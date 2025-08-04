@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import "../CSS/ProductShowCase.css";
+import "../CSS/ProductShowcase.css";
 const ProductShowCase = () => {
   const [timeLeft, setTimeLeft] = useState({
     days: 1,
