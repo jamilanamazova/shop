@@ -34,7 +34,7 @@ const Hero = () => {
       </div>
       <div className="right-hero-section flex-shrink-0 w-[50%] lg:w-auto max-w-[400px] lg:max-w-none">
         <img
-          src="/src/Images/hero.png"
+          src="../src/Images/hero.png"
           alt="hero-png"
           className="w-full object-cover"
         />
