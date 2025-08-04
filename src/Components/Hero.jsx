@@ -3,7 +3,7 @@ import "../CSS/hero.module.css";
 
 const Hero = () => {
   return (
-    <main className="hero-section min-h-[85vh] flex flex-col lg:flex-row items-center max-w-[90%] lg:max-w-[85%] m-auto py-8 lg:py-0 gap-8 lg:gap-0">
+    <main className="hero-section min-h-[75vh] flex flex-col lg:flex-row items-center max-w-[90%] lg:max-w-[85%] m-auto py-8 lg:py-0 gap-8 lg:gap-0">
       <div className="left-hero-section flex flex-col items-start justify-center gap-4 lg:grow text-center lg:text-left">
         <div className="title-part mb-3">
           <h4 className="text-2xl md:text-3xl lg:text-4xl font-bold text-wrap mb-3">
@@ -34,7 +34,7 @@ const Hero = () => {
       </div>
       <div className="right-hero-section flex-shrink-0 w-[50%] lg:w-auto max-w-[400px] lg:max-w-none">
         <img
-          src="../Images/hero.png"
+          src="/src/Images/hero.png"
           alt="hero-png"
           className="w-full object-cover"
         />
