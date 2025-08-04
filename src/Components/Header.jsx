@@ -6,6 +6,8 @@ const Header = () => {
   const hamburgerMenuRef = useRef(null);
   const [openSideBar, setOpenSideBar] = useState(false);
 
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+
   const toggleSideBar = () => {
     setOpenSideBar(!openSideBar);
     if (hamburgerMenuRef.current) {
@@ -40,7 +42,7 @@ const Header = () => {
             </span>
           </div>
           <div className="headerLinks hidden sm:block">
-            <ul className="flex gap-3 items-center list-none">
+            <ul className="flex gap-12 items-center list-none">
               <Link className="font-bold" to={"/"}>
                 HOME
               </Link>
@@ -65,7 +67,24 @@ const Header = () => {
               <i class="fa-solid fa-cart-shopping"></i>
             </div>
             <div className="user-icon">
-              <i class="fa-solid fa-user"></i>
+              {currentUser ? (
+                <Link
+                  to={"/profile"}
+                  className="flex items-center gap-2 text-black hover:text-gray-700 transition-colors"
+                >
+                  <i className="fa-solid fa-user-circle text-lg"></i>
+                  <span className="font-medium hidden md:inline">
+                    {currentUser.fullName}
+                  </span>
+                </Link>
+              ) : (
+                <Link
+                  to={"/signin"}
+                  className="hover:text-gray-700 transition-colors"
+                >
+                  <i class="fa-solid fa-user"></i>
+                </Link>
+              )}
             </div>
           </div>
         </div>

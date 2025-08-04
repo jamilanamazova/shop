@@ -4,7 +4,7 @@ import hero from "../Images/hero.png";
 
 const Hero = () => {
   return (
-    <main className="hero-section min-h-[75vh] flex flex-col lg:flex-row items-center max-w-[90%] lg:max-w-[85%] m-auto py-8 lg:py-0 gap-8 lg:gap-0">
+    <main className="hero-section min-h-[65vh] flex flex-col lg:flex-row items-center max-w-[90%] lg:max-w-[85%] m-auto py-8 lg:py-0 gap-8 lg:gap-0">
       <div className="left-hero-section flex flex-col items-start justify-center gap-4 lg:grow text-center lg:text-left">
         <div className="title-part mb-3">
           <h4 className="text-2xl md:text-3xl lg:text-4xl font-bold text-wrap mb-3">
