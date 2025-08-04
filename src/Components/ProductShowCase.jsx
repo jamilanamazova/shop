@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
 import "../CSS/ProductShowcase.css";
+import catWithToys from "../Images/catwithtoys.jpg";
+import noise from "../Images/noise.jpg";
+
 const ProductShowCase = () => {
   const [timeLeft, setTimeLeft] = useState({
     days: 1,
@@ -14,7 +17,7 @@ const ProductShowCase = () => {
       name: "Noise-cancelling",
       price: "9.99",
       originalPrice: "12.99",
-      image: "/src/Images/noise.jpg",
+      image: noise,
       category: "electronics",
     },
     {
@@ -110,7 +113,7 @@ const ProductShowCase = () => {
               <div className="flex justify-center items-center mb-4">
                 <div className="relative">
                   <img
-                    src="../src/Images/catwithtoys.jpg"
+                    src={catWithToys}
                     alt="Featured"
                     className="w-32 h-25 rounded-lg object-cover"
                   />

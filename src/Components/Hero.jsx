@@ -1,5 +1,6 @@
 import React from "react";
 import "../CSS/hero.module.css";
+import hero from "../Images/hero.png";
 
 const Hero = () => {
   return (
@@ -33,11 +34,7 @@ const Hero = () => {
         </div>
       </div>
       <div className="right-hero-section flex-shrink-0 w-[50%] lg:w-auto max-w-[400px] lg:max-w-none">
-        <img
-          src="../src/Images/hero.png"
-          alt="hero-png"
-          className="w-full object-cover"
-        />
+        <img src={hero} alt="hero-png" className="w-full object-cover" />
       </div>
     </main>
   );
