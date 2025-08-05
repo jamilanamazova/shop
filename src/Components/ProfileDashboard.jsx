@@ -1,11 +1,32 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useReducer } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
+import "../CSS/ProfileDashboard.css";
+
+const initialState = {
+  fullName: "",
+  email: "",
+  phone: "",
+};
+
+const formReducer = (state, action) => {
+  switch (action.type) {
+    case "UPDATE_FIELD":
+      return {
+        ...state,
+        [action.field]: action.value,
+      };
+    default:
+      return state;
+  }
+};
 
 const ProfileDashboard = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showEditProfileModal, setShowEditProfileModal] = useState(false);
+  const [formState, dispatch] = useReducer(formReducer, initialState);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -38,6 +59,69 @@ const ProfileDashboard = () => {
     return <div>Loading...</div>;
   }
 
+  const handleInputChange = (field, value) => {
+    dispatch({
+      type: "UPDATE_FIELD",
+      field: field,
+      value: value,
+    });
+  };
+
+  const handleEditSubmit = (e) => {
+    e.preventDefault();
+    const updatedUser = {
+      ...currentUser,
+      fullName: formState.fullName || currentUser.fullName,
+      email: formState.email || currentUser.email,
+      phone: formState.phone || currentUser.phone,
+    };
+    setCurrentUser(updatedUser);
+    localStorage.setItem("currentUser", JSON.stringify(updatedUser));
+
+    const existingUsers = JSON.parse(localStorage.getItem("users")) || [];
+    const updatedUsers = existingUsers.map((user) => {
+      if (user.id === currentUser?.id) {
+        return {
+          ...user,
+          fullName: formState.fullName || user.fullName,
+          email: formState.email || user.email,
+          phone: formState.phone || user.phone,
+        };
+      }
+      return user;
+    });
+    localStorage.setItem("users", JSON.stringify(updatedUsers));
+    setShowEditProfileModal(false);
+    window.location.reload();
+  };
+
+  const handleProfileImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const updatedUser = { ...currentUser, profileImage: reader.result };
+        setCurrentUser(updatedUser);
+        localStorage.setItem("currentUser", JSON.stringify(updatedUser));
+        const existingUsers = JSON.parse(localStorage.getItem("users")) || [];
+        const updatedUsers = existingUsers.map((user) => {
+          if (user.id === currentUser?.id) {
+            return {
+              ...user,
+              profileImage: reader.result,
+            };
+          }
+          return user;
+        });
+        localStorage.setItem("users", JSON.stringify(updatedUsers));
+        window.location.reload();
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  console.log(currentUser);
+
   return (
     <>
       <Header />
@@ -57,8 +141,26 @@ const ProfileDashboard = () => {
             <div className="lg:col-span-1">
               <div className="bg-white rounded-xl shadow-lg p-6">
                 <div className="text-center">
-                  <div className="w-20 h-20 bg-gray-300 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i className="fa-solid fa-user text-3xl text-gray-600"></i>
+                  <div className="relative profile-picture w-20 h-20 bg-gray-300 rounded-full flex items-center justify-center mx-auto mb-4">
+                    {currentUser.profileImage ? (
+                      <img
+                        src={currentUser.profileImage}
+                        alt="Profile"
+                        className="w-full h-full object-cover rounded-full"
+                      />
+                    ) : (
+                      <i className="fa-solid fa-user text-3xl text-gray-600"></i>
+                    )}
+                    <div className="overlay">
+                      <i className="fa-solid fa-camera text-gray-400 camera-icon"></i>
+                      <span className="sr-only">Change profile picture</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        onChange={handleProfileImageChange}
+                      />
+                    </div>
                   </div>
                   <h2 className="text-xl font-bold text-gray-800 mb-1">
                     {currentUser.fullName}
@@ -67,7 +169,10 @@ const ProfileDashboard = () => {
                     {currentUser.email}
                   </p>
                   <div className="flex flex-col gap-2">
-                    <button className="bg-black text-white py-2 px-4 rounded-lg font-medium hover:bg-gray-800 transition-colors">
+                    <button
+                      className="bg-black text-white py-2 px-4 rounded-lg font-medium hover:bg-gray-800 transition-colors"
+                      onClick={() => setShowEditProfileModal(true)}
+                    >
                       Edit Profile
                     </button>
                     <button
@@ -236,6 +341,68 @@ const ProfileDashboard = () => {
                   Logout
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showEditProfileModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4">
+            <div className="text-center">
+              <h3 className="text-lg font-bold text-gray-800 mb-2">
+                Edit Profile
+              </h3>
+              <form onSubmit={handleEditSubmit} className="space-y-4">
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    defaultValue={currentUser.fullName}
+                    onChange={(e) =>
+                      handleInputChange("fullName", e.target.value)
+                    }
+                    className="w-full p-2 border border-gray-300 rounded-lg"
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    defaultValue={currentUser.email}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-lg"
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    defaultValue={currentUser.phone}
+                    onChange={(e) => handleInputChange("phone", e.target.value)}
+                    pattern="(^\d{3}\s\d{3}\s\d{2}\s\d{2}$)|(^\d{10}$)"
+                    className="w-full p-2 border border-gray-300 rounded-lg"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="bg-blue-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                >
+                  Save Changes
+                </button>
+              </form>
+              <button
+                onClick={() => setShowEditProfileModal(false)}
+                className="mt-4 text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>

@@ -6,6 +6,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [error, setError] = useState(false);
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -29,7 +30,10 @@ const Login = () => {
       setShowSuccessModal(true);
       localStorage.setItem("currentUser", JSON.stringify(user));
     } else {
-      alert("Invalid email or password. Please try again.");
+      setError(true);
+      setTimeout(() => {
+        setError(false);
+      }, 3000);
     }
   };
 
@@ -111,6 +115,13 @@ const Login = () => {
               >
                 Password
               </label>
+              <div>
+                {error && (
+                  <p className="text-red-500 text-sm mb-2">
+                    Invalid email or password. Please try again.
+                  </p>
+                )}
+              </div>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
