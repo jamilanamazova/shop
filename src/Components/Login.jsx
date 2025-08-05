@@ -28,6 +28,9 @@ const Login = () => {
     );
     if (user) {
       setShowSuccessModal(true);
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 1000);
       localStorage.setItem("currentUser", JSON.stringify(user));
     } else {
       setError(true);
@@ -37,9 +40,6 @@ const Login = () => {
     }
   };
 
-  const closeModal = () => {
-    setShowSuccessModal(false);
-  };
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4 py-8">
       {showSuccessModal && (
@@ -57,16 +57,6 @@ const Login = () => {
                 You have successfully signed in to your account. Welcome to
                 Shopery!
               </p>
-
-              <div className="space-y-3">
-                <Link
-                  to="/"
-                  className="w-full bg-black text-white py-3 px-4 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-300 inline-block"
-                  onClick={closeModal}
-                >
-                  Go to Dashboard
-                </Link>
-              </div>
             </div>
           </div>
         </div>
@@ -189,7 +179,7 @@ const Login = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1">
               <button
                 type="button"
                 className="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-300"
@@ -197,15 +187,6 @@ const Login = () => {
                 <i className="fa-brands fa-google text-red-500 mr-2"></i>
                 <span className="text-sm font-medium text-gray-700">
                   Google
-                </span>
-              </button>
-              <button
-                type="button"
-                className="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-300"
-              >
-                <i className="fa-brands fa-facebook text-blue-600 mr-2"></i>
-                <span className="text-sm font-medium text-gray-700">
-                  Facebook
                 </span>
               </button>
             </div>

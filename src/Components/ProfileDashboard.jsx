@@ -6,7 +6,6 @@ import "../CSS/ProfileDashboard.css";
 
 const initialState = {
   fullName: "",
-  email: "",
   phone: "",
 };
 
@@ -62,8 +61,8 @@ const ProfileDashboard = () => {
   const handleInputChange = (field, value) => {
     dispatch({
       type: "UPDATE_FIELD",
-      field: field,
-      value: value,
+      field,
+      value,
     });
   };
 
@@ -72,7 +71,6 @@ const ProfileDashboard = () => {
     const updatedUser = {
       ...currentUser,
       fullName: formState.fullName || currentUser.fullName,
-      email: formState.email || currentUser.email,
       phone: formState.phone || currentUser.phone,
     };
     setCurrentUser(updatedUser);
@@ -84,7 +82,6 @@ const ProfileDashboard = () => {
         return {
           ...user,
           fullName: formState.fullName || user.fullName,
-          email: formState.email || user.email,
           phone: formState.phone || user.phone,
         };
       }
@@ -369,17 +366,6 @@ const ProfileDashboard = () => {
                 </div>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    defaultValue={currentUser.email}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-lg"
-                  />
-                </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Phone Number
                   </label>
                   <input
@@ -407,7 +393,6 @@ const ProfileDashboard = () => {
           </div>
         </div>
       )}
-
       <Footer />
     </>
   );

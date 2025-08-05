@@ -28,14 +28,99 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, dispatch] = useReducer(formReducer, initialState);
-  const [isPasswordValid, setIsPasswordValid] = useState(true);
+  const [passwordStrength, setPasswordStrength] = useState({
+    score: 0,
+    text: "",
+    color: "",
+    borderColor: "",
+  });
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const errorRef = useRef(null);
-  const passwordLengthRef = useRef(null);
+  const passwordInputRef = useRef(null);
+
+  const calculatePasswordStrength = (password) => {
+    if (!password) {
+      return {
+        score: 0,
+        text: "",
+        color: "",
+        borderColor: "border-gray-300",
+      };
+    }
+
+    const checks = [
+      {
+        test: password.length >= 8,
+        score: 2,
+      },
+      {
+        test: password.length >= 6 && password.length < 8,
+        score: 1,
+      },
+      {
+        test: /[a-z]/.test(password),
+        score: 1,
+      },
+      {
+        test: /[A-Z]/.test(password),
+        score: 1,
+      },
+      { test: /\d/.test(password), score: 1 },
+      {
+        test: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+        score: 2,
+      },
+    ];
+
+    let score = 0;
+
+    checks.forEach(({ test, score: points }) => {
+      if (test) {
+        score += points;
+      }
+    });
+
+    const strengthLevels = [
+      {
+        minScore: 6,
+        score: 3,
+        text: "Strong",
+        color: "text-green-500",
+        borderColor: "border-green-500",
+      },
+      {
+        minScore: 4,
+        score: 2,
+        text: "Medium",
+        color: "text-orange-500",
+        borderColor: "border-orange-500",
+      },
+      {
+        minScore: 1,
+        score: 1,
+        text: "Weak",
+        color: "text-red-500",
+        borderColor: "border-red-500",
+      },
+      {
+        minScore: 0,
+        score: 0,
+        text: "Weak",
+        color: "text-red-500",
+        borderColor: "border-red-500",
+      },
+    ];
+
+    const strength =
+      strengthLevels.find(({ minScore }) => score >= minScore) ||
+      strengthLevels[strengthLevels.length - 1];
+
+    return strength;
+  };
 
   useEffect(() => {
-    const passwordPattern = /^(?=.*[!@#$%^&*_\.]).{6,}$/;
-    setIsPasswordValid(passwordPattern.test(formData.password));
+    const strength = calculatePasswordStrength(formData.password);
+    setPasswordStrength(strength);
   }, [formData.password]);
 
   const handleInputChange = (field, value) => {
@@ -64,11 +149,16 @@ const Register = () => {
       errorRef.current.classList.add("hidden");
     }
 
-    if (!isPasswordValid) {
-      passwordLengthRef.current.classList.remove("hidden");
+    if (passwordStrength.score < 2) {
+      passwordInputRef.current.classList.remove("hidden");
       return;
     } else {
-      passwordLengthRef.current.classList.add("hidden");
+      passwordInputRef.current.classList.add("hidden");
+    }
+
+    if (!formData.terms) {
+      alert("Please accept the terms and conditions");
+      return;
     }
 
     const userData = {
@@ -94,21 +184,19 @@ const Register = () => {
     existingUsers.push(userData);
 
     localStorage.setItem("users", JSON.stringify(existingUsers));
-
     localStorage.setItem("currentUser", JSON.stringify(userData));
 
     console.log("userData", userData);
     console.log("users", existingUsers);
 
     setShowSuccessModal(true);
+    setTimeout(() => {
+      window.location.href = "/";
+    }, 1000);
 
     dispatch({ type: "RESET_FORM" });
     setShowPassword(false);
     setShowConfirmPassword(false);
-  };
-
-  const closeModal = () => {
-    setShowSuccessModal(false);
   };
 
   const togglePasswordVisibility = () => {
@@ -117,6 +205,43 @@ const Register = () => {
 
   const toggleConfirmPasswordVisibility = () => {
     setShowConfirmPassword(!showConfirmPassword);
+  };
+
+  const PasswordStrengthIndicator = () => {
+    if (!formData.password) return null;
+
+    return (
+      <div className="mt-2">
+        <div className="flex items-center justify-between mb-1">
+          <span className={`text-sm font-medium ${passwordStrength.color}`}>
+            Password Strength: {passwordStrength.text}
+          </span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div
+            className={`h-2 rounded-full transition-all duration-300 ${
+              passwordStrength.score === 1
+                ? "bg-red-500 w-1/3"
+                : passwordStrength.score === 2
+                ? "bg-orange-500 w-2/3"
+                : passwordStrength.score === 3
+                ? "bg-green-500 w-full"
+                : "bg-gray-300 w-0"
+            }`}
+          ></div>
+        </div>
+        <div className="mt-1">
+          <p className="text-xs text-gray-600">
+            {passwordStrength.score === 1 &&
+              "Add uppercase, numbers, and special characters"}
+            {passwordStrength.score === 2 &&
+              "Good! Consider adding more special characters"}
+            {passwordStrength.score === 3 &&
+              "Excellent! Your password is strong"}
+          </p>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -136,22 +261,6 @@ const Register = () => {
                 You have successfully registered your account. Welcome to
                 Shopery!
               </p>
-
-              <div className="space-y-3">
-                <Link
-                  to="/signin"
-                  className="w-full bg-black text-white py-3 px-4 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-300 inline-block"
-                  onClick={closeModal}
-                >
-                  Go to Login
-                </Link>
-                <button
-                  onClick={closeModal}
-                  className="w-full bg-gray-200 text-gray-800 py-3 px-4 rounded-lg font-medium hover:bg-gray-300 transition-colors duration-300"
-                >
-                  Continue
-                </button>
-              </div>
             </div>
           </div>
         </div>
@@ -163,7 +272,7 @@ const Register = () => {
             <h1 className="text-3xl font-bold text-gray-800">Shopery</h1>
           </Link>
           <h2 className="text-2xl font-bold text-gray-800 mb-2">
-            Create Account
+            Create an Account
           </h2>
           <p className="text-gray-600">
             Join us today and start your shopping journey
@@ -249,11 +358,10 @@ const Register = () => {
                 Password
               </label>
               <span
-                className="text-[12px] font-[500] password-error text-red-500 hidden"
-                ref={passwordLengthRef}
+                className="text-sm font-[500] password-error text-red-500 hidden"
+                ref={passwordInputRef}
               >
-                Password should be at least 6 characters long and contains one
-                special character.
+                Please use a strong or medium password
               </span>
               <div className="relative">
                 <input
@@ -265,7 +373,11 @@ const Register = () => {
                     handleInputChange("password", e.target.value)
                   }
                   placeholder="Create a password"
-                  className="w-full px-4 py-3 pl-12 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
+                  className={`w-full px-4 py-3 pl-12 pr-12 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
+                    formData.password
+                      ? `${passwordStrength.borderColor} focus:ring-2 focus:ring-opacity-50`
+                      : "border-gray-300 focus:ring-black focus:border-black"
+                  }`}
                   required
                 />
                 <i className="fa-solid fa-lock absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
@@ -281,6 +393,7 @@ const Register = () => {
                   ></i>
                 </button>
               </div>
+              <PasswordStrengthIndicator />
             </div>
 
             <div>
@@ -375,7 +488,7 @@ const Register = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1">
               <button
                 type="button"
                 className="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-300"
@@ -383,15 +496,6 @@ const Register = () => {
                 <i className="fa-brands fa-google text-red-500 mr-2"></i>
                 <span className="text-sm font-medium text-gray-700">
                   Google
-                </span>
-              </button>
-              <button
-                type="button"
-                className="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-300"
-              >
-                <i className="fa-brands fa-facebook text-blue-600 mr-2"></i>
-                <span className="text-sm font-medium text-gray-700">
-                  Facebook
                 </span>
               </button>
             </div>

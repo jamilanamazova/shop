@@ -9,6 +9,7 @@ import NotFound from "../Components/NotFound";
 import Login from "../Components/Login";
 import Register from "../Components/Register";
 import Profile from "../Components/ProfileDashboard"; // Assuming ProfileDashboard is the component for user profile
+import Settings from "../Components/Settings";
 
 const Routing = () => {
   return (
@@ -20,6 +21,7 @@ const Routing = () => {
       <Route path="/signin" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/profile" element={<Profile />} />
+      <Route path="/settings" element={<Settings />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
