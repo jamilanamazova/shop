@@ -131,15 +131,15 @@ const Register = () => {
   const handleInputChange = (field, value) => {
     dispatch({
       type: "UPDATE_FIELD",
-      field: field,
-      value: value,
+      field,
+      value,
     });
   };
 
   const handleCheckBoxChange = (field, checked) => {
     dispatch({
       type: "UPDATE_FIELD",
-      field: field,
+      field,
       value: checked,
     });
   };
@@ -169,6 +169,19 @@ const Register = () => {
     const namePattern =
       /^[A-ZƏÖÜÇŞĞİ][a-zəıöüçşğ]+\s[A-ZƏÖÜÇŞĞİ][a-zəıöüçşğ]+$/;
     return namePattern.test(name);
+  };
+
+  const getPhoneMaxLength = (countryCode) => {
+    const maxLengths = {
+      "+994": 12,
+      "+90": 13,
+      "+1": 12,
+      "+44": 11,
+      "+49": 13,
+      "+33": 13,
+      "+7": 12,
+    };
+    return maxLengths[countryCode] || 15;
   };
 
   const handleSubmit = async (e) => {
@@ -231,64 +244,7 @@ const Register = () => {
       }, 1000);
     } catch (error) {
       console.error("Registration error:", error);
-      if (error.response) {
-        const { status, data } = error.response;
-
-        if (status === 400) {
-          if (data.message) {
-            alert(data.message);
-          } else if (data.errors) {
-            const errorMessages = Object.values(data.errors).join("\n");
-            alert(`Validation Errors:\n${errorMessages}`);
-          } else {
-            alert("Invalid data. Please check your inputs.");
-          }
-        } else if (status === 409) {
-          alert("Email already exists. Please use a different email.");
-        } else {
-          alert("Registration failed. Please try again.");
-        }
-      } else if (error.request) {
-        alert(
-          "Cannot connect to server. Please check your connection and try again."
-        );
-      } else {
-        alert("An unexpected error occurred. Please try again.");
-      }
     }
-
-    // const userData = {
-    //   fullName: formData.fullName,
-    //   email: formData.email,
-    //   phone: formData.phone,
-    //   password: formData.password,
-    //   registrationDate: new Date().toISOString(),
-    //   id: Date.now(),
-    // };
-
-    // const existingUsers = JSON.parse(localStorage.getItem("users")) || [];
-
-    // const emailExists = existingUsers.find(
-    //   (user) => user.email === formData.email
-    // );
-
-    // if (emailExists) {
-    //   alert("Email already exists. Please use a different email.");
-    //   return;
-    // }
-
-    // existingUsers.push(userData);
-
-    // localStorage.setItem("users", JSON.stringify(existingUsers));
-    // localStorage.setItem("currentUser", JSON.stringify(userData));
-
-    // console.log("userData", userData);
-    // console.log("users", existingUsers);
-
-    // setShowSuccessModal(true);
-    // setTimeout(() => {
-    //   window.location.href = "/";
-    // }, 1000);
   };
 
   const togglePasswordVisibility = () => {
@@ -463,7 +419,11 @@ const Register = () => {
                     id="phone"
                     name="phone"
                     value={formData.phone}
-                    onChange={(e) => handleInputChange("phone", e.target.value)}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^\d\s]/g, "");
+                      handleInputChange("phone", value);
+                    }}
+                    maxLength={getPhoneMaxLength(countryCode)}
                     className="flex-1 px-4 py-3 border-l-0 border border-gray-300 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
                     required
                   />
