@@ -1,71 +1,15 @@
 import React, { useState, useEffect } from "react";
 import "../CSS/ProductShowcase.css";
 import catWithToys from "../Images/catwithtoys.jpg";
-import noise from "../Images/noise.jpg";
+import { Link } from "react-router-dom";
 
-const ProductShowCase = () => {
+const ProductShowCase = ({ products }) => {
   const [timeLeft, setTimeLeft] = useState({
     days: 1,
     hours: 1,
     minutes: 5,
     seconds: 7,
   });
-
-  const topPicksProducts = [
-    {
-      id: 1,
-      name: "Noise-cancelling",
-      price: "9.99",
-      originalPrice: "12.99",
-      image: noise,
-      category: "electronics",
-    },
-    {
-      id: 2,
-      name: "Stylish Jacket",
-      price: "45.99",
-      originalPrice: "65.99",
-      image:
-        "https://cdn.shopify.com/s/files/1/0867/4417/0787/files/winter-jacket-for-men.jpg?v=1725260898",
-      category: "fashion",
-    },
-    {
-      id: 3,
-      name: "Comfortable Sofa",
-      price: "299.99",
-      originalPrice: "399.99",
-      image:
-        "https://cdn.thewirecutter.com/wp-content/media/2024/12/BEST-ONLINE-SOFAS-SUB-2048px-sixpenny-aria-grande.jpg?auto=webp&quality=75&width=1024",
-      category: "furniture",
-    },
-    {
-      id: 4,
-      name: "Gourmet dog cookies",
-      price: "9.99",
-      originalPrice: "14.99",
-      image:
-        "https://i.etsystatic.com/13595738/r/il/2f46cf/3711835356/il_570xN.3711835356_e5c9.jpg",
-      category: "pets",
-    },
-    {
-      id: 5,
-      name: "Natural bird feed",
-      price: "7.99",
-      originalPrice: "11.99",
-      image:
-        "https://peckishbirdfood.com/cdn/shop/products/60051338_1_v2.jpg?v=1675160670",
-      category: "pets",
-    },
-    {
-      id: 6,
-      name: "Durable chew toy",
-      price: "12.99",
-      originalPrice: "18.99",
-      image:
-        "https://m.media-amazon.com/images/I/71KHlJw+8TL._UF1000,1000_QL80_.jpg",
-      category: "pets",
-    },
-  ];
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -164,42 +108,44 @@ const ProductShowCase = () => {
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-              {topPicksProducts.map((product) => (
-                <div
-                  key={product.id}
-                  className="bg-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
-                >
-                  <div className="relative group">
-                    <div className="h-40 bg-gray-300 overflow-hidden">
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <button className="bg-white text-black px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors cursor-pointer">
-                        Add to cart
+              {products.map((product) => (
+                <Link to={`/product/${product.id}`} key={product.id}>
+                  <div
+                    key={product.id}
+                    className="bg-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+                  >
+                    <div className="relative group">
+                      <div className="h-40 bg-gray-300 overflow-hidden">
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <button className="bg-white text-black px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors cursor-pointer">
+                          Add to cart
+                        </button>
+                      </div>
+                      <button className="absolute top-3 right-3 p-2 bg-white rounded-full hover:bg-gray-100 transition-colors">
+                        <i className="fa-solid fa-heart text-gray-600"></i>
                       </button>
                     </div>
-                    <button className="absolute top-3 right-3 p-2 bg-white rounded-full hover:bg-gray-100 transition-colors">
-                      <i className="fa-solid fa-heart text-gray-600"></i>
-                    </button>
-                  </div>
-                  <div className="p-4">
-                    <h4 className="font-medium text-gray-800 mb-2">
-                      {product.name}
-                    </h4>
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg font-bold text-gray-800">
-                        ${product.price}
-                      </span>
-                      <span className="text-sm text-gray-500 line-through">
-                        ${product.originalPrice}
-                      </span>
+                    <div className="p-4">
+                      <h4 className="font-medium text-gray-800 mb-2">
+                        {product.name}
+                      </h4>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-bold text-gray-800">
+                          ${product.price}
+                        </span>
+                        <span className="text-sm text-gray-500 line-through">
+                          ${product.originalPrice}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
             <div className="bg-gray-200 rounded-lg p-4 mb-4">

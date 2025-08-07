@@ -35,7 +35,7 @@ const Footer = () => {
           </div>
 
           <div className="right-footer">
-            <p className="text-gray-600 text-sm md:text-base">© Shopery 2023</p>
+            <p className="text-gray-600 text-sm md:text-base">© Shopery 2025</p>
           </div>
         </div>
       </div>

@@ -1,5 +1,7 @@
 import React, { useEffect, useReducer, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { apiURL } from "../Backend/Api/api";
+import axios from "axios";
 
 const initialState = {
   fullName: "",
@@ -37,6 +39,7 @@ const Register = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const errorRef = useRef(null);
   const passwordInputRef = useRef(null);
+  const phoneInputRef = useRef(null);
 
   const calculatePasswordStrength = (password) => {
     if (!password) {
@@ -67,7 +70,7 @@ const Register = () => {
       },
       { test: /\d/.test(password), score: 1 },
       {
-        test: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+        test: /[!@#$%^&*()_+\-=\\[\]{};':"\\|,.<>\\/?]/.test(password),
         score: 2,
       },
     ];
@@ -139,8 +142,22 @@ const Register = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const validatePhoneNumber = (phone) => {
+    const azePhonePattern =
+      /^(\+994\s?\d{2}\s?\d{3}\s?\d{2}\s?\d{2}|\+994\d{9})$/;
+
+    return azePhonePattern.test(phone);
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!validatePhoneNumber(formData.phone)) {
+      phoneInputRef.current.classList.remove("hidden");
+      return;
+    } else {
+      phoneInputRef.current.classList.add("hidden");
+    }
 
     if (formData.password !== formData.confirmPassword) {
       errorRef.current.classList.remove("hidden");
@@ -161,42 +178,93 @@ const Register = () => {
       return;
     }
 
-    const userData = {
-      fullName: formData.fullName,
-      email: formData.email,
-      phone: formData.phone,
-      password: formData.password,
-      registrationDate: new Date().toISOString(),
-      id: Date.now(),
-    };
+    try {
+      const response = await axios.post(`${apiURL}/auth/register`, {
+        name: formData.fullName,
+        password: formData.password,
+        email: formData.email,
+        phone: formData.phone,
+      });
+      const data = response.data;
 
-    const existingUsers = JSON.parse(localStorage.getItem("users")) || [];
+      console.log("Registration successful:", data);
+      if (data.token) {
+        localStorage.setItem("authToken", data.token);
+        localStorage.setItem("currentUser", JSON.stringify(data.user));
+      }
 
-    const emailExists = existingUsers.find(
-      (user) => user.email === formData.email
-    );
+      setShowSuccessModal(true);
 
-    if (emailExists) {
-      alert("Email already exists. Please use a different email.");
-      return;
+      if (data.error) {
+        console.error("Registration error:", data.error);
+        return;
+      }
+      dispatch({ type: "RESET_FORM" });
+      setShowPassword(false);
+      setShowConfirmPassword(false);
+      setTimeout(() => {
+        window.location.href = "/confirm-email";
+      }, 1000);
+    } catch (error) {
+      console.error("Registration error:", error);
+      if (error.response) {
+        const { status, data } = error.response;
+
+        if (status === 400) {
+          if (data.message) {
+            alert(data.message);
+          } else if (data.errors) {
+            const errorMessages = Object.values(data.errors).join("\n");
+            alert(`Validation Errors:\n${errorMessages}`);
+          } else {
+            alert("Invalid data. Please check your inputs.");
+          }
+        } else if (status === 409) {
+          alert("Email already exists. Please use a different email.");
+        } else {
+          alert("Registration failed. Please try again.");
+        }
+      } else if (error.request) {
+        alert(
+          "Cannot connect to server. Please check your connection and try again."
+        );
+      } else {
+        alert("An unexpected error occurred. Please try again.");
+      }
     }
 
-    existingUsers.push(userData);
+    // const userData = {
+    //   fullName: formData.fullName,
+    //   email: formData.email,
+    //   phone: formData.phone,
+    //   password: formData.password,
+    //   registrationDate: new Date().toISOString(),
+    //   id: Date.now(),
+    // };
 
-    localStorage.setItem("users", JSON.stringify(existingUsers));
-    localStorage.setItem("currentUser", JSON.stringify(userData));
+    // const existingUsers = JSON.parse(localStorage.getItem("users")) || [];
 
-    console.log("userData", userData);
-    console.log("users", existingUsers);
+    // const emailExists = existingUsers.find(
+    //   (user) => user.email === formData.email
+    // );
 
-    setShowSuccessModal(true);
-    setTimeout(() => {
-      window.location.href = "/";
-    }, 1000);
+    // if (emailExists) {
+    //   alert("Email already exists. Please use a different email.");
+    //   return;
+    // }
 
-    dispatch({ type: "RESET_FORM" });
-    setShowPassword(false);
-    setShowConfirmPassword(false);
+    // existingUsers.push(userData);
+
+    // localStorage.setItem("users", JSON.stringify(existingUsers));
+    // localStorage.setItem("currentUser", JSON.stringify(userData));
+
+    // console.log("userData", userData);
+    // console.log("users", existingUsers);
+
+    // setShowSuccessModal(true);
+    // setTimeout(() => {
+    //   window.location.href = "/";
+    // }, 1000);
   };
 
   const togglePasswordVisibility = () => {
@@ -334,12 +402,18 @@ const Register = () => {
               >
                 Phone Number
               </label>
+              <span
+                className="text-sm font-[500] password-error text-red-500 hidden"
+                ref={phoneInputRef}
+              >
+                Please enter a valid phone number format: +994XXXXXXXXX
+              </span>
               <div className="relative">
                 <input
                   type="tel"
                   id="phone"
                   name="phone"
-                  pattern="(^\d{3}\s\d{3}\s\d{2}\s\d{2}$)|(^\d{10}$)"
+                  pattern="^(\+994\s?\d{2}\s?\d{3}\s?\d{2}\s?\d{2}|\+994\d{9})$"
                   value={formData.phone}
                   onChange={(e) => handleInputChange("phone", e.target.value)}
                   placeholder="Enter your phone number"
