@@ -262,7 +262,6 @@ const Register = () => {
           alert("Registration failed. Please try again.");
         }
       } else if (error.request) {
-        // Network error
         alert(
           "Cannot connect to server. Please check your connection and try again."
         );
