@@ -244,6 +244,31 @@ const Register = () => {
       }, 1000);
     } catch (error) {
       console.error("Registration error:", error);
+      if (error.response) {
+        const { status, data } = error.response;
+
+        if (status === 400) {
+          if (data.message) {
+            alert(data.message);
+          } else if (data.errors) {
+            const errorMessages = Object.values(data.errors).join("\n");
+            alert(`Validation Errors:\n${errorMessages}`);
+          } else {
+            alert("Invalid data. Please check your inputs.");
+          }
+        } else if (status === 409) {
+          alert("Email already exists. Please use a different email.");
+        } else {
+          alert("Registration failed. Please try again.");
+        }
+      } else if (error.request) {
+        // Network error
+        alert(
+          "Cannot connect to server. Please check your connection and try again."
+        );
+      } else {
+        alert("An unexpected error occurred. Please try again.");
+      }
     }
   };
 
