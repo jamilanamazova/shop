@@ -173,15 +173,15 @@ const Register = () => {
 
   const getPhoneMaxLength = (countryCode) => {
     const maxLengths = {
-      "+994": 12,
-      "+90": 13,
-      "+1": 12,
-      "+44": 11,
-      "+49": 13,
-      "+33": 13,
-      "+7": 12,
+      "+994": 9,
+      "+90": 10,
+      "+1": 10,
+      "+44": 10,
+      "+49": 11,
+      "+33": 9,
+      "+7": 10,
     };
-    return maxLengths[countryCode] || 15;
+    return maxLengths[countryCode];
   };
 
   const handleSubmit = async (e) => {
