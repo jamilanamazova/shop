@@ -37,9 +37,11 @@ const Register = () => {
     borderColor: "",
   });
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [countryCode, setCountryCode] = useState("+994");
   const errorRef = useRef(null);
   const passwordInputRef = useRef(null);
   const phoneInputRef = useRef(null);
+  const fullNameInputRef = useRef(null);
 
   const calculatePasswordStrength = (password) => {
     if (!password) {
@@ -142,15 +144,42 @@ const Register = () => {
     });
   };
 
-  const validatePhoneNumber = (phone) => {
-    const azePhonePattern =
-      /^(\+994\s?\d{2}\s?\d{3}\s?\d{2}\s?\d{2}|\+994\d{9})$/;
+  const validatePhoneNumber = (phone, code = countryCode) => {
+    const patterns = {
+      "+994": /^(\d{2}\s?\d{3}\s?\d{2}\s?\d{2}|\d{9})$/,
+      "+90": /^(\d{3}\s?\d{3}\s?\d{2}\s?\d{2}|\d{10})$/,
+      "+1": /^(\d{3}\s?\d{3}\s?\d{4}|\d{10})$/,
+      "+44": /^(\d{4}\s?\d{6}|\d{10})$/,
+      "+49": /^(\d{3}\s?\d{3}\s?\d{4}|\d{10})$/,
+      "+33": /^(\d{2}\s?\d{2}\s?\d{2}\s?\d{2}|\d{10})$/,
+      "+7": /^(\d{3}\s?\d{3}\s?\d{2}\s?\d{2}|\d{10})$/,
+    };
 
-    return azePhonePattern.test(phone);
+    const pattern = patterns[code] || patterns["+994"];
+
+    return pattern.test(phone);
+  };
+
+  const handleCountryCodeChange = (e) => {
+    setCountryCode(e.target.value);
+    handleInputChange("phone", "");
+  };
+
+  const validateFullName = (name) => {
+    const namePattern =
+      /^[A-ZƏÖÜÇŞĞİ][a-zəıöüçşğ]+\s[A-ZƏÖÜÇŞĞİ][a-zəıöüçşğ]+$/;
+    return namePattern.test(name);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!validateFullName(formData.fullName)) {
+      fullNameInputRef.current.classList.remove("hidden");
+      return;
+    } else {
+      fullNameInputRef.current.classList.add("hidden");
+    }
 
     if (!validatePhoneNumber(formData.phone)) {
       phoneInputRef.current.classList.remove("hidden");
@@ -171,11 +200,6 @@ const Register = () => {
       return;
     } else {
       passwordInputRef.current.classList.add("hidden");
-    }
-
-    if (!formData.terms) {
-      alert("Please accept the terms and conditions");
-      return;
     }
 
     try {
@@ -356,6 +380,12 @@ const Register = () => {
               >
                 Full Name
               </label>
+              <span
+                className="text-sm font-[500] password-error text-red-500 hidden"
+                ref={fullNameInputRef}
+              >
+                Please enter a valid Full Name
+              </span>
               <div className="relative">
                 <input
                   type="text"
@@ -409,18 +439,35 @@ const Register = () => {
                 Please enter a valid phone number format: +994XXXXXXXXX
               </span>
               <div className="relative">
-                <input
-                  type="tel"
-                  id="phone"
-                  name="phone"
-                  pattern="^(\+994\s?\d{2}\s?\d{3}\s?\d{2}\s?\d{2}|\+994\d{9})$"
-                  value={formData.phone}
-                  onChange={(e) => handleInputChange("phone", e.target.value)}
-                  placeholder="Enter your phone number"
-                  className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
-                  required
-                />
-                <i className="fa-solid fa-phone absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                <div className="flex">
+                  <div className="relative">
+                    <select
+                      name="countryCode"
+                      id="countryCode"
+                      className="appearance-none bg-gray-50 border border-gray-300 rounded-l-lg px-2 py-3 pr-8 text-gray-700 focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors font-medium"
+                      onChange={handleCountryCodeChange}
+                    >
+                      <option value="+994">🇦🇿 +994</option>
+                      <option value="+90">🇹🇷 +90</option>
+                      <option value="+1">🇺🇸 +1</option>
+                      <option value="+44">🇬🇧 +44</option>
+                      <option value="+49">🇩🇪 +49</option>
+                      <option value="+33">🇫🇷 +33</option>
+                      <option value="+7">🇷🇺 +7</option>
+                    </select>
+                    <i className="fa-solid fa-chevron-down absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
+                  </div>
+
+                  <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={(e) => handleInputChange("phone", e.target.value)}
+                    className="flex-1 px-4 py-3 border-l-0 border border-gray-300 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
+                    required
+                  />
+                </div>
               </div>
             </div>
 
