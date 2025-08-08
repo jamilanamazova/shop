@@ -7,6 +7,7 @@ import Footer from "./Footer";
 import "../CSS/Home.css";
 import noise from "../Images/noise.jpg";
 import { checkTokens, isAuthenticated, getCurrentUser } from "../utils/auth";
+import { motion } from "framer-motion";
 
 const Home = () => {
   const authenticated = isAuthenticated();

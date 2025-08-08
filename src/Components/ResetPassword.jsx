@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { apiURL } from "../Backend/Api/api";
+import { motion } from "framer-motion";
 
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
