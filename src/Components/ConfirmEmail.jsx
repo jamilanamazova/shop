@@ -1,11 +1,110 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
+import axios from "axios";
+import { apiURL } from "../Backend/Api/api";
 
 const ConfirmEmail = () => {
   const [code, setCode] = useState(["", "", "", "", "", ""]);
+  const [timer, setTimer] = useState(300);
+  const [isResending, setIsResending] = useState(false);
+  const [resendMessage, setResendMessage] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
+  const [userName, setUserName] = useState("");
   const inputRefs = useRef([]);
+
+  useEffect(() => {
+    const email = localStorage.getItem("pendingMail");
+    const name = localStorage.getItem("pendingUserName");
+    if (email) {
+      setUserEmail(email);
+      setUserName(name || "User");
+    } else {
+      window.location.href = "/register";
+    }
+  }, []);
+
+  useEffect(() => {
+    if (timer > 0) {
+      const countdown = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+      return () => clearInterval(countdown);
+    }
+  }, [timer]);
+
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, "0")}:${remainingSeconds
+      .toString()
+      .padStart(2, "0")}`;
+  };
+
+  const handleResendCode = async () => {
+    if (isResending || timer > 0) return;
+    setIsResending(true);
+    setResendMessage("");
+
+    try {
+      const response = await axios.post(`${apiURL}/auth/resend-code`, {
+        email: userEmail,
+      });
+      if (response.data.success) {
+        setResendMessage("Verification code resent successfully.");
+        setTimer(300);
+        setCode(["", "", "", "", "", ""]);
+        inputRefs.current[0]?.focus();
+      }
+    } catch (error) {
+      console.error("Error resending code:", error);
+      if (error.response?.data?.message) {
+        setResendMessage(error.response.data.message);
+      } else {
+        setResendMessage("Failed to resend code. Please try again later.");
+      }
+    } finally {
+      setIsResending(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    const verificationCode = code.join("");
+    if (verificationCode.length < 6) {
+      alert("Please enter the complete 6-digit code.");
+      return;
+    }
+    setIsVerifying(true);
+
+    try {
+      const response = await axios.post(`${apiURL}/auth/verify`, {
+        email: userEmail,
+        code: verificationCode,
+      });
+      if (response.data.token) {
+        localStorage.setItem("authToken", response.data.token);
+        localStorage.setItem("currentUser", JSON.stringify(response.data.user));
+      }
+
+      localStorage.removeItem("pendingMail");
+      localStorage.removeItem("pendingUserName");
+
+      window.location.href = "/signin";
+    } catch (error) {
+      console.error("Verification failed:", error);
+      if (error.response?.data?.message) {
+        alert("Invalid or expired verification code. Please try again.");
+        setCode(["", "", "", "", "", ""]);
+        inputRefs.current[0]?.focus();
+      } else {
+        alert("Verification failed. Please try again");
+      }
+    } finally {
+      setIsVerifying(false);
+    }
+  };
 
   const handleInputChange = (index, value) => {
     if (!/^\d*$/.test(value)) return;
@@ -69,15 +168,15 @@ const ConfirmEmail = () => {
                 <h3 className="text-lg font-semibold text-gray-800 mb-2">
                   Check Your Email
                 </h3>
-                <p className="text-gray-600 text-sm mb-6">
-                  We've sent a 6-digit verification code to your email address.
-                  Please enter the code below to verify your account.
+                <p className="text-gray-600">
+                  We've sent a verification code to{" "}
+                  <span className="font-medium text-gray-800">{userEmail}</span>
                 </p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3 text-center">
-                  Verification Code
+                  Enter 6-digit verification code
                 </label>
                 <div className="flex justify-center space-x-3">
                   {code.map((digit, index) => (
@@ -85,6 +184,7 @@ const ConfirmEmail = () => {
                       key={index}
                       ref={(el) => (inputRefs.current[index] = el)}
                       type="text"
+                      inputMode="numeric"
                       maxLength="1"
                       value={digit}
                       onChange={(e) => handleInputChange(index, e.target.value)}
@@ -103,23 +203,75 @@ const ConfirmEmail = () => {
               </div>
 
               <div className="text-center">
-                <p className="text-sm text-gray-600">
-                  Code expires in{" "}
-                  <span className="font-medium text-black">05:00</span>
-                </p>
+                {timer > 0 ? (
+                  <p className="text-sm text-gray-600">
+                    Code expires in{" "}
+                    <span className="font-medium text-black">
+                      {formatTime(timer)}
+                    </span>
+                  </p>
+                ) : (
+                  <p className="text-sm text-red-600 font-medium">
+                    Verification code has expired
+                  </p>
+                )}
               </div>
 
-              <button className="w-full bg-black text-white py-3 px-4 rounded-lg font-medium hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 transition-colors duration-300">
-                Verify Email
+              <button
+                onClick={handleVerifyCode}
+                disabled={!code.every((digit) => digit) || isVerifying}
+                className={`w-full py-3 px-4 rounded-lg font-medium transition-colors duration-300 ${
+                  code.every((digit) => digit) && !isVerifying
+                    ? "bg-black text-white hover:bg-gray-800"
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                }`}
+              >
+                {isVerifying ? (
+                  <span className="flex items-center justify-center">
+                    <i className="fa-solid fa-spinner fa-spin mr-2"></i>
+                    Verifying...
+                  </span>
+                ) : (
+                  "Verify Email"
+                )}
               </button>
 
-              <div className="text-center">
+              <div className="text-center space-y-3">
                 <p className="text-sm text-gray-600">
-                  Didn't receive the code?{" "}
-                  <button className="text-black hover:text-gray-800 font-medium transition-colors">
-                    Resend Code
-                  </button>
+                  Didn't receive the code?
                 </p>
+
+                {resendMessage && (
+                  <div
+                    className={`p-3 rounded-lg text-sm ${
+                      resendMessage.includes("sent")
+                        ? "bg-green-50 text-green-800 border border-green-200"
+                        : "bg-red-50 text-red-800 border border-red-200"
+                    }`}
+                  >
+                    {resendMessage}
+                  </div>
+                )}
+                <button
+                  onClick={handleResendCode}
+                  disabled={isResending || timer > 0}
+                  className={`text-sm font-medium transition-colors ${
+                    timer > 0 || isResending
+                      ? "text-gray-400 cursor-not-allowed"
+                      : "text-black hover:text-gray-600"
+                  }`}
+                >
+                  {isResending ? (
+                    <span className="flex items-center justify-center">
+                      <i className="fa-solid fa-spinner fa-spin mr-1"></i>
+                      Sending...
+                    </span>
+                  ) : timer > 0 ? (
+                    `Resend in ${formatTime(timer)}`
+                  ) : (
+                    "Resend Code"
+                  )}
+                </button>
               </div>
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">

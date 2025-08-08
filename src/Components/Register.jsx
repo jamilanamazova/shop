@@ -229,6 +229,8 @@ const Register = () => {
         localStorage.setItem("authToken", data.token);
         localStorage.setItem("currentUser", JSON.stringify(data.user));
       }
+      localStorage.setItem("pendingMail", formData.email);
+      localStorage.setItem("pendingUserName", formData.fullName);
 
       setShowSuccessModal(true);
 
@@ -236,12 +238,14 @@ const Register = () => {
         console.error("Registration error:", data.error);
         return;
       }
+
       dispatch({ type: "RESET_FORM" });
       setShowPassword(false);
       setShowConfirmPassword(false);
+
       setTimeout(() => {
         window.location.href = "/confirm-email";
-      }, 1000);
+      }, 2000);
     } catch (error) {
       console.error("Registration error:", error);
       if (error.response) {
