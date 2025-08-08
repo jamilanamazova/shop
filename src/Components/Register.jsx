@@ -215,12 +215,20 @@ const Register = () => {
       passwordInputRef.current.classList.add("hidden");
     }
 
+    const formatPhoneForBackend = (phone, countryCode) => {
+      const cleanPhone = phone.replace(/\s/g, "");
+
+      return `${countryCode}${cleanPhone}`;
+    };
+
     try {
+      const formattedPhone = formatPhoneForBackend(formData.phone, countryCode);
+
       const response = await axios.post(`${apiURL}/auth/register`, {
         name: formData.fullName,
         password: formData.password,
         email: formData.email,
-        phone: formData.phone,
+        phone: formattedPhone,
       });
       const data = response.data;
 
