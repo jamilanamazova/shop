@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { motion } from "framer-motion";
 import Header from "./Header";
 import Hero from "./Hero";
@@ -7,8 +7,23 @@ import ProductShowCase from "./ProductShowCase";
 import Footer from "./Footer";
 import "../CSS/Home.css";
 import noise from "../Images/noise.jpg";
+import { checkTokens, isAuthenticated, getCurrentUser } from "../utils/auth";
 
 const Home = () => {
+  const authenticated = isAuthenticated();
+  const user = getCurrentUser();
+
+  useEffect(() => {
+    checkTokens();
+
+    if (authenticated) {
+      console.log("✅ User is authenticated and ready!");
+      console.log("User info:", user);
+    } else {
+      console.log("❌ User is not authenticated");
+    }
+  }, [authenticated, user]);
+
   const topPicksProducts = [
     {
       id: 1,

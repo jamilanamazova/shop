@@ -230,15 +230,27 @@ const Register = () => {
         email: formData.email,
         phone: formattedPhone,
       });
+
+      console.log("=== FULL RESPONSE DEBUG ===");
+      console.log("Response status:", response.status);
+      console.log("Response data:", JSON.stringify(response.data, null, 2));
+      console.log("Data.token exists:", !!response.data.token);
+      console.log("Data.user exists:", !!response.data.user);
+      console.log("=========================");
+
       const data = response.data;
 
-      console.log("Registration successful:", data);
       if (data.token) {
+        console.log("Token found:", data.token);
         localStorage.setItem("authToken", data.token);
         localStorage.setItem("currentUser", JSON.stringify(data.user));
+      } else {
+        console.log("No token in response");
       }
+
       localStorage.setItem("pendingMail", formData.email);
       localStorage.setItem("pendingUserName", formData.fullName);
+      localStorage.setItem("pendingPhone", formData.phone);
 
       setShowSuccessModal(true);
 
@@ -253,7 +265,7 @@ const Register = () => {
 
       setTimeout(() => {
         window.location.href = "/confirm-email";
-      }, 2000);
+      }, 8000);
     } catch (error) {
       console.error("Registration error:", error);
       if (error.response) {

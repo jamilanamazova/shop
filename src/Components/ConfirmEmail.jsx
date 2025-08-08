@@ -83,15 +83,54 @@ const ConfirmEmail = () => {
         email: userEmail,
         code: verificationCode,
       });
-      if (response.data.token) {
-        localStorage.setItem("authToken", response.data.token);
-        localStorage.setItem("currentUser", JSON.stringify(response.data.user));
+
+      console.log("=== VERIFICATION DEBUG ===");
+      console.log("Full response:", response);
+      console.log("Response data:", response.data);
+      console.log("AccessToken:", response.data.accessToken);
+      console.log("User data:", response.data.data);
+      console.log("========================");
+
+      const data = response.data;
+
+      const { accessToken, refreshToken } = data.data;
+
+      console.log("Access Token:", accessToken ? "✅ Found" : "❌ Missing");
+      console.log("Refresh Token:", refreshToken ? "✅ Found" : "❌ Missing");
+      console.log("User data:", data.data);
+
+      if (accessToken && refreshToken) {
+        localStorage.setItem("accessToken", accessToken);
+        localStorage.setItem("refreshToken", refreshToken);
+
+        console.log("Tokens saved successfully!");
+
+        const userPhone =
+          localStorage.getItem("pendingPhone") || "Not provided";
+
+        const userData = {
+          fullName: userName || "User",
+          email: userEmail,
+          phone: userPhone,
+          isEmailVerified: true,
+          id: Date.now(),
+          createdAt: new Date().toISOString(),
+        };
+
+        localStorage.setItem("currentUser", JSON.stringify(userData));
+        console.log("user data saved: ", userData);
+
+        localStorage.removeItem("pendingMail");
+        localStorage.removeItem("pendingUserName");
+
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 2000);
+      } else {
+        console.log("❌ Tokens not found in response");
+        alert("Verification failed. No tokens received.");
+        return;
       }
-
-      localStorage.removeItem("pendingMail");
-      localStorage.removeItem("pendingUserName");
-
-      window.location.href = "/signin";
     } catch (error) {
       console.error("Verification failed:", error);
       if (error.response?.data?.message) {

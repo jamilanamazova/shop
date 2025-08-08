@@ -3,6 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
 import "../CSS/ProfileDashboard.css";
+import {
+  isAuthenticated,
+  getCurrentUser,
+  logout,
+  checkTokens,
+} from "../utils/auth";
+import { Navigate } from "react-router-dom";
 
 const initialState = {
   fullName: "",
@@ -27,7 +34,8 @@ const ProfileDashboard = () => {
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
   const [formState, dispatch] = useReducer(formReducer, initialState);
   const navigate = useNavigate();
-
+  const authenticated = isAuthenticated();
+  const user = getCurrentUser();
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("currentUser"));
     if (!user) {
@@ -37,11 +45,14 @@ const ProfileDashboard = () => {
     }
   }, [navigate]);
 
+  if (!authenticated) {
+    return <Navigate to="/signin" replace />;
+  }
+
   const handleLogout = () => {
-    localStorage.removeItem("currentUser");
+    logout();
     setShowLogoutModal(false);
-    navigate("/");
-    window.location.reload();
+    window.location.href = "/";
   };
 
   const formatDate = (dateString) => {
@@ -130,7 +141,13 @@ const ProfileDashboard = () => {
               My Profile Dashboard
             </h1>
             <p className="text-gray-600">
-              Manage your account information and settings
+              Welcome back, {user?.fullName || "User"}!
+              <button
+                onClick={checkTokens}
+                className="ml-2 text-blue-600 hover:text-blue-800 text-sm underline"
+              >
+                (Check Token Status)
+              </button>
             </p>
           </div>
 
@@ -332,7 +349,7 @@ const ProfileDashboard = () => {
                   Cancel
                 </button>
                 <button
-                  onClick={handleLogout}
+                  onClick={handleLogout} // ✅ Updated logout function
                   className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-red-700 transition-colors"
                 >
                   Logout
