@@ -13,6 +13,8 @@ import Settings from "../Components/Settings";
 import Product from "../Components/Product";
 import noise from "../Images/noise.jpg";
 import ConfirmEmail from "../Components/ConfirmEmail";
+import ForgotPassword from "../Components/ForgotPassword";
+import ResetPassword from "../Components/ResetPassword";
 const Routing = () => {
   const topPicksProducts = [
     {
@@ -84,6 +86,8 @@ const Routing = () => {
         path="/product/:id"
         element={<Product products={topPicksProducts} />}
       />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

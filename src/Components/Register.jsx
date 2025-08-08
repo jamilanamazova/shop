@@ -250,7 +250,7 @@ const Register = () => {
 
       localStorage.setItem("pendingMail", formData.email);
       localStorage.setItem("pendingUserName", formData.fullName);
-      localStorage.setItem("pendingPhone", formData.phone);
+      localStorage.setItem("pendingPhone", formattedPhone);
 
       setShowSuccessModal(true);
 
