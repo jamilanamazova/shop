@@ -1,6 +1,6 @@
+import React, { useState, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
-import React, { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
 import { apiURL } from "../Backend/Api/api";
 
 const ResetPassword = () => {
@@ -33,7 +33,7 @@ const ResetPassword = () => {
 
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
-    const resetToken = urlParams.get(token);
+    const resetToken = urlParams.get("token");
 
     if (resetToken) {
       setToken(resetToken);
@@ -64,6 +64,7 @@ const ResetPassword = () => {
     if (password.length < 6) {
       setError("Password must be at least 6 characters long.");
       setIsLoading(false);
+      return;
     }
 
     try {
@@ -72,7 +73,7 @@ const ResetPassword = () => {
       console.log("New password length:", password.length);
       console.log("===============================");
 
-      const response = await axios.post(`${apiURL}/reset-password`, {
+      const response = await axios.post(`${apiURL}/auth/reset-password`, {
         token: token,
         password: password,
       });
@@ -83,14 +84,15 @@ const ResetPassword = () => {
       console.log("====================");
 
       if (response.status === 200) {
-        showSuccessModal(true);
+        setShowSuccessModal(true);
 
         setTimeout(() => {
           navigate("/signin");
         }, 3000);
       }
     } catch (error) {
-      console.error("Message:", error.message);
+      console.error("❌ RESET PASSWORD ERROR:", error);
+
       if (error.response) {
         const status = error.response.status;
         const message = error.response.data?.message;
