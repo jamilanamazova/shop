@@ -1,4 +1,3 @@
-// Header.jsx-i tam responsive et:
 import React, { useRef, useState } from "react";
 import "../CSS/header.module.css";
 import { Link } from "react-router-dom";
@@ -38,7 +37,6 @@ const Header = () => {
   return (
     <>
       <header className="p-4 lg:p-7 flex justify-between items-center max-w-[93%] m-auto relative">
-        {/* ✅ Left Section */}
         <div className="leftHeader flex gap-3 md:gap-12 items-center">
           <div className="bagIcon">
             <span className="text-xl">
@@ -87,7 +85,6 @@ const Header = () => {
 
         <div className="rightHeader">
           <div className="flex items-center gap-2 md:gap-4">
-            {/* ✅ Search & Cart Icons */}
             <div className="flex items-center gap-2 md:gap-3">
               <div className="search-icon cursor-pointer hover:text-gray-600 transition-colors">
                 <i className="fa-solid fa-magnifying-glass text-lg"></i>

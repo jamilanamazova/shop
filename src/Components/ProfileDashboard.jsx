@@ -77,8 +77,43 @@ const ProfileDashboard = () => {
     });
   };
 
+  const validateFullName = (name) => {
+    const trimmedName = name.trim();
+
+    if (trimmedName.length < 2 || trimmedName.length > 25) {
+      return false;
+    }
+
+    if (/\d/.test(trimmedName)) {
+      return false;
+    }
+
+    if (!/^[A-Za-zƏÖÜÇŞĞİəıöüçşğ\s]+$/.test(trimmedName)) {
+      return false;
+    }
+
+    const namePattern =
+      /^[A-ZƏÖÜÇŞĞİ][a-zəıöüçşğ]+\s[A-ZƏÖÜÇŞĞİ][a-zəıöüçşğ]+$/;
+
+    return namePattern.test(trimmedName);
+  };
+
   const handleEditSubmit = (e) => {
     e.preventDefault();
+
+    if (formState.fullName && !validateFullName(formState.fullName)) {
+      alert("Please enter a valid full name format.");
+      return;
+    }
+
+    if (formState.phone && formState.phone.length > 0) {
+      const phonePattern = /^(\+994|0)?(50|51|55|70|77|99)\d{7}$/;
+      if (!phonePattern.test(formState.phone.replace(/\s/g, ""))) {
+        alert("Please enter a valid phone number.");
+        return;
+      }
+    }
+
     const updatedUser = {
       ...currentUser,
       fullName: formState.fullName || currentUser.fullName,
@@ -133,7 +168,6 @@ const ProfileDashboard = () => {
   return (
     <>
       <Header />
-
       <div className="min-h-screen bg-gray-100 py-8">
         <div className="max-w-4xl mx-auto px-4">
           <div className="mb-8">
@@ -327,7 +361,6 @@ const ProfileDashboard = () => {
           </div>
         </div>
       </div>
-
       {showLogoutModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4">
@@ -359,30 +392,37 @@ const ProfileDashboard = () => {
           </div>
         </div>
       )}
-
+      // ProfileDashboard.jsx-də showEditProfileModal section-unu düzəlt:
       {showEditProfileModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4">
             <div className="text-center">
-              <h3 className="text-lg font-bold text-gray-800 mb-2">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">
                 Edit Profile
               </h3>
               <form onSubmit={handleEditSubmit} className="space-y-4">
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 text-left">
                     Full Name
                   </label>
                   <input
                     type="text"
                     defaultValue={currentUser.fullName}
-                    onChange={(e) =>
-                      handleInputChange("fullName", e.target.value)
-                    }
-                    className="w-full p-2 border border-gray-300 rounded-lg"
+                    onChange={(e) => {
+                      const filteredValue = e.target.value.replace(
+                        /[0-9]/g,
+                        ""
+                      );
+                      handleInputChange("fullName", filteredValue);
+                    }}
+                    maxLength={25}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter your full name"
                   />
                 </div>
+
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 text-left">
                     Phone Number
                   </label>
                   <input
@@ -390,16 +430,28 @@ const ProfileDashboard = () => {
                     defaultValue={currentUser.phone}
                     onChange={(e) => handleInputChange("phone", e.target.value)}
                     pattern="(^\d{3}\s\d{3}\s\d{2}\s\d{2}$)|(^\d{10}$)"
-                    className="w-full p-2 border border-gray-300 rounded-lg"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="+994 50 123 45 67"
                   />
                 </div>
+
                 <button
                   type="submit"
-                  className="bg-blue-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                  disabled={
+                    formState.fullName && !validateFullName(formState.fullName)
+                  }
+                  className={`w-full py-3 px-4 rounded-lg font-medium transition-all ${
+                    formState.fullName && !validateFullName(formState.fullName)
+                      ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                      : "bg-blue-600 text-white hover:bg-blue-700"
+                  }`}
                 >
-                  Save Changes
+                  {formState.fullName && !validateFullName(formState.fullName)
+                    ? "Please fix validation errors"
+                    : "Save Changes"}
                 </button>
               </form>
+
               <button
                 onClick={() => setShowEditProfileModal(false)}
                 className="mt-4 text-gray-600 hover:text-gray-800 transition-colors"

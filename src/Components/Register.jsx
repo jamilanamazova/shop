@@ -36,7 +36,6 @@ const Register = () => {
     color: "",
     borderColor: "",
   });
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [countryCode, setCountryCode] = useState("+994");
   const errorRef = useRef(null);
   const passwordInputRef = useRef(null);
@@ -267,8 +266,6 @@ const Register = () => {
       localStorage.setItem("pendingUserName", formData.fullName);
       localStorage.setItem("pendingPhone", formattedPhone);
 
-      setShowSuccessModal(true);
-
       if (data.error) {
         console.error("Registration error:", data.error);
         return;
@@ -280,7 +277,7 @@ const Register = () => {
 
       setTimeout(() => {
         window.location.href = "/confirm-email";
-      }, 8000);
+      }, 2000);
     } catch (error) {
       console.error("Registration error:", error);
       if (error.response) {
@@ -357,26 +354,6 @@ const Register = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4 py-8">
-      {showSuccessModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full mx-4 transform transition-all">
-            <div className="text-center">
-              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
-                <i className="fa-solid fa-check text-green-600 text-2xl"></i>
-              </div>
-
-              <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                Registration Successful!
-              </h3>
-              <p className="text-gray-600 mb-6">
-                You have successfully registered your account. Welcome to
-                Shopery!
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <Link to="/" className="inline-block mb-6">
