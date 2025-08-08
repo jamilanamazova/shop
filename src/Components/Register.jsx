@@ -166,9 +166,24 @@ const Register = () => {
   };
 
   const validateFullName = (name) => {
+    const trimmedName = name.trim();
+
+    if (trimmedName.length < 2 || trimmedName.length > 25) {
+      return false;
+    }
+
+    if (/\d/.test(trimmedName)) {
+      return false;
+    }
+
+    if (!/^[A-Za-zƏÖÜÇŞĞİəıöüçşğ\s]+$/.test(trimmedName)) {
+      return false;
+    }
+
     const namePattern =
       /^[A-ZƏÖÜÇŞĞİ][a-zəıöüçşğ]+\s[A-ZƏÖÜÇŞĞİ][a-zəıöüçşğ]+$/;
-    return namePattern.test(name);
+
+    return namePattern.test(trimmedName);
   };
 
   const getPhoneMaxLength = (countryCode) => {
@@ -388,7 +403,7 @@ const Register = () => {
                 className="text-sm font-[500] password-error text-red-500 hidden"
                 ref={fullNameInputRef}
               >
-                Please enter a valid Full Name
+                Please enter a valid full name:
               </span>
               <div className="relative">
                 <input
@@ -396,10 +411,12 @@ const Register = () => {
                   id="fullName"
                   name="fullName"
                   value={formData.fullName}
-                  onChange={(e) =>
-                    handleInputChange("fullName", e.target.value)
-                  }
+                  onChange={(e) => {
+                    const filteredValue = e.target.value.replace(/[0-9]/g, "");
+                    handleInputChange("fullName", filteredValue);
+                  }}
                   placeholder="Enter your full name"
+                  maxLength={25}
                   className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
                   required
                 />
