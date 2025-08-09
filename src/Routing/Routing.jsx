@@ -1,6 +1,8 @@
 import React from "react";
 import { Route, Routes } from "react-router-dom";
 import App from "../App";
+import ProtectedRoute from "../Components/ProtectedRoute";
+import PublicRoute from "../Components/PublicRoute";
 import Home from "../Components/Home";
 import Products from "../Components/Products";
 import Blog from "../Components/Blog";
@@ -74,20 +76,81 @@ const Routing = () => {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
-      <Route path="/products" element={<Products />} />
-      <Route path="/blog" element={<Blog />} />
-      <Route path="/support" element={<Support />} />
-      <Route path="/signin" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/settings" element={<Settings />} />
+      <Route
+        path="/register"
+        element={
+          <PublicRoute>
+            <Register />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/signin"
+        element={
+          <PublicRoute>
+            <Login />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/forgot-password"
+        element={
+          <PublicRoute>
+            <ForgotPassword />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/reset-password"
+        element={
+          <PublicRoute>
+            <ResetPassword />
+          </PublicRoute>
+        }
+      />
       <Route path="/confirm-email" element={<ConfirmEmail />} />
       <Route
-        path="/product/:id"
-        element={<Product products={topPicksProducts} />}
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        }
       />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route
+        path="/products"
+        element={
+          <ProtectedRoute>
+            <Products products={topPicksProducts} />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/product/:id"
+        element={
+          <ProtectedRoute>
+            <Product products={topPicksProducts} />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/blog"
+        element={
+          <ProtectedRoute>
+            <Blog />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/support"
+        element={
+          <ProtectedRoute>
+            <Support />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="/settings" element={<Settings />} />
+
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

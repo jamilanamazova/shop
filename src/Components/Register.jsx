@@ -35,6 +35,7 @@ const Register = () => {
     color: "",
     borderColor: "",
   });
+  const [showRedirectModal, setShowRedirectModal] = useState(false);
   const errorRef = useRef(null);
   const passwordInputRef = useRef(null);
   const fullNameInputRef = useRef(null);
@@ -221,6 +222,8 @@ const Register = () => {
       setShowPassword(false);
       setShowConfirmPassword(false);
 
+      setShowRedirectModal(true);
+
       setTimeout(() => {
         window.location.href = "/confirm-email";
       }, 2000);
@@ -300,6 +303,50 @@ const Register = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4 py-8">
+      {showRedirectModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full mx-4 transform animate-pulse">
+            <div className="text-center">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <i className="fa-solid fa-envelope text-blue-600 text-lg"></i>
+                  </div>
+                  <div className="ml-3 text-left">
+                    <h4 className="text-sm font-medium text-blue-800 mb-1">
+                      Email Verification Required
+                    </h4>
+                    <p className="text-xs text-blue-700 mb-2">
+                      We've sent a 6-digit verification code to:
+                    </p>
+                    <p className="text-sm font-medium text-blue-900 bg-blue-100 p-2 rounded">
+                      {formData.email}
+                    </p>
+                    <p className="text-xs text-blue-700 mt-2">
+                      Please check your email inbox and enter the code on the
+                      next page.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+                <div className="flex items-center justify-center">
+                  <div className="flex-shrink-0">
+                    <i className="fa-solid fa-clock text-orange-600"></i>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm text-orange-700">
+                      You will be redirected to the email verification page in a
+                      few seconds...
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <Link to="/" className="inline-block mb-6">

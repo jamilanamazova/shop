@@ -1,11 +1,13 @@
 import React, { useRef, useState } from "react";
 import "../CSS/header.module.css";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { isAuthenticated, getCurrentUser, logout } from "../utils/auth";
 
 const Header = () => {
   const authenticated = isAuthenticated();
   const user = getCurrentUser();
+  const location = useLocation();
+  const isEmailVerified = user?.isEmailVerified;
 
   const handleLogout = () => {
     logout();
@@ -33,6 +35,14 @@ const Header = () => {
     }
     document.body.style.transition = "overflow 0.3s ease-in-out";
   };
+
+  if (
+    location.pathname === "/confirm-email" &&
+    authenticated &&
+    !isEmailVerified
+  ) {
+    return null;
+  }
 
   return (
     <>
@@ -161,7 +171,6 @@ const Header = () => {
           boxShadow: "2px 0 10px rgba(0,0,0,0.1)",
         }}
       >
-        {/* ✅ Close button */}
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-lg font-bold">Menu</h3>
           <button
