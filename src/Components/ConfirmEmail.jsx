@@ -56,7 +56,6 @@ const ConfirmEmail = () => {
       });
       if (response.data.success) {
         setResendMessage("Verification code resent successfully.");
-        setShowSuccessModal(true);
         setTimer(300);
         setCode(["", "", "", "", "", ""]);
         inputRefs.current[0]?.focus();
@@ -108,13 +107,9 @@ const ConfirmEmail = () => {
 
         console.log("Tokens saved successfully!");
 
-        const userPhone =
-          localStorage.getItem("pendingPhone") || "Not provided";
-
         const userData = {
           fullName: userName || "User",
           email: userEmail,
-          phone: userPhone,
           isEmailVerified: true,
           id: Date.now(),
           createdAt: new Date().toISOString(),
@@ -125,6 +120,8 @@ const ConfirmEmail = () => {
 
         localStorage.removeItem("pendingMail");
         localStorage.removeItem("pendingUserName");
+
+        setShowSuccessModal(true);
 
         setTimeout(() => {
           window.location.href = "/";

@@ -6,7 +6,6 @@ import axios from "axios";
 const initialState = {
   fullName: "",
   email: "",
-  phone: "",
   password: "",
   confirmPassword: "",
   terms: false,
@@ -36,10 +35,8 @@ const Register = () => {
     color: "",
     borderColor: "",
   });
-  const [countryCode, setCountryCode] = useState("+994");
   const errorRef = useRef(null);
   const passwordInputRef = useRef(null);
-  const phoneInputRef = useRef(null);
   const fullNameInputRef = useRef(null);
 
   const calculatePasswordStrength = (password) => {
@@ -143,27 +140,6 @@ const Register = () => {
     });
   };
 
-  const validatePhoneNumber = (phone, code = countryCode) => {
-    const patterns = {
-      "+994": /^(\d{2}\s?\d{3}\s?\d{2}\s?\d{2}|\d{9})$/,
-      "+90": /^(\d{3}\s?\d{3}\s?\d{2}\s?\d{2}|\d{10})$/,
-      "+1": /^(\d{3}\s?\d{3}\s?\d{4}|\d{10})$/,
-      "+44": /^(\d{4}\s?\d{6}|\d{10})$/,
-      "+49": /^(\d{3}\s?\d{3}\s?\d{4}|\d{10})$/,
-      "+33": /^(\d{2}\s?\d{2}\s?\d{2}\s?\d{2}|\d{10})$/,
-      "+7": /^(\d{3}\s?\d{3}\s?\d{2}\s?\d{2}|\d{10})$/,
-    };
-
-    const pattern = patterns[code] || patterns["+994"];
-
-    return pattern.test(phone);
-  };
-
-  const handleCountryCodeChange = (e) => {
-    setCountryCode(e.target.value);
-    handleInputChange("phone", "");
-  };
-
   const validateFullName = (name) => {
     const trimmedName = name.trim();
 
@@ -185,19 +161,6 @@ const Register = () => {
     return namePattern.test(trimmedName);
   };
 
-  const getPhoneMaxLength = (countryCode) => {
-    const maxLengths = {
-      "+994": 9,
-      "+90": 10,
-      "+1": 10,
-      "+44": 10,
-      "+49": 11,
-      "+33": 9,
-      "+7": 10,
-    };
-    return maxLengths[countryCode];
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -206,13 +169,6 @@ const Register = () => {
       return;
     } else {
       fullNameInputRef.current.classList.add("hidden");
-    }
-
-    if (!validatePhoneNumber(formData.phone)) {
-      phoneInputRef.current.classList.remove("hidden");
-      return;
-    } else {
-      phoneInputRef.current.classList.add("hidden");
     }
 
     if (formData.password !== formData.confirmPassword) {
@@ -229,20 +185,11 @@ const Register = () => {
       passwordInputRef.current.classList.add("hidden");
     }
 
-    const formatPhoneForBackend = (phone, countryCode) => {
-      const cleanPhone = phone.replace(/\s/g, "");
-
-      return `${countryCode}${cleanPhone}`;
-    };
-
     try {
-      const formattedPhone = formatPhoneForBackend(formData.phone, countryCode);
-
       const response = await axios.post(`${apiURL}/auth/register`, {
         name: formData.fullName,
-        password: formData.password,
         email: formData.email,
-        phone: formattedPhone,
+        password: formData.password,
       });
 
       console.log("=== FULL RESPONSE DEBUG ===");
@@ -264,7 +211,6 @@ const Register = () => {
 
       localStorage.setItem("pendingMail", formData.email);
       localStorage.setItem("pendingUserName", formData.fullName);
-      localStorage.setItem("pendingPhone", formattedPhone);
 
       if (data.error) {
         console.error("Registration error:", data.error);
@@ -425,56 +371,6 @@ const Register = () => {
 
             <div>
               <label
-                htmlFor="phone"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Phone Number
-              </label>
-              <span
-                className="text-sm font-[500] password-error text-red-500 hidden"
-                ref={phoneInputRef}
-              >
-                Please enter a valid phone number format: +994XXXXXXXXX
-              </span>
-              <div className="relative">
-                <div className="flex">
-                  <div className="relative">
-                    <select
-                      name="countryCode"
-                      id="countryCode"
-                      className="appearance-none bg-gray-50 border border-gray-300 rounded-l-lg px-2 py-3 pr-8 text-gray-700 focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors font-medium"
-                      onChange={handleCountryCodeChange}
-                    >
-                      <option value="+994">🇦🇿 +994</option>
-                      <option value="+90">🇹🇷 +90</option>
-                      <option value="+1">🇺🇸 +1</option>
-                      <option value="+44">🇬🇧 +44</option>
-                      <option value="+49">🇩🇪 +49</option>
-                      <option value="+33">🇫🇷 +33</option>
-                      <option value="+7">🇷🇺 +7</option>
-                    </select>
-                    <i className="fa-solid fa-chevron-down absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
-                  </div>
-
-                  <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/[^\d\s]/g, "");
-                      handleInputChange("phone", value);
-                    }}
-                    maxLength={getPhoneMaxLength(countryCode)}
-                    className="flex-1 px-4 py-3 border-l-0 border border-gray-300 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
-                    required
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <label
                 htmlFor="password"
                 className="block text-sm font-medium text-gray-700 mb-2"
               >
@@ -599,29 +495,6 @@ const Register = () => {
             >
               Create Account
             </button>
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">
-                  Or sign up with
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1">
-              <button
-                type="button"
-                className="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-300"
-              >
-                <i className="fa-brands fa-google text-red-500 mr-2"></i>
-                <span className="text-sm font-medium text-gray-700">
-                  Google
-                </span>
-              </button>
-            </div>
           </form>
 
           <div className="mt-6 text-center">

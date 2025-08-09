@@ -308,30 +308,6 @@ const Login = () => {
                 "Sign In"
               )}
             </button>
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">
-                  Or continue with
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1">
-              <button
-                type="button"
-                className="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-300"
-                disabled={isLoading}
-              >
-                <i className="fa-brands fa-google text-red-500 mr-2"></i>
-                <span className="text-sm font-medium text-gray-700">
-                  Google
-                </span>
-              </button>
-            </div>
           </form>
 
           <div className="mt-6 text-center">
