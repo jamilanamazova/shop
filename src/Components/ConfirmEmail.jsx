@@ -104,7 +104,7 @@ const ConfirmEmail = () => {
   };
 
   const handleResendCode = async () => {
-    if (isResending || timer > 0) return;
+    if (isResending) return;
     setIsResending(true);
     setResendMessage("");
 
@@ -112,12 +112,18 @@ const ConfirmEmail = () => {
       const response = await axios.post(`${apiURL}/auth/resend-code`, {
         email: userEmail,
       });
-      if (response.data.success) {
+      console.log("RESPONSE: ", response);
+      console.log("RESPONSE DATA: ", response.data);
+      console.log("RESPONSE DATA SUCCESS", response.data.status);
+      if (response.data.status === "OK") {
         setResendMessage("Verification code resent successfully.");
-        setShowSuccessModal(true);
         startNewTimer();
         setCode(["", "", "", "", "", ""]);
         inputRefs.current[0]?.focus();
+
+        setTimeout(() => {
+          setResendMessage("");
+        }, 4000);
       }
     } catch (error) {
       console.error("Error resending code:", error);
@@ -126,6 +132,10 @@ const ConfirmEmail = () => {
       } else {
         setResendMessage("Failed to resend code. Please try again later.");
       }
+
+      setTimeout(() => {
+        setResendMessage("");
+      }, 5000);
     } finally {
       setIsResending(false);
     }
@@ -363,8 +373,9 @@ const ConfirmEmail = () => {
 
                 {resendMessage && (
                   <div
-                    className={`p-3 rounded-lg text-sm ${
-                      resendMessage.includes("sent")
+                    className={`p-3 rounded-lg text-sm transition-all duration-300 ${
+                      resendMessage.includes("sent") ||
+                      resendMessage.includes("successfully")
                         ? "bg-green-50 text-green-800 border border-green-200"
                         : "bg-red-50 text-red-800 border border-red-200"
                     }`}
@@ -374,9 +385,9 @@ const ConfirmEmail = () => {
                 )}
                 <button
                   onClick={handleResendCode}
-                  disabled={isResending || timer > 0}
+                  disabled={isResending}
                   className={`text-sm font-medium transition-colors ${
-                    timer > 0 || isResending
+                    isResending
                       ? "text-gray-400 cursor-not-allowed"
                       : "text-black hover:text-gray-600"
                   }`}
@@ -384,10 +395,8 @@ const ConfirmEmail = () => {
                   {isResending ? (
                     <span className="flex items-center justify-center">
                       <i className="fa-solid fa-spinner fa-spin mr-1"></i>
-                      Sending...
+                      Sending new code...
                     </span>
-                  ) : timer > 0 ? (
-                    `Resend in ${formatTime(timer)}`
                   ) : (
                     "Resend Code"
                   )}

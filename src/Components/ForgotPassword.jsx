@@ -7,8 +7,40 @@ import { motion } from "framer-motion";
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [error, setError] = useState("");
+  const [resendMessage, setResendMessage] = useState("");
+
+  const handleResend = async () => {
+    if (isResending) return;
+    setIsResending(true);
+    setResendMessage("");
+    setError("");
+
+    try {
+      const response = await axios.post(`${apiURL}/auth/forgot-password`, {
+        email: email,
+      });
+      console.log("RESPONSE", response);
+      console.log("RESPONSE DATA", response.data);
+
+      if (response.status === 200) {
+        setResendMessage("New reset link sent successfully!");
+
+        setTimeout(() => {
+          setResendMessage("");
+        }, 3000);
+      } else {
+        setError("Failed to resend password reset email.");
+      }
+    } catch (error) {
+      console.error("Error resending reset link:", error);
+      setError("Failed to resend password reset email.");
+    } finally {
+      setIsResending(false);
+    }
+  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -101,18 +133,56 @@ const ForgotPassword = () => {
                 password. The link will expire in 15 minutes.
               </p>
 
-              <button
-                onClick={() => setShowSuccessModal(false)}
-                className="w-full bg-green-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 transition-colors duration-300"
-              >
-                Got it
-              </button>
+              {resendMessage && (
+                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm text-green-800 font-medium">
+                    <i className="fa-solid fa-check-circle mr-2"></i>
+                    {resendMessage}
+                  </p>
+                </div>
+              )}
+
+              {error && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-800">
+                    <i className="fa-solid fa-exclamation-circle mr-2"></i>
+                    {error}
+                  </p>
+                </div>
+              )}
+
+              <Link to="/">
+                <button
+                  onClick={() => setShowSuccessModal(false)}
+                  className="w-full bg-green-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 transition-colors duration-300"
+                >
+                  Got it
+                </button>
+              </Link>
 
               <div className="mt-4 text-center">
                 <p className="text-sm text-gray-600">
                   Didn't receive the email?{" "}
-                  <button className="font-medium text-green-600 hover:text-green-800 transition-colors">
-                    Resend
+                  <button
+                    onClick={handleResend}
+                    disabled={isResending}
+                    className={`font-medium transition-colors ${
+                      isResending
+                        ? "text-gray-400 cursor-not-allowed"
+                        : "text-green-600 hover:text-green-800"
+                    }`}
+                  >
+                    {isResending ? (
+                      <span className="flex items-center justify-center">
+                        <i className="fa-solid fa-spinner fa-spin mr-2"></i>
+                        Sending...
+                      </span>
+                    ) : (
+                      <span>
+                        <i className="fa-solid fa-paper-plane mr-2"></i>
+                        Resend Reset Link
+                      </span>
+                    )}
                   </button>
                 </p>
               </div>
