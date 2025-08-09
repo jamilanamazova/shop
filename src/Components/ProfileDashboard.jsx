@@ -373,7 +373,6 @@ const ProfileDashboard = () => {
           </div>
         </div>
       )}
-      // ProfileDashboard.jsx-də showEditProfileModal section-unu düzəlt:
       {showEditProfileModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4">

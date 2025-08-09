@@ -171,7 +171,6 @@ const ConfirmEmail = () => {
       console.log("User data:", data.data);
 
       if (accessToken && refreshToken) {
-        // Uğurlu verification-dan sonra timer-i localStorage-dan sil
         const email = localStorage.getItem("pendingMail");
         if (email) {
           localStorage.removeItem(`verificationTimer_${email}`);
@@ -244,7 +243,7 @@ const ConfirmEmail = () => {
 
   const handlePaste = (e) => {
     e.preventDefault();
-    const pastedData = e.clipboardData.getData("text");
+    const pastedData = e.clipboardData.getData("text").trim();
 
     if (/^\d{6}$/.test(pastedData)) {
       const newCode = pastedData.split("");
@@ -326,7 +325,7 @@ const ConfirmEmail = () => {
                           : "border-gray-300 focus:ring-black focus:border-black"
                       }`}
                       placeholder="X"
-                      autoComplete="off"
+                      autoComplete={index === 0 ? "one-time-code" : "off"}
                     />
                   ))}
                 </div>
