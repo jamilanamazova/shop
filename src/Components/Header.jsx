@@ -36,11 +36,7 @@ const Header = () => {
     document.body.style.transition = "overflow 0.3s ease-in-out";
   };
 
-  if (
-    location.pathname === "/confirm-email" &&
-    authenticated &&
-    !isEmailVerified
-  ) {
+  if (location.pathname === "/confirm-email") {
     return null;
   }
 

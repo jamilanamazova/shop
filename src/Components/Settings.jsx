@@ -5,7 +5,6 @@ import Footer from "./Footer";
 
 const initialState = {
   fullName: "",
-  phone: "",
   birthDate: "",
   gender: "",
 };
@@ -47,7 +46,6 @@ const Settings = () => {
     const updatedUser = {
       ...currentUser,
       fullName: formState.fullName || currentUser.fullName,
-      phone: formState.phone || currentUser.phone,
       birthDate: formState.birthDate || currentUser.birthDate,
       gender: formState.gender || currentUser.gender,
     };
@@ -60,7 +58,6 @@ const Settings = () => {
         return {
           ...user,
           fullName: formState.fullName || user.fullName,
-          phone: formState.phone || user.phone,
           birthDate: formState.birthDate || user.birthDate,
           gender: formState.gender || user.gender,
         };
@@ -151,18 +148,6 @@ const Settings = () => {
             <p className="text-xs text-gray-500 mt-1">
               Email cannot be changed
             </p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Phone Number
-            </label>
-            <input
-              type="tel"
-              defaultValue={currentUser.phone}
-              onChange={(e) => handleInputChange("phone", e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
-              placeholder="Enter your phone number"
-            />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">

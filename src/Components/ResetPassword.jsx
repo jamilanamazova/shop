@@ -12,6 +12,13 @@ const ResetPassword = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [error, setError] = useState("");
 
+  const [passwordStrength, setPasswordStrength] = useState({
+    score: 0,
+    text: "",
+    color: "",
+    borderColor: "",
+  });
+
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -30,6 +37,128 @@ const ResetPassword = () => {
       y: 0,
       transition: { duration: 0.5 },
     },
+  };
+
+  const calculatePasswordStrength = (password) => {
+    if (!password) {
+      return {
+        score: 0,
+        text: "",
+        color: "",
+        borderColor: "border-gray-300",
+      };
+    }
+
+    const checks = [
+      {
+        test: password.length >= 8,
+        score: 2,
+      },
+      {
+        test: password.length >= 6 && password.length < 8,
+        score: 1,
+      },
+      {
+        test: /[a-z]/.test(password),
+        score: 1,
+      },
+      {
+        test: /[A-Z]/.test(password),
+        score: 1,
+      },
+      { test: /\d/.test(password), score: 1 },
+      {
+        test: /[!@#$%^&*()_+\-=\\[\]{};':"\\|,.<>\\/?]/.test(password),
+        score: 2,
+      },
+    ];
+
+    let score = 0;
+
+    checks.forEach(({ test, score: points }) => {
+      if (test) {
+        score += points;
+      }
+    });
+
+    const strengthLevels = [
+      {
+        minScore: 6,
+        score: 3,
+        text: "Strong",
+        color: "text-green-500",
+        borderColor: "border-green-500",
+      },
+      {
+        minScore: 4,
+        score: 2,
+        text: "Medium",
+        color: "text-orange-500",
+        borderColor: "border-orange-500",
+      },
+      {
+        minScore: 1,
+        score: 1,
+        text: "Weak",
+        color: "text-red-500",
+        borderColor: "border-red-500",
+      },
+      {
+        minScore: 0,
+        score: 0,
+        text: "Weak",
+        color: "text-red-500",
+        borderColor: "border-red-500",
+      },
+    ];
+
+    const strength =
+      strengthLevels.find(({ minScore }) => score >= minScore) ||
+      strengthLevels[strengthLevels.length - 1];
+
+    return strength;
+  };
+
+  useEffect(() => {
+    const strength = calculatePasswordStrength(password);
+    setPasswordStrength(strength);
+  }, [password]);
+
+  const PasswordStrengthIndicator = () => {
+    if (!password) return null;
+
+    return (
+      <div className="mt-2">
+        <div className="flex items-center justify-between mb-1">
+          <span className={`text-sm font-medium ${passwordStrength.color}`}>
+            Password Strength: {passwordStrength.text}
+          </span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div
+            className={`h-2 rounded-full transition-all duration-300 ${
+              passwordStrength.score === 1
+                ? "bg-red-500 w-1/3"
+                : passwordStrength.score === 2
+                ? "bg-orange-500 w-2/3"
+                : passwordStrength.score === 3
+                ? "bg-green-500 w-full"
+                : "bg-gray-300 w-0"
+            }`}
+          ></div>
+        </div>
+        <div className="mt-1">
+          <p className="text-xs text-gray-600">
+            {passwordStrength.score === 1 &&
+              "Add uppercase, numbers, and special characters"}
+            {passwordStrength.score === 2 &&
+              "Good! Consider adding more special characters"}
+            {passwordStrength.score === 3 &&
+              "Excellent! Your password is strong"}
+          </p>
+        </div>
+      </div>
+    );
   };
 
   useEffect(() => {
@@ -64,6 +193,12 @@ const ResetPassword = () => {
 
     if (password.length < 6) {
       setError("Password must be at least 6 characters long.");
+      setIsLoading(false);
+      return;
+    }
+
+    if (passwordStrength.score < 2) {
+      setError("Please use a medium or strong password for better security.");
       setIsLoading(false);
       return;
     }
@@ -224,7 +359,11 @@ const ResetPassword = () => {
                   value={password}
                   onChange={handlePasswordChange}
                   placeholder="Enter your new password"
-                  className="w-full px-4 py-3 pl-12 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className={`w-full px-4 py-3 pl-12 pr-12 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
+                    password
+                      ? `${passwordStrength.borderColor} focus:ring-2 focus:ring-opacity-50`
+                      : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                  }`}
                   required
                   disabled={isLoading}
                 />
@@ -242,12 +381,16 @@ const ResetPassword = () => {
                   ></i>
                 </button>
               </div>
+
+              <PasswordStrengthIndicator />
+
               <p className="text-xs text-gray-500 mt-2">
-                Password must be at least 6 characters long.
+                Password must be at least 6 characters long and medium strength
+                or higher.
               </p>
             </div>
 
-            {password && (
+            {/* {password && (
               <div className="space-y-2">
                 <div className="flex items-center space-x-2 text-xs">
                   <div
@@ -286,13 +429,13 @@ const ResetPassword = () => {
                   </span>
                 </div>
               </div>
-            )}
+            )} */}
 
             <button
               type="submit"
-              disabled={isLoading || !token}
+              disabled={isLoading || !token || passwordStrength.score < 2}
               className={`w-full py-3 px-4 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-300 ${
-                isLoading || !token
+                isLoading || !token || passwordStrength.score < 2
                   ? "bg-gray-400 text-gray-200 cursor-not-allowed"
                   : "bg-blue-600 text-white hover:bg-blue-700 transform hover:scale-[1.02]"
               }`}
@@ -306,6 +449,9 @@ const ResetPassword = () => {
                 <div className="flex items-center justify-center">
                   <i className="fa-solid fa-key mr-2"></i>
                   Update Password
+                  {passwordStrength.score >= 2 && (
+                    <i className="fa-solid fa-check ml-2 text-green-400"></i>
+                  )}
                 </div>
               )}
             </button>

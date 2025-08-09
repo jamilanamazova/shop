@@ -17,12 +17,52 @@ const ConfirmEmail = () => {
 
   const inputRefs = useRef([]);
 
+  const initializeTimer = () => {
+    const email = localStorage.getItem("pendingMail");
+    if (!email) return;
+
+    const savedTimerData = localStorage.getItem(`verificationTimer_${email}`);
+
+    if (savedTimerData) {
+      const { endTime } = JSON.parse(savedTimerData);
+      const now = Date.now();
+      const remainingTime = Math.max(0, Math.floor((endTime - now) / 1000));
+
+      if (remainingTime > 0) {
+        setTimer(remainingTime);
+      } else {
+        localStorage.removeItem(`verificationTimer_${email}`);
+        setTimer(0);
+      }
+    } else {
+      const endTime = Date.now() + 300 * 1000;
+      localStorage.setItem(
+        `verificationTimer_${email}`,
+        JSON.stringify({ endTime })
+      );
+      setTimer(300);
+    }
+  };
+
+  const startNewTimer = () => {
+    const email = localStorage.getItem("pendingMail");
+    if (!email) return;
+
+    const endTime = Date.now() + 300 * 1000;
+    localStorage.setItem(
+      `verificationTimer_${email}`,
+      JSON.stringify({ endTime })
+    );
+    setTimer(300);
+  };
+
   useEffect(() => {
     const email = localStorage.getItem("pendingMail");
     const name = localStorage.getItem("pendingUserName");
     if (email) {
       setUserEmail(email);
       setUserName(name || "User");
+      initializeTimer();
     } else {
       window.location.href = "/register";
     }
@@ -31,7 +71,27 @@ const ConfirmEmail = () => {
   useEffect(() => {
     if (timer > 0) {
       const countdown = setInterval(() => {
-        setTimer((prev) => prev - 1);
+        setTimer((prev) => {
+          const newTime = prev - 1;
+          const email = localStorage.getItem("pendingMail");
+
+          if (newTime <= 0) {
+            if (email) {
+              localStorage.removeItem(`verificationTimer_${email}`);
+            }
+            return 0;
+          }
+
+          if (email) {
+            const endTime = Date.now() + newTime * 1000;
+            localStorage.setItem(
+              `verificationTimer_${email}`,
+              JSON.stringify({ endTime })
+            );
+          }
+
+          return newTime;
+        });
       }, 1000);
       return () => clearInterval(countdown);
     }
@@ -40,9 +100,7 @@ const ConfirmEmail = () => {
   const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
-    return `${minutes.toString().padStart(2, "0")}:${remainingSeconds
-      .toString()
-      .padStart(2, "0")}`;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
   const handleResendCode = async () => {
@@ -56,7 +114,8 @@ const ConfirmEmail = () => {
       });
       if (response.data.success) {
         setResendMessage("Verification code resent successfully.");
-        setTimer(300);
+        setShowSuccessModal(true);
+        startNewTimer();
         setCode(["", "", "", "", "", ""]);
         inputRefs.current[0]?.focus();
       }
@@ -102,6 +161,12 @@ const ConfirmEmail = () => {
       console.log("User data:", data.data);
 
       if (accessToken && refreshToken) {
+        // Uğurlu verification-dan sonra timer-i localStorage-dan sil
+        const email = localStorage.getItem("pendingMail");
+        if (email) {
+          localStorage.removeItem(`verificationTimer_${email}`);
+        }
+
         localStorage.setItem("accessToken", accessToken);
         localStorage.setItem("refreshToken", refreshToken);
 
@@ -120,8 +185,6 @@ const ConfirmEmail = () => {
 
         localStorage.removeItem("pendingMail");
         localStorage.removeItem("pendingUserName");
-
-        setShowSuccessModal(true);
 
         setTimeout(() => {
           window.location.href = "/";
@@ -231,7 +294,6 @@ const ConfirmEmail = () => {
                   <span className="font-medium text-gray-800">{userEmail}</span>
                 </p>
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3 text-center">
                   Enter 6-digit verification code
@@ -345,13 +407,28 @@ const ConfirmEmail = () => {
               </div>
 
               <div className="pt-4 border-t border-gray-200 space-y-3">
-                <Link
-                  to="/signin"
-                  className="block w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors duration-300 text-center"
-                >
-                  Back to Sign In
-                </Link>
+                <div className="text-center">
+                  <p className="text-xs text-gray-500">
+                    Wrong email address?{" "}
+                    <button
+                      onClick={() => {
+                        const email = localStorage.getItem("pendingMail");
+                        if (email) {
+                          localStorage.removeItem(`verificationTimer_${email}`);
+                        }
+                        localStorage.removeItem("pendingMail");
+                        localStorage.removeItem("pendingUserName");
+                        window.location.href = "/register";
+                      }}
+                      className="text-black hover:text-gray-800 font-medium underline"
+                    >
+                      Go back to registration
+                    </button>
+                  </p>
+                </div>
+              </div>
 
+              <div className="pt-4 border-t border-gray-200 space-y-3">
                 <div className="text-center">
                   <p className="text-xs text-gray-500">
                     Need help? Contact our{" "}
@@ -368,14 +445,6 @@ const ConfirmEmail = () => {
           </div>
 
           <div className="text-center space-y-4">
-            <Link
-              to="/"
-              className="inline-flex items-center text-sm text-gray-600 hover:text-gray-800 transition-colors"
-            >
-              <i className="fa-solid fa-arrow-left mr-2"></i>
-              Back to Home
-            </Link>
-
             <div className="text-xs text-gray-500">
               <p>
                 By verifying your email, you agree to our{" "}

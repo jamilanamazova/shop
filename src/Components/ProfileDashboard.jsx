@@ -13,7 +13,6 @@ import { Navigate } from "react-router-dom";
 
 const initialState = {
   fullName: "",
-  phone: "",
 };
 
 const formReducer = (state, action) => {
@@ -106,18 +105,9 @@ const ProfileDashboard = () => {
       return;
     }
 
-    if (formState.phone && formState.phone.length > 0) {
-      const phonePattern = /^(\+994|0)?(50|51|55|70|77|99)\d{7}$/;
-      if (!phonePattern.test(formState.phone.replace(/\s/g, ""))) {
-        alert("Please enter a valid phone number.");
-        return;
-      }
-    }
-
     const updatedUser = {
       ...currentUser,
       fullName: formState.fullName || currentUser.fullName,
-      phone: formState.phone || currentUser.phone,
     };
     setCurrentUser(updatedUser);
     localStorage.setItem("currentUser", JSON.stringify(updatedUser));
@@ -128,7 +118,6 @@ const ProfileDashboard = () => {
         return {
           ...user,
           fullName: formState.fullName || user.fullName,
-          phone: formState.phone || user.phone,
         };
       }
       return user;
@@ -263,14 +252,6 @@ const ProfileDashboard = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Phone Number
-                      </label>
-                      <div className="bg-gray-50 p-3 rounded-lg">
-                        <p className="text-gray-800">{currentUser.phone}</p>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
                         User ID
                       </label>
                       <div className="bg-gray-50 p-3 rounded-lg">
@@ -287,7 +268,7 @@ const ProfileDashboard = () => {
                     </label>
                     <div className="bg-gray-50 p-3 rounded-lg">
                       <p className="text-gray-800">
-                        {formatDate(currentUser.registrationDate)}
+                        {formatDate(currentUser.createdAt)}
                       </p>
                     </div>
                   </div>
@@ -418,20 +399,6 @@ const ProfileDashboard = () => {
                     maxLength={25}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Enter your full name"
-                  />
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2 text-left">
-                    Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    defaultValue={currentUser.phone}
-                    onChange={(e) => handleInputChange("phone", e.target.value)}
-                    pattern="(^\d{3}\s\d{3}\s\d{2}\s\d{2}$)|(^\d{10}$)"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="+994 50 123 45 67"
                   />
                 </div>
 

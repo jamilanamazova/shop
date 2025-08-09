@@ -100,14 +100,7 @@ const Routing = () => {
           </PublicRoute>
         }
       />
-      <Route
-        path="/reset-password"
-        element={
-          <PublicRoute>
-            <ResetPassword />
-          </PublicRoute>
-        }
-      />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/confirm-email" element={<ConfirmEmail />} />
       <Route
         path="/profile"
