@@ -383,11 +383,6 @@ const ResetPassword = () => {
               </div>
 
               <PasswordStrengthIndicator />
-
-              <p className="text-xs text-gray-500 mt-2">
-                Password must be at least 6 characters long and medium strength
-                or higher.
-              </p>
             </div>
 
             {/* {password && (
