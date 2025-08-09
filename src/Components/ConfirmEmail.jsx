@@ -220,8 +220,15 @@ const ConfirmEmail = () => {
   const handleInputChange = (index, value) => {
     if (!/^\d*$/.test(value)) return;
 
+    if (value.length === 6 && index === 0) {
+      const newCode = value.split("").slice(0, 6);
+      setCode(newCode);
+      inputRefs.current[5]?.focus();
+      return;
+    }
+
     const newCode = [...code];
-    newCode[index] = value;
+    newCode[index] = value.slice(-1);
     setCode(newCode);
 
     if (value && index < 5) {
@@ -326,6 +333,11 @@ const ConfirmEmail = () => {
                       }`}
                       placeholder="X"
                       autoComplete={index === 0 ? "one-time-code" : "off"}
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck="false"
+                      data-lpignore="true"
+                      data-from-type="other"
                     />
                   ))}
                 </div>
