@@ -16,6 +16,8 @@ import axios from "axios";
 const initialState = {
   firstName: "",
   lastName: "",
+  phone: "",
+  dateOfBirth: "",
 };
 
 const formReducer = (state, action) => {
@@ -93,6 +95,7 @@ const ProfileDashboard = () => {
 
   const updateUserProfile = async (updateData) => {
     try {
+      setLoading(true);
       const token = localStorage.getItem("accessToken");
 
       const response = await axios.put(
@@ -114,9 +117,12 @@ const ProfileDashboard = () => {
         await fetchUserProfile();
         setShowEditProfileModal(false);
         alert("Profile updated successfully!");
+      } else {
+        alert("Failed to update profile");
       }
     } catch (error) {
       console.error("Update error:", error);
+      console.log("error", error.response.status);
       if (error.response?.status === 401) {
         logout();
         navigate("/signin");
@@ -252,6 +258,14 @@ const ProfileDashboard = () => {
     const updateData = {};
     if (formState.firstName) updateData.firstName = formState.firstName;
     if (formState.lastName) updateData.lastName = formState.lastName;
+    if (formState.phone) {
+      updateData.phone = String(formState.phone);
+    }
+    if (formState.dateOfBirth) {
+      updateData.dateOfBirth = new Date(formState.dateOfBirth).toISOString();
+    }
+
+    console.log("Update data being sent:", updateData);
 
     if (Object.keys(updateData).length > 0) {
       await updateUserProfile(updateData);
@@ -564,6 +578,46 @@ const ProfileDashboard = () => {
                     maxLength={25}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Enter your last name"
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 text-left">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    defaultValue={currentUser.phone}
+                    onChange={(e) => {
+                      // Yalnız rəqəm və + işarəsinə icazə ver
+                      const value = e.target.value.replace(
+                        /[^0-9+\-\s()]/g,
+                        ""
+                      );
+                      handleInputChange("phone", value);
+                    }}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter your phone number"
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 text-left">
+                    Date of Birth
+                  </label>
+                  <input
+                    type="date"
+                    defaultValue={
+                      currentUser.dateOfBirth
+                        ? new Date(currentUser.dateOfBirth)
+                            .toISOString()
+                            .split("T")[0]
+                        : ""
+                    }
+                    onChange={(e) =>
+                      handleInputChange("dateOfBirth", e.target.value)
+                    }
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
 

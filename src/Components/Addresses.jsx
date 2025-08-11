@@ -101,6 +101,8 @@ const Addresses = () => {
         return;
       }
 
+      console.log("📥 Fetching addresses from backend...");
+
       const response = await axios.get(`${apiURL}/customers/me/addresses`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -109,6 +111,7 @@ const Addresses = () => {
       });
 
       if (response.data.status === "OK" && response.data.data) {
+        console.log("📥 Fetched addresses:", response.data.data);
         setAddresses(response.data.data);
       }
     } catch (error) {
@@ -156,7 +159,17 @@ const Addresses = () => {
       );
 
       if (response.data.status === "OK") {
-        setAddresses((prevAddresses) => [...prevAddresses, response.data.data]);
+        if (formState.default) {
+          setAddresses((prevAddresses) => [
+            ...prevAddresses.map((addr) => ({ ...addr, default: false })),
+            response.data.data,
+          ]);
+        } else {
+          setAddresses((prevAddresses) => [
+            ...prevAddresses,
+            response.data.data,
+          ]);
+        }
 
         dispatch({ type: "RESET_FORM" });
         setShowAddModal(false);
@@ -186,6 +199,23 @@ const Addresses = () => {
         return;
       }
 
+      console.log("🔄 Starting updateAddress function");
+      console.log("📥 Received addressId:", addressId);
+      console.log("📥 Received addressData:", addressData);
+
+      const currentAddress = addresses.find((addr) => addr.id === addressId);
+      console.log("📍 Current address found:", currentAddress);
+
+      if (!currentAddress?.default && addressData.default) {
+        setAddresses((prevAddresses) =>
+          prevAddresses.map((address) =>
+            address.id === addressId ? address : { ...address, default: false }
+          )
+        );
+      }
+
+      console.log("📤 Making PUT request to backend...");
+
       const response = await axios.put(
         `${apiURL}/customers/me/addresses/${addressId}`,
         addressData,
@@ -197,12 +227,30 @@ const Addresses = () => {
         }
       );
 
+      console.log("📥 Backend response:", response.data);
+      console.log("✅ Backend status:", response.data.status);
+      console.log("📄 Backend data:", response.data.data);
+
       if (response.data.status === "OK" && response.data.data) {
-        setAddresses((prevAddresses) =>
-          prevAddresses.map((address) =>
-            address.id === addressId ? response.data.data : address
-          )
-        );
+        console.log("✅ Update successful, updating local state");
+        if (addressData.default) {
+          console.log(
+            "🔄 Setting this address as default, making others false"
+          );
+          setAddresses((prevAddresses) =>
+            prevAddresses.map((address) =>
+              address.id === addressId
+                ? response.data.data
+                : { ...address, default: false }
+            )
+          );
+        } else {
+          setAddresses((prevAddresses) =>
+            prevAddresses.map((address) =>
+              address.id === addressId ? response.data.data : address
+            )
+          );
+        }
 
         dispatch({ type: "RESET_FORM" });
         setShowEditModal(false);
@@ -296,6 +344,9 @@ const Addresses = () => {
         default: true,
       };
 
+      console.log("🔄 Setting default address:", addressId);
+      console.log("📤 Sending data:", addressData);
+
       const response = await axios.put(
         `${apiURL}/customers/me/addresses/${addressId}`,
         addressData,
@@ -307,24 +358,28 @@ const Addresses = () => {
         }
       );
 
-      console.log("SET DEFAULT ADDRESS RESPONSE", response.data);
-      console.log("SET DEFAULT ADDRESS DATA", response.data.data);
-      console.log("SET DEFAULT ADDRESS STATUS", response.data.status);
+      console.log("📥 Backend response:", response.data);
 
       if (response.data.status === "OK" && response.data.data) {
-        setAddresses((prevAddresses) =>
-          prevAddresses.map((address) => ({
+        console.log("✅ Backend confirmed success, updating local state");
+
+        setAddresses((prevAddresses) => {
+          const updatedAddresses = prevAddresses.map((address) => ({
             ...address,
             default: address.id === addressId ? true : false,
-          }))
-        );
+          }));
+          console.log("🔄 Updated local addresses:", updatedAddresses);
+          return updatedAddresses;
+        });
 
         showSuccess("Default address updated successfully!");
       } else {
+        console.error("❌ Backend did not confirm success");
         alert("Failed to set default address");
       }
     } catch (error) {
-      console.error("Error setting default address:", error);
+      console.error("💥 Error setting default address:", error);
+      console.error("💥 Error response:", error.response?.data);
       if (error.response?.status === 401) {
         logout();
         navigate("/signin");
@@ -337,16 +392,8 @@ const Addresses = () => {
   };
 
   useEffect(() => {
-    if (authenticated) {
-      fetchAddresses();
-    } else {
-      navigate("/signin");
-    }
-  }, [authenticated, navigate]);
-
-  if (!authenticated) {
-    return <Navigate to="/signin" replace />;
-  }
+    fetchAddresses();
+  }, []);
 
   if (loading) {
     return (
@@ -433,6 +480,12 @@ const Addresses = () => {
       postalCode: formState.postalCode,
       default: formState.default,
     };
+
+    console.log("🔄 Editing address:", selectedAddress.id);
+    console.log("📝 Form state:", formState);
+    console.log("📤 Sending address data:", addressData);
+    console.log("🎯 Default checkbox value:", formState.default);
+    console.log("📍 Selected address before edit:", selectedAddress);
 
     await updateAddress(selectedAddress.id, addressData);
   };
@@ -706,22 +759,6 @@ const Addresses = () => {
                   />
                 </div>
 
-                <div className="mb-4">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={formState.default}
-                      onChange={(e) =>
-                        handleInputChange("default", e.target.checked)
-                      }
-                      className="mr-2"
-                    />
-                    <span className="text-sm text-gray-700">
-                      Set as default address
-                    </span>
-                  </label>
-                </div>
-
                 <button
                   type="submit"
                   disabled={modalSubmitting}
@@ -840,22 +877,6 @@ const Addresses = () => {
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Enter postal code"
                   />
-                </div>
-
-                <div className="mb-4">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={formState.default}
-                      onChange={(e) =>
-                        handleInputChange("default", e.target.checked)
-                      }
-                      className="mr-2"
-                    />
-                    <span className="text-sm text-gray-700">
-                      Set as default address
-                    </span>
-                  </label>
                 </div>
 
                 <button
