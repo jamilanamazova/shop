@@ -64,7 +64,6 @@ const Settings = () => {
       }
       return user;
     });
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
     setShowSuccessMessage(true);
     setTimeout(() => setShowSuccessMessage(false), 3000);
   };

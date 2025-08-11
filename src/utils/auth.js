@@ -5,28 +5,20 @@ export const getAccessToken = () => {
 export const getRefreshToken = () => {
   return localStorage.getItem("refreshToken");
 };
-
+// Bu funksiya artıq lazım deyil, çünki API-dən məlumat çəkirik
 export const getCurrentUser = () => {
-  const userString = localStorage.getItem("currentUser");
-  if (userString) {
-    try {
-      return JSON.parse(userString);
-    } catch (error) {
-      console.error("Error parsing currentUser:", error);
-      return null;
-    }
-  }
-  return null;
+  const token = getAccessToken();
+  return token ? { hasToken: true } : null;
 };
 
 export const isAuthenticated = () => {
   const token = getAccessToken();
-  const user = getCurrentUser();
-  return !!(token && user);
+  return !!token;
 };
 
 export const logout = () => {
   localStorage.removeItem("accessToken");
+  localStorage.removeItem("currentUser");
   console.log("🚪 User logged out");
 };
 
@@ -37,7 +29,6 @@ export const checkTokens = () => {
   console.log("=== TOKEN STATUS ===");
   console.log("Access Token:", accessToken ? "✅ Present" : "❌ Missing");
   console.log("Refresh Token:", refreshToken ? "✅ Present" : "❌ Missing");
-  console.log("User Data:", getCurrentUser() ? "✅ Present" : "❌ Missing");
   console.log("Authenticated:", isAuthenticated() ? "✅ Yes" : "❌ No");
   console.log("==================");
 
@@ -51,9 +42,8 @@ export const checkTokens = () => {
 export const checkAuthSession = () => {
   const accessToken = getAccessToken();
   const refreshToken = getRefreshToken();
-  const user = getCurrentUser();
 
-  if (!accessToken || !refreshToken || !user) {
+  if (!accessToken || !refreshToken) {
     console.log("❌ No valid session found - redirecting to login");
     return false;
   }
