@@ -5,7 +5,6 @@ export const getAccessToken = () => {
 export const getRefreshToken = () => {
   return localStorage.getItem("refreshToken");
 };
-// Bu funksiya artıq lazım deyil, çünki API-dən məlumat çəkirik
 export const getCurrentUser = () => {
   const token = getAccessToken();
   return token ? { hasToken: true } : null;
