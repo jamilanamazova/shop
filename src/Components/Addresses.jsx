@@ -15,6 +15,17 @@ const initialState = {
   default: false,
 };
 
+const countries = [
+  { value: "", label: "Select Country" },
+  { value: "Azerbaijan", label: "Azerbaijan" },
+  { value: "Turkey", label: "Turkey" },
+  { value: "United States", label: "United States" },
+  { value: "United Kingdom", label: "United Kingdom" },
+  { value: "Germany", label: "Germany" },
+  { value: "France", label: "France" },
+  { value: "Russia", label: "Russia" },
+];
+
 const formReducer = (state, action) => {
   switch (action.type) {
     case "SET_INITIAL_DATA":
@@ -97,10 +108,6 @@ const Addresses = () => {
         },
       });
 
-      console.log("RESPONSE DATA", response.data);
-      console.log("RESPONSE DATA", response.data.data);
-      console.log("RESPONSE DATA STATUS", response.data.status);
-
       if (response.data.status === "OK" && response.data.data) {
         setAddresses(response.data.data);
       }
@@ -148,10 +155,6 @@ const Addresses = () => {
         }
       );
 
-      console.log("RESPONSE DATA", response.data);
-      console.log("RESPONSE DATA", response.data.data);
-      console.log("RESPONSE DATA STATUS", response.data.status);
-
       if (response.data.status === "OK") {
         setAddresses((prevAddresses) => [...prevAddresses, response.data.data]);
 
@@ -193,10 +196,6 @@ const Addresses = () => {
           },
         }
       );
-
-      console.log("UPDATE ADDRESS RESPONSE", response.data);
-      console.log("UPDATE ADDRESS DATA", response.data.data);
-      console.log("UPDATE ADDRESS STATUS", response.data.status);
 
       if (response.data.status === "OK" && response.data.data) {
         setAddresses((prevAddresses) =>
@@ -245,9 +244,6 @@ const Addresses = () => {
         }
       );
 
-      console.log("DELETE ADDRESS RESPONSE", response.data);
-      console.log("DELETE ADDRESS STATUS", response.data.status);
-
       if (response.data.status === "OK") {
         setAddresses((prevAddresses) =>
           prevAddresses.filter((address) => address.id !== addressId)
@@ -284,7 +280,19 @@ const Addresses = () => {
         return;
       }
 
+      const currentAddress = addresses.find((addr) => addr.id === addressId);
+
+      if (!currentAddress) {
+        alert("address not found");
+        return;
+      }
+
       const addressData = {
+        addressLine1: currentAddress.addressLine1,
+        addressLine2: currentAddress.addressLine2,
+        city: currentAddress.city,
+        country: currentAddress.country,
+        postalCode: currentAddress.postalCode,
         default: true,
       };
 
@@ -310,6 +318,7 @@ const Addresses = () => {
             default: address.id === addressId ? true : false,
           }))
         );
+
         showSuccess("Default address updated successfully!");
       } else {
         alert("Failed to set default address");
@@ -615,7 +624,26 @@ const Addresses = () => {
               <form onSubmit={handleAddSubmit} className="space-y-4">
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2 text-left">
-                    Address Line 1 *
+                    Country or region <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={formState.country}
+                    onChange={(e) =>
+                      handleInputChange("country", e.target.value)
+                    }
+                    required
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  >
+                    {countries.map((country) => (
+                      <option key={country.value} value={country.value}>
+                        {country.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 text-left">
+                    Address Line 1 <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -644,10 +672,10 @@ const Addresses = () => {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2 text-left">
-                      City *
+                      City <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -660,27 +688,11 @@ const Addresses = () => {
                       placeholder="Enter city"
                     />
                   </div>
-
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2 text-left">
-                      Country *
-                    </label>
-                    <input
-                      type="text"
-                      value={formState.country}
-                      onChange={(e) =>
-                        handleInputChange("country", e.target.value)
-                      }
-                      required
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Enter country"
-                    />
-                  </div>
                 </div>
 
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2 text-left">
-                    Postal Code *
+                    Postal Code <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -797,16 +809,20 @@ const Addresses = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2 text-left">
                       Country *
                     </label>
-                    <input
-                      type="text"
+                    <select
                       value={formState.country}
                       onChange={(e) =>
                         handleInputChange("country", e.target.value)
                       }
                       required
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Enter country"
-                    />
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                    >
+                      {countries.map((country) => (
+                        <option key={country.value} value={country.value}>
+                          {country.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 

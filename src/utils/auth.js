@@ -27,7 +27,6 @@ export const isAuthenticated = () => {
 
 export const logout = () => {
   localStorage.removeItem("accessToken");
-  localStorage.removeItem("refreshToken");
   console.log("🚪 User logged out");
 };
 

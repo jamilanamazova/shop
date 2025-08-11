@@ -1,13 +1,51 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "../CSS/header.module.css";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { isAuthenticated, getCurrentUser, logout } from "../utils/auth";
+import axios from "axios";
+import { apiURL } from "../Backend/Api/api";
 
 const Header = () => {
+  const [currentUser, setCurrentUser] = useState();
   const authenticated = isAuthenticated();
   const user = getCurrentUser();
   const location = useLocation();
   const isEmailVerified = user?.isEmailVerified;
+  const navigate = useNavigate();
+
+  const handleGetUserProfile = async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+
+      if (!token) {
+        navigate("/signin");
+        return;
+      }
+
+      const response = await axios.get(`${apiURL}/customers/me/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      console.log("RESPONSE DATA", response.data);
+      console.log("RESPONSE DATA STATUS", response.data.status);
+      console.log(response.data.data);
+
+      if (response.data.status === "OK") {
+        setCurrentUser(response.data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (authenticated) {
+      handleGetUserProfile();
+    }
+  }, [authenticated]);
 
   const handleLogout = () => {
     logout();
@@ -104,7 +142,7 @@ const Header = () => {
               <>
                 <div className="hidden md:flex items-center space-x-3 lg:space-x-4">
                   <span className="text-gray-700 text-sm lg:text-base max-w-[100px] lg:max-w-none truncate">
-                    Hi, {user?.name || user?.fullName || "User"}!
+                    Hi, {currentUser?.firstName || user?.fullName || "User"}!
                   </span>
                   <Link
                     to="/profile"
@@ -223,9 +261,11 @@ const Header = () => {
                 <i className="fa-solid fa-user-circle text-2xl text-gray-600"></i>
                 <div>
                   <p className="font-medium text-gray-800">
-                    {user?.name || user?.fullName || "User"}
+                    {currentUser?.firstName || user?.fullName || "User"}
                   </p>
-                  <p className="text-sm text-gray-500">{user?.email || ""}</p>
+                  <p className="text-sm text-gray-500">
+                    {currentUser?.email || ""}
+                  </p>
                 </div>
               </div>
 
