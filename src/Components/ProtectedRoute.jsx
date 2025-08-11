@@ -60,11 +60,6 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/signin" state={{ from: location }} replace />;
   }
 
-  if (user && !user.isEmailVerified) {
-    console.log("Email not verified, redirecting to confirm-email.");
-    return <Navigate to="/confirm-email" replace />;
-  }
-
   if (!user) {
     return <Navigate to="/signin" state={{ from: location }} replace />;
   }
