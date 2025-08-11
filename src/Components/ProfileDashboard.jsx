@@ -10,9 +10,12 @@ import {
   checkTokens,
 } from "../utils/auth";
 import { Navigate } from "react-router-dom";
+import { apiURL } from "../Backend/Api/api";
+import axios from "axios";
 
 const initialState = {
-  fullName: "",
+  firstName: "",
+  lastName: "",
 };
 
 const formReducer = (state, action) => {
@@ -21,6 +24,14 @@ const formReducer = (state, action) => {
       return {
         ...state,
         [action.field]: action.value,
+      };
+    case "SET_INITIAL_DATA":
+      return {
+        ...state,
+        firstName: action.data.firstName || "",
+        lastName: action.data.lastName || "",
+        phone: action.data.phone || "",
+        dateOfBirth: action.data.dateOfBirth || "",
       };
     default:
       return state;
@@ -32,20 +43,162 @@ const ProfileDashboard = () => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
   const [formState, dispatch] = useReducer(formReducer, initialState);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
   const authenticated = isAuthenticated();
-  const user = getCurrentUser();
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("currentUser"));
-    if (!user) {
-      navigate("/signin");
-    } else {
-      setCurrentUser(user);
+
+  const fetchUserProfile = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const token = localStorage.getItem("accessToken");
+
+      if (!token) {
+        navigate("/signin");
+        return;
+      }
+
+      const response = await axios.get(`${apiURL}/customers/me/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      console.log("RESPONSE DATA", response.data);
+      console.log("RESPONSE DATA STATUS", response.data.status);
+      console.log(response.data.data);
+
+      if (response.data.status === "OK" && response.data.data) {
+        setCurrentUser(response.data.data);
+        dispatch({
+          type: "SET_INITIAL_DATA",
+          data: response.data.data,
+        });
+      }
+    } catch (error) {
+      console.error("Profile fetch error:", error);
+
+      if (error.response?.status === 401) {
+        logout();
+        navigate("/signin");
+      } else {
+        setError("Failed to fetch user profile");
+      }
+    } finally {
+      setLoading(false);
     }
-  }, [navigate]);
+  };
+
+  const updateUserProfile = async (updateData) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+
+      const response = await axios.put(
+        `${apiURL}/customers/me/profile`,
+        updateData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log("RESPONSE", response);
+      console.log("RESPONSE DATA", response.data);
+      console.log("RESPONSE DATA STATUS", response.data.status);
+
+      if (response.data.status === "OK") {
+        await fetchUserProfile();
+        setShowEditProfileModal(false);
+        alert("Profile updated successfully!");
+      }
+    } catch (error) {
+      console.error("Update error:", error);
+      if (error.response?.status === 401) {
+        logout();
+        navigate("/signin");
+      } else {
+        alert("Failed to update profile");
+      }
+    }
+  };
+
+  const uploadProfileImage = async (file) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const formData = new FormData();
+      formData.append("profilePhoto", file);
+
+      const response = await axios.post(
+        `${apiURL}/customers/me/profile-photo`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (response.data.status === "100 CONTINUE") {
+        await fetchUserProfile();
+        alert("Profile image updated successfully!");
+      }
+    } catch (error) {
+      console.error("Image upload error:", error);
+      if (error.response?.status === 401) {
+        logout();
+        navigate("/signin");
+      } else {
+        alert("Failed to update profile image");
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (authenticated) {
+      fetchUserProfile();
+    } else {
+      navigate("/signin");
+    }
+  }, [authenticated, navigate]);
 
   if (!authenticated) {
     return <Navigate to="/signin" replace />;
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <button
+            onClick={fetchUserProfile}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    return <div>No user data available</div>;
   }
 
   const handleLogout = () => {
@@ -64,10 +217,6 @@ const ProfileDashboard = () => {
     });
   };
 
-  if (!currentUser) {
-    return <div>Loading...</div>;
-  }
-
   const handleInputChange = (field, value) => {
     dispatch({
       type: "UPDATE_FIELD",
@@ -76,83 +225,51 @@ const ProfileDashboard = () => {
     });
   };
 
-  const validateFullName = (name) => {
+  const validateName = (name) => {
     const trimmedName = name.trim();
-
     if (trimmedName.length < 2 || trimmedName.length > 25) {
       return false;
     }
-
     if (/\d/.test(trimmedName)) {
       return false;
     }
-
-    if (!/^[A-Za-zƏÖÜÇŞĞİəıöüçşğ\s]+$/.test(trimmedName)) {
-      return false;
-    }
-
-    const namePattern =
-      /^[A-ZƏÖÜÇŞĞİ][a-zəıöüçşğ]+\s[A-ZƏÖÜÇŞĞİ][a-zəıöüçşğ]+$/;
-
-    return namePattern.test(trimmedName);
+    return /^[A-Za-zƏÖÜÇŞĞİəıöüçşğ\s]+$/.test(trimmedName);
   };
 
-  const handleEditSubmit = (e) => {
+  const handleEditSubmit = async (e) => {
     e.preventDefault();
 
-    if (formState.fullName && !validateFullName(formState.fullName)) {
-      alert("Please enter a valid full name format.");
+    if (formState.firstName && !validateName(formState.firstName)) {
+      alert("Please enter a valid first name format.");
       return;
     }
 
-    const updatedUser = {
-      ...currentUser,
-      fullName: formState.fullName || currentUser.fullName,
-    };
-    setCurrentUser(updatedUser);
-    localStorage.setItem("currentUser", JSON.stringify(updatedUser));
+    if (formState.lastName && !validateName(formState.lastName)) {
+      alert("Please enter a valid last name format.");
+      return;
+    }
 
-    const existingUsers = JSON.parse(localStorage.getItem("users")) || [];
-    const updatedUsers = existingUsers.map((user) => {
-      if (user.id === currentUser?.id) {
-        return {
-          ...user,
-          fullName: formState.fullName || user.fullName,
-        };
-      }
-      return user;
-    });
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
-    setShowEditProfileModal(false);
-    window.location.reload();
-  };
+    const updateData = {};
+    if (formState.firstName) updateData.firstName = formState.firstName;
+    if (formState.lastName) updateData.lastName = formState.lastName;
 
-  const handleProfileImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file && file.type.startsWith("image/")) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const updatedUser = { ...currentUser, profileImage: reader.result };
-        setCurrentUser(updatedUser);
-        localStorage.setItem("currentUser", JSON.stringify(updatedUser));
-        const existingUsers = JSON.parse(localStorage.getItem("users")) || [];
-        const updatedUsers = existingUsers.map((user) => {
-          if (user.id === currentUser?.id) {
-            return {
-              ...user,
-              profileImage: reader.result,
-            };
-          }
-          return user;
-        });
-        localStorage.setItem("users", JSON.stringify(updatedUsers));
-        window.location.reload();
-      };
-      reader.readAsDataURL(file);
+    if (Object.keys(updateData).length > 0) {
+      await updateUserProfile(updateData);
+    } else {
+      setShowEditProfileModal(false);
     }
   };
 
-  console.log(currentUser);
+  const handleProfileImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith("image/")) {
+      await uploadProfileImage(file);
+    }
+  };
+
+  // const fullName = `${currentUser.firstName || ""} ${
+  //   currentUser.lastName || ""
+  // }`.trim();
 
   return (
     <>
@@ -164,7 +281,7 @@ const ProfileDashboard = () => {
               My Profile Dashboard
             </h1>
             <p className="text-gray-600">
-              Welcome back, {user?.fullName || "User"}!
+              Welcome back, {currentUser.fullName || "User"}!
               <button
                 onClick={checkTokens}
                 className="ml-2 text-blue-600 hover:text-blue-800 text-sm underline"
@@ -179,9 +296,9 @@ const ProfileDashboard = () => {
               <div className="bg-white rounded-xl shadow-lg p-6">
                 <div className="text-center">
                   <div className="relative profile-picture w-20 h-20 bg-gray-300 rounded-full flex items-center justify-center mx-auto mb-4">
-                    {currentUser.profileImage ? (
+                    {currentUser.profilePhotoUrl ? (
                       <img
-                        src={currentUser.profileImage}
+                        src={currentUser.profilePhotoUrl}
                         alt="Profile"
                         className="w-full h-full object-cover rounded-full"
                       />
@@ -233,12 +350,27 @@ const ProfileDashboard = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Full Name
+                        First Name
                       </label>
                       <div className="bg-gray-50 p-3 rounded-lg">
-                        <p className="text-gray-800">{currentUser.fullName}</p>
+                        <p className="text-gray-800">
+                          {currentUser.firstName || "Not set"}
+                        </p>
                       </div>
                     </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Last Name
+                      </label>
+                      <div className="bg-gray-50 p-3 rounded-lg">
+                        <p className="text-gray-800">
+                          {currentUser.lastName || "Not set"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Email Address
@@ -247,34 +379,46 @@ const ProfileDashboard = () => {
                         <p className="text-gray-800">{currentUser.email}</p>
                       </div>
                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        User ID
+                        Phone Number
                       </label>
                       <div className="bg-gray-50 p-3 rounded-lg">
-                        <p className="text-gray-800 font-mono text-sm">
-                          #{currentUser.id}
+                        <p className="text-gray-800">
+                          {currentUser.phone || "Not set"}
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Registration Date
-                    </label>
-                    <div className="bg-gray-50 p-3 rounded-lg">
-                      <p className="text-gray-800">
-                        {formatDate(currentUser.createdAt)}
-                      </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Date of Birth
+                      </label>
+                      <div className="bg-gray-50 p-3 rounded-lg">
+                        <p className="text-gray-800">
+                          {currentUser.dateOfBirth
+                            ? formatDate(currentUser.dateOfBirth)
+                            : "Not set"}
+                        </p>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Registration Date
+                      </label>
+                      <div className="bg-gray-50 p-3 rounded-lg">
+                        <p className="text-gray-800">
+                          {formatDate(currentUser.createdAt)}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
+              {/* ...existing code... */}
               <div className="bg-white rounded-xl shadow-lg p-6">
                 <h3 className="text-xl font-bold text-gray-800 mb-6">
                   Quick Actions
@@ -342,6 +486,7 @@ const ProfileDashboard = () => {
           </div>
         </div>
       </div>
+
       {showLogoutModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4">
@@ -363,7 +508,7 @@ const ProfileDashboard = () => {
                   Cancel
                 </button>
                 <button
-                  onClick={handleLogout} // ✅ Updated logout function
+                  onClick={handleLogout}
                   className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-red-700 transition-colors"
                 >
                   Logout
@@ -373,6 +518,7 @@ const ProfileDashboard = () => {
           </div>
         </div>
       )}
+
       {showEditProfileModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4">
@@ -383,38 +529,60 @@ const ProfileDashboard = () => {
               <form onSubmit={handleEditSubmit} className="space-y-4">
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2 text-left">
-                    Full Name
+                    First Name
                   </label>
                   <input
                     type="text"
-                    defaultValue={currentUser.fullName}
+                    defaultValue={currentUser.firstName}
                     onChange={(e) => {
                       const filteredValue = e.target.value.replace(
                         /[0-9]/g,
                         ""
                       );
-                      handleInputChange("fullName", filteredValue);
+                      handleInputChange("firstName", filteredValue);
                     }}
                     maxLength={25}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter your full name"
+                    placeholder="Enter your first name"
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 text-left">
+                    Last Name
+                  </label>
+                  <input
+                    type="text"
+                    defaultValue={currentUser.lastName}
+                    onChange={(e) => {
+                      const filteredValue = e.target.value.replace(
+                        /[0-9]/g,
+                        ""
+                      );
+                      handleInputChange("lastName", filteredValue);
+                    }}
+                    maxLength={25}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter your last name"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={
-                    formState.fullName && !validateFullName(formState.fullName)
+                    (formState.firstName &&
+                      !validateName(formState.firstName)) ||
+                    (formState.lastName && !validateName(formState.lastName))
                   }
                   className={`w-full py-3 px-4 rounded-lg font-medium transition-all ${
-                    formState.fullName && !validateFullName(formState.fullName)
+                    (formState.firstName &&
+                      !validateName(formState.firstName)) ||
+                    (formState.lastName && !validateName(formState.lastName))
                       ? "bg-gray-400 text-gray-200 cursor-not-allowed"
                       : "bg-blue-600 text-white hover:bg-blue-700"
                   }`}
                 >
-                  {formState.fullName && !validateFullName(formState.fullName)
-                    ? "Please fix validation errors"
-                    : "Save Changes"}
+                  Save Changes
                 </button>
               </form>
 

@@ -17,6 +17,7 @@ import noise from "../Images/noise.jpg";
 import ConfirmEmail from "../Components/ConfirmEmail";
 import ForgotPassword from "../Components/ForgotPassword";
 import ResetPassword from "../Components/ResetPassword";
+import Addresses from "../Components/Addresses";
 const Routing = () => {
   const topPicksProducts = [
     {
@@ -139,6 +140,14 @@ const Routing = () => {
         element={
           <ProtectedRoute>
             <Support />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/addresses"
+        element={
+          <ProtectedRoute>
+            <Addresses />
           </ProtectedRoute>
         }
       />
