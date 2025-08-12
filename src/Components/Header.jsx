@@ -142,7 +142,7 @@ const Header = () => {
               <>
                 <div className="hidden md:flex items-center space-x-3 lg:space-x-4">
                   <span className="text-gray-700 text-sm lg:text-base max-w-[100px] lg:max-w-none truncate">
-                    Hi, {currentUser?.firstName || user?.fullName || "User"}!
+                    Hi, {currentUser?.firstName || user?.fullName}!
                   </span>
                   <Link
                     to="/profile"

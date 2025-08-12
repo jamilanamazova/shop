@@ -328,28 +328,14 @@ const Addresses = () => {
         return;
       }
 
-      const currentAddress = addresses.find((addr) => addr.id === addressId);
-
-      if (!currentAddress) {
-        alert("address not found");
-        return;
-      }
-
-      const addressData = {
-        addressLine1: currentAddress.addressLine1,
-        addressLine2: currentAddress.addressLine2,
-        city: currentAddress.city,
-        country: currentAddress.country,
-        postalCode: currentAddress.postalCode,
-        default: true,
-      };
-
-      console.log("🔄 Setting default address:", addressId);
-      console.log("📤 Sending data:", addressData);
+      console.log(
+        "🔄 Setting default address via specialized endpoint:",
+        addressId
+      );
 
       const response = await axios.put(
-        `${apiURL}/customers/me/addresses/${addressId}`,
-        addressData,
+        `${apiURL}/customers/me/addresses/${addressId}/default`,
+        {},
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -360,17 +346,10 @@ const Addresses = () => {
 
       console.log("📥 Backend response:", response.data);
 
-      if (response.data.status === "OK" && response.data.data) {
+      if (response.data.status === "OK") {
         console.log("✅ Backend confirmed success, updating local state");
 
-        setAddresses((prevAddresses) => {
-          const updatedAddresses = prevAddresses.map((address) => ({
-            ...address,
-            default: address.id === addressId ? true : false,
-          }));
-          console.log("🔄 Updated local addresses:", updatedAddresses);
-          return updatedAddresses;
-        });
+        await fetchAddresses();
 
         showSuccess("Default address updated successfully!");
       } else {
@@ -553,65 +532,72 @@ const Addresses = () => {
       <div className="min-h-screen bg-gray-100 py-8">
         <div className="max-w-6xl mx-auto px-4">
           <div className="mb-8">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
               <div>
-                <h1 className="text-3xl font-bold text-gray-800 mb-2">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
                   My Addresses
                 </h1>
-                <p className="text-gray-600">Manage your delivery addresses</p>
+                <p className="text-gray-600 text-sm sm:text-base">
+                  Manage your delivery addresses
+                </p>
               </div>
               <button
                 onClick={() => setShowAddModal(true)}
-                className="bg-green-600 text-white py-2 px-6 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center gap-2"
+                className="bg-green-600 text-white py-2 px-4 sm:px-6 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center gap-2 w-full sm:w-auto"
               >
                 <i className="fa-solid fa-plus"></i>
-                Add New Address
+                <span className="hidden sm:inline">Add New Address</span>
+                <span className="sm:hidden">Add</span>
               </button>
             </div>
           </div>
 
           {addresses.length === 0 ? (
-            <div className="text-center py-16">
-              <div className="mb-6">
-                <i className="fa-solid fa-location-dot text-6xl text-gray-400"></i>
+            <div className="text-center py-12 sm:py-16">
+              <div className="mb-4 sm:mb-6">
+                <i className="fa-solid fa-location-dot text-4xl sm:text-6xl text-gray-400"></i>
               </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2">
                 No addresses found
               </h3>
-              <p className="text-gray-600 mb-6">
+              <p className="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base px-4">
                 Add your first delivery address to get started
               </p>
               <button
                 onClick={() => setShowAddModal(true)}
-                className="bg-green-600 text-white py-2 px-6 rounded-lg font-medium hover:bg-green-700 transition-colors"
+                className="bg-green-600 text-white py-2 px-4 sm:px-6 rounded-lg font-medium hover:bg-green-700 transition-colors"
               >
-                Add Address
+                <span className="hidden sm:inline">Add Address</span>
+                <span className="sm:hidden">Add</span>
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {addresses.map((address) => (
                 <div
                   key={address.id}
-                  className={`bg-white rounded-xl shadow-lg p-6 border-2 ${
+                  className={`bg-white rounded-xl shadow-lg p-4 sm:p-6 border-2 ${
                     address.default ? "border-green-500" : "border-transparent"
                   }`}
                 >
                   {address.default && (
-                    <div className="mb-4">
+                    <div className="mb-3 sm:mb-4">
                       <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
                         <i className="fa-solid fa-star mr-1"></i>
-                        Default Address
+                        <span className="hidden sm:inline">
+                          Default Address
+                        </span>
+                        <span className="sm:hidden">Default</span>
                       </span>
                     </div>
                   )}
 
-                  <div className="mb-4">
-                    <h3 className="font-bold text-gray-800 mb-2">
+                  <div className="mb-3 sm:mb-4">
+                    <h3 className="font-bold text-gray-800 mb-2 text-sm sm:text-base">
                       <i className="fa-solid fa-location-dot mr-2 text-gray-600"></i>
                       Address
                     </h3>
-                    <div className="text-gray-700 text-sm space-y-1">
+                    <div className="text-gray-700 text-xs sm:text-sm space-y-1">
                       <p>{address.addressLine1}</p>
                       {address.addressLine2 && <p>{address.addressLine2}</p>}
                       <p>
@@ -621,31 +607,38 @@ const Addresses = () => {
                     </div>
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     {!address.default && (
                       <button
                         onClick={() => setDefaultAddress(address.id)}
                         disabled={isAddressLoading(address.id)}
-                        className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                        className={`flex-1 py-2 px-2 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
                           isAddressLoading(address.id)
                             ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                             : "bg-blue-50 text-blue-600 hover:bg-blue-100"
                         }`}
                       >
-                        {isAddressLoading(address.id)
-                          ? "Setting..."
-                          : "Set Default"}
+                        {isAddressLoading(address.id) ? (
+                          "Setting..."
+                        ) : (
+                          <>
+                            <span className="hidden sm:inline">
+                              Set Default
+                            </span>
+                            <span className="sm:hidden">Default</span>
+                          </>
+                        )}
                       </button>
                     )}
                     <button
                       onClick={() => openEditModal(address)}
-                      className="flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors bg-gray-50 text-gray-600 hover:bg-gray-100"
+                      className="flex-1 py-2 px-2 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-colors bg-gray-50 text-gray-600 hover:bg-gray-100"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => openDeleteModal(address)}
-                      className="flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors bg-red-50 text-red-600 hover:bg-red-100"
+                      className="flex-1 py-2 px-2 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-colors bg-red-50 text-red-600 hover:bg-red-100"
                     >
                       Delete
                     </button>
@@ -654,7 +647,6 @@ const Addresses = () => {
               ))}
             </div>
           )}
-
           <div className="text-center mt-8">
             <Link
               to="/profile"

@@ -47,6 +47,12 @@ const ProfileDashboard = () => {
   const [formState, dispatch] = useReducer(formReducer, initialState);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentAddress, setCurrentAddress] = useState({});
+  const [defaultAddress, setDefaultAddress] = useState(null);
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState(null);
+  const [imageLoadError, setImageLoadError] = useState(false);
+  const [imageLoading, setImageLoading] = useState(false);
+  const [showDeletePhotoModal, setShowDeletePhotoModal] = useState(false);
   const navigate = useNavigate();
   const authenticated = isAuthenticated();
 
@@ -136,25 +142,34 @@ const ProfileDashboard = () => {
     try {
       const token = localStorage.getItem("accessToken");
       const formData = new FormData();
-      formData.append("profilePhoto", file);
+      formData.append("file", file);
+
+      console.log("Formdata entries: ");
+      for (let [key, value] of formData.entries()) {
+        console.log(key, value);
+      }
 
       const response = await axios.post(
-        `${apiURL}/customers/me/profile-photo`,
+        `${apiURL}/customers/me/profile/photo`,
         formData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
           },
         }
       );
 
-      if (response.data.status === "100 CONTINUE") {
+      console.log("response ", response);
+      console.log("response data", response.data);
+
+      if (response.data.status === "OK") {
+        await handleGetPhotoURL(true);
         await fetchUserProfile();
         alert("Profile image updated successfully!");
       }
     } catch (error) {
       console.error("Image upload error:", error);
+      console.error("Upload error response:", error.response?.data);
       if (error.response?.status === 401) {
         logout();
         navigate("/signin");
@@ -164,9 +179,137 @@ const ProfileDashboard = () => {
     }
   };
 
+  const handleGetPhotoURL = async (forceRefresh = false) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+
+      if (!token) {
+        navigate("/signin");
+        return;
+      }
+
+      const response = await axios.get(
+        `${apiURL}/customers/me/profile/photo/url`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          params: forceRefresh ? { t: Date.now() } : {},
+        }
+      );
+
+      console.log("Photo URL API Response:", response.data);
+
+      if (response.data.status === "OK" && response.data.data) {
+        const photoUrl = response.data.data;
+        console.log("Setting photo URL:", photoUrl);
+
+        setImageLoadError(false);
+        setProfilePhotoUrl(photoUrl);
+
+        setCurrentUser((prevUser) => ({
+          ...prevUser,
+          profilePhotoUrl: photoUrl,
+        }));
+      } else {
+        console.log("No photo url in response or status is not OK");
+        setImageLoadError(true);
+      }
+    } catch (error) {
+      console.error("Failed when getting photo url", error);
+      console.error("Error response:", error.response?.data);
+      setImageLoadError(true);
+    }
+  };
+
+  const deleteProfileImage = async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+
+      if (!token) {
+        navigate("/signin");
+        return;
+      }
+
+      const response = await axios.delete(
+        `${apiURL}/customers/me/profile/photo`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log("Delete response:", response);
+      console.log("Delete response data:", response.data);
+
+      if (response.data.status === "OK") {
+        setProfilePhotoUrl(null);
+        setImageLoadError(false);
+
+        setCurrentUser((prevUser) => ({
+          ...prevUser,
+          profilePhotoUrl: null,
+        }));
+
+        alert("profile image deleted successfully!");
+      }
+    } catch (error) {
+      console.error("Failed to delete profile image", error);
+      console.error("Error response:", error.response?.data);
+      if (error.response?.status === 401) {
+        logout();
+        navigate("/signin");
+      } else {
+        alert("Failed to delete profile image");
+      }
+    }
+  };
+
+  const handleGetCurrentAddress = async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+
+      if (!token) {
+        navigate("/signin");
+        return;
+      }
+
+      const response = await axios.get(`${apiURL}/customers/me/addresses`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.data.status === "OK" && response.data.data) {
+        setCurrentAddress(response.data.data);
+
+        const defaultAddress = response.data.data.find(
+          (addr) => addr.default === true
+        );
+        setDefaultAddress(defaultAddress || null);
+      }
+    } catch (error) {
+      console.error("error while getting current address", error);
+    }
+  };
+
+  console.log(defaultAddress);
+
+  useEffect(() => {
+    if (profilePhotoUrl) {
+      console.log("Profile photo URL updated:", profilePhotoUrl);
+    }
+  }, [profilePhotoUrl]);
+
   useEffect(() => {
     if (authenticated) {
       fetchUserProfile();
+      handleGetCurrentAddress();
+      handleGetPhotoURL();
     } else {
       navigate("/signin");
     }
@@ -276,9 +419,53 @@ const ProfileDashboard = () => {
 
   const handleProfileImageChange = async (e) => {
     const file = e.target.files[0];
-    if (file && file.type.startsWith("image/")) {
-      await uploadProfileImage(file);
+
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        alert("Please select a valid image file.");
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        alert("File size must be less than 5MB.");
+        return;
+      }
+      console.log(
+        "Uploading file:",
+        file.name,
+        "Size:",
+        file.size,
+        "Type:",
+        file.type
+      );
+
+      if (file && file.type.startsWith("image/")) {
+        await uploadProfileImage(file);
+      }
     }
+  };
+
+  const handleImageError = async (e) => {
+    console.error("Image load error:", e);
+    console.log("Failed image URL:", e.target.src);
+
+    setImageLoadError(true);
+
+    // URL-ni yenidən almağı cəhd et
+    setTimeout(async () => {
+      console.log("Attempting to refresh image URL...");
+      try {
+        await handleGetPhotoURL();
+        setImageLoadError(false);
+      } catch (error) {
+        console.error("Failed to refresh image URL:", error);
+      }
+    }, 2000);
+  };
+
+  const handleImageLoad = () => {
+    console.log("Image loaded successfully");
+    setImageLoadError(false);
+    setImageLoading(false);
   };
 
   // const fullName = `${currentUser.firstName || ""} ${
@@ -294,41 +481,79 @@ const ProfileDashboard = () => {
             <h1 className="text-3xl font-bold text-gray-800 mb-2">
               My Profile Dashboard
             </h1>
-            <p className="text-gray-600">
-              Welcome back, {currentUser.fullName || "User"}!
-              <button
-                onClick={checkTokens}
-                className="ml-2 text-blue-600 hover:text-blue-800 text-sm underline"
-              >
-                (Check Token Status)
-              </button>
-            </p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-1">
               <div className="bg-white rounded-xl shadow-lg p-6">
                 <div className="text-center">
-                  <div className="relative profile-picture w-20 h-20 bg-gray-300 rounded-full flex items-center justify-center mx-auto mb-4">
-                    {currentUser.profilePhotoUrl ? (
-                      <img
-                        src={currentUser.profilePhotoUrl}
-                        alt="Profile"
-                        className="w-full h-full object-cover rounded-full"
-                      />
-                    ) : (
-                      <i className="fa-solid fa-user text-3xl text-gray-600"></i>
-                    )}
-                    <div className="overlay">
-                      <i className="fa-solid fa-camera text-gray-400 camera-icon"></i>
-                      <span className="sr-only">Change profile picture</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        onChange={handleProfileImageChange}
-                      />
+                  <div className="text-center">
+                    <div className="relative profile-picture w-20 h-20 bg-gray-300 rounded-full flex items-center justify-center mx-auto mb-3">
+                      {(currentUser.profilePhotoUrl || profilePhotoUrl) &&
+                      !imageLoadError ? (
+                        <div className="relative w-full h-full">
+                          {imageLoading && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-gray-200 rounded-full">
+                              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-600"></div>
+                            </div>
+                          )}
+                          <img
+                            src={currentUser.profilePhotoUrl || profilePhotoUrl}
+                            alt="Profile"
+                            className="w-full h-full object-cover rounded-full"
+                            onError={handleImageError}
+                            onLoad={handleImageLoad}
+                            onLoadStart={() => setImageLoading(true)}
+                            style={{
+                              display: imageLoadError ? "none" : "block",
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <i className="fa-solid fa-user text-3xl text-gray-600"></i>
+                      )}
                     </div>
+
+                    {/* Photo action buttons */}
+                    <div className="flex justify-center gap-2 mb-4">
+                      <button
+                        onClick={() =>
+                          document.querySelector('input[type="file"]').click()
+                        }
+                        className="flex items-center gap-1 px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm rounded-full transition-colors"
+                        title="Change photo"
+                      >
+                        <i className="fa-solid fa-camera text-xs"></i>
+                        {currentUser.profilePhotoUrl || profilePhotoUrl
+                          ? "Change"
+                          : "Upload"}
+                      </button>
+
+                      {(currentUser.profilePhotoUrl || profilePhotoUrl) &&
+                        !imageLoadError && (
+                          <button
+                            onClick={() => setShowDeletePhotoModal(true)}
+                            className="flex items-center gap-1 px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-sm rounded-full transition-colors"
+                            title="Delete photo"
+                          >
+                            <i className="fa-solid fa-trash text-xs"></i>
+                            Delete
+                          </button>
+                        )}
+                    </div>
+
+                    {/* Hidden file input */}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleProfileImageChange}
+                    />
+
+                    <h2 className="text-xl font-bold text-gray-800 mb-1">
+                      {currentUser.fullName}
+                    </h2>
+                    {/* ...rest of the content... */}
                   </div>
                   <h2 className="text-xl font-bold text-gray-800 mb-1">
                     {currentUser.fullName}
@@ -428,6 +653,41 @@ const ProfileDashboard = () => {
                         </p>
                       </div>
                     </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <h3 className="text-lg font-semibold mb-4">
+                      Default Address
+                    </h3>
+                    {defaultAddress ? (
+                      <div className="address-card p-4 border rounded-lg bg-gray-50">
+                        <p className="font-medium">
+                          {defaultAddress.addressLine1}
+                        </p>
+                        {defaultAddress.addressLine2 && (
+                          <p className="text-gray-600">
+                            {defaultAddress.addressLine2}
+                          </p>
+                        )}
+                        <p className="text-gray-600">
+                          {defaultAddress.city}, {defaultAddress.country}{" "}
+                          {defaultAddress.postalCode}
+                        </p>
+                        <span className="inline-block mt-2 px-2 py-1 bg-green-100 text-green-800 text-xs rounded">
+                          Default Address
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="no-address p-4 border rounded-lg bg-gray-50">
+                        <p className="text-gray-500">No default address set</p>
+                        <Link
+                          to="/addresses"
+                          className="text-blue-600 hover:underline mt-2 inline-block"
+                        >
+                          Add an address
+                        </Link>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -646,6 +906,42 @@ const ProfileDashboard = () => {
               >
                 Cancel
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDeletePhotoModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4">
+            <div className="text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                <i className="fa-solid fa-trash text-red-600"></i>
+              </div>
+              <h3 className="text-lg font-bold text-gray-800 mb-2">
+                Delete Profile Photo
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to delete your profile photo? This action
+                cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeletePhotoModal(false)}
+                  className="flex-1 bg-gray-200 text-gray-800 py-2 px-4 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    await deleteProfileImage();
+                    setShowDeletePhotoModal(false);
+                  }}
+                  className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-red-700 transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           </div>
         </div>

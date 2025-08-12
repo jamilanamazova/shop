@@ -11,27 +11,6 @@ const Footer = () => {
                 Shopery
               </h2>
             </div>
-
-            <div className="social-links flex items-center gap-4 md:gap-6">
-              <a
-                href="#"
-                className="text-gray-600 hover:text-blue-600 transition-colors duration-300 text-sm md:text-base"
-              >
-                Facebook
-              </a>
-              <a
-                href="#"
-                className="text-gray-600 hover:text-pink-600 transition-colors duration-300 text-sm md:text-base"
-              >
-                Pinterest
-              </a>
-              <a
-                href="#"
-                className="text-gray-600 hover:text-yellow-500 transition-colors duration-300 text-sm md:text-base"
-              >
-                Snapchat
-              </a>
-            </div>
           </div>
 
           <div className="right-footer">

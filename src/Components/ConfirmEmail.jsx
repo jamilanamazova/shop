@@ -14,6 +14,7 @@ const ConfirmEmail = () => {
   const [userEmail, setUserEmail] = useState("");
   const [userName, setUserName] = useState("");
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   const inputRefs = useRef([]);
 
@@ -55,6 +56,22 @@ const ConfirmEmail = () => {
     );
     setTimer(300);
   };
+
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const cooldownInterval = setInterval(() => {
+        setResendCooldown((prev) => {
+          const newTime = prev - 1;
+          if (newTime <= 0) {
+            return 0;
+          }
+          return newTime;
+        });
+      }, 1000);
+
+      return () => clearInterval(cooldownInterval);
+    }
+  }, [resendCooldown]);
 
   useEffect(() => {
     const email = localStorage.getItem("pendingMail");
@@ -104,7 +121,8 @@ const ConfirmEmail = () => {
   };
 
   const handleResendCode = async () => {
-    if (isResending) return;
+    if (isResending || resendCooldown > 0) return;
+
     setIsResending(true);
     setResendMessage("");
 
@@ -120,6 +138,8 @@ const ConfirmEmail = () => {
         startNewTimer();
         setCode(["", "", "", "", "", ""]);
         inputRefs.current[0]?.focus();
+
+        setResendCooldown(60);
 
         setTimeout(() => {
           setResendMessage("");
@@ -396,9 +416,9 @@ const ConfirmEmail = () => {
                 )}
                 <button
                   onClick={handleResendCode}
-                  disabled={isResending}
+                  disabled={isResending || isResending > 0}
                   className={`text-sm font-medium transition-colors ${
-                    isResending
+                    isResending || resendCooldown > 0
                       ? "text-gray-400 cursor-not-allowed"
                       : "text-black hover:text-gray-600"
                   }`}
@@ -407,6 +427,11 @@ const ConfirmEmail = () => {
                     <span className="flex items-center justify-center">
                       <i className="fa-solid fa-spinner fa-spin mr-1"></i>
                       Sending new code...
+                    </span>
+                  ) : resendCooldown > 0 ? (
+                    <span className="flex items-center justify-center">
+                      <i className="fa-solid fa-clock mr-1"></i>
+                      Resend in {resendCooldown}
                     </span>
                   ) : (
                     "Resend Code"
