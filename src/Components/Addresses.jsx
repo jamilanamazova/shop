@@ -33,23 +33,6 @@ const addressTypes = [
   { value: "OTHER", label: "Other" },
 ];
 
-const getAddressIcon = (addressType) => {
-  switch (addressType) {
-    case "HOUSE":
-      return "fa-home";
-    case "OFFICE":
-      return "fa-building";
-    case "APARTMENT":
-      return "fa-building-user";
-    case "HOTEL":
-      return "fa-bed";
-    case "OTHER":
-      return "fa-location-dot";
-    default:
-      return "fa-location-dot";
-  }
-};
-
 const formReducer = (state, action) => {
   switch (action.type) {
     case "SET_INITIAL_DATA":
@@ -402,7 +385,7 @@ const Addresses = () => {
         logout();
         navigate("/signin");
       } else {
-        showError("Failed to set default address. Please try again.");
+        showErr("Failed to set default address. Please try again.");
       }
     } finally {
       setAddressLoading(addressId, false);
@@ -466,7 +449,7 @@ const Addresses = () => {
       !formState.postalCode.trim() ||
       !formState.addressType.trim()
     ) {
-      showError("Please fill in all required fields");
+      showErr("Please fill in all required fields");
       return;
     }
 
@@ -482,12 +465,12 @@ const Addresses = () => {
       !formState.country.trim() ||
       !formState.postalCode.trim()
     ) {
-      showError("Please fill in all required fields");
+      showErr("Please fill in all required fields");
       return;
     }
 
     if (!selectedAddress) {
-      showError("No address selected for editing");
+      showErr("No address selected for editing");
       return;
     }
 
@@ -512,7 +495,7 @@ const Addresses = () => {
 
   const handleDeleteConfirm = async () => {
     if (!selectedAddress) {
-      showError("No address selected for deletion");
+      showErr("No address selected for deletion");
       return;
     }
 
@@ -617,11 +600,7 @@ const Addresses = () => {
               )}
 
               {addresses.length >= 6 && (
-                <div className="text-center py-4">
-                  <p className="text-red-500">
-                    You've reached the maximum limit of 6 addresses
-                  </p>
-                </div>
+                <div className="text-center py-4"></div>
               )}
             </div>
           </div>
@@ -676,11 +655,6 @@ const Addresses = () => {
 
                     <div className="mb-3 sm:mb-4">
                       <h3 className="font-bold text-gray-800 mb-2 text-sm sm:text-base">
-                        <i
-                          className={`${getAddressIcon(
-                            address.addressType
-                          )} mr-2 text-gray-600`}
-                        ></i>
                         {address.addressType
                           ? address.addressType.charAt(0) +
                             address.addressType.slice(1).toLowerCase()
@@ -738,7 +712,7 @@ const Addresses = () => {
           )}
           <div className="text-center mt-8">
             <Link
-              to="/customer/profile"
+              to="/profile"
               className="inline-flex items-center text-gray-600 hover:text-gray-800 transition-colors"
             >
               <i className="fa-solid fa-arrow-left mr-2"></i>
@@ -804,6 +778,7 @@ const Addresses = () => {
                     onChange={(e) =>
                       handleInputChange("addressLine1", e.target.value)
                     }
+                    maxLength={30}
                     required
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Enter street address"
@@ -820,6 +795,7 @@ const Addresses = () => {
                     onChange={(e) =>
                       handleInputChange("addressLine2", e.target.value)
                     }
+                    maxLength={30}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Apartment, suite, etc. (optional)"
                   />
@@ -836,6 +812,7 @@ const Addresses = () => {
                       onChange={(e) =>
                         handleInputChange("city", e.target.value)
                       }
+                      maxLength={30}
                       required
                       className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       placeholder="Enter city"
@@ -853,6 +830,7 @@ const Addresses = () => {
                     onChange={(e) =>
                       handleInputChange("postalCode", e.target.value)
                     }
+                    maxLength={9}
                     required
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Enter postal code"
@@ -923,6 +901,7 @@ const Addresses = () => {
                     onChange={(e) =>
                       handleInputChange("addressLine1", e.target.value)
                     }
+                    maxLength={30}
                     required
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Enter street address"
@@ -939,6 +918,7 @@ const Addresses = () => {
                     onChange={(e) =>
                       handleInputChange("addressLine2", e.target.value)
                     }
+                    maxLength={30}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Apartment, suite, etc. (optional)"
                   />
@@ -956,6 +936,7 @@ const Addresses = () => {
                         handleInputChange("city", e.target.value)
                       }
                       required
+                      maxLength={30}
                       className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       placeholder="Enter city"
                     />
@@ -993,6 +974,7 @@ const Addresses = () => {
                       handleInputChange("postalCode", e.target.value)
                     }
                     required
+                    maxLength={9}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Enter postal code"
                   />
