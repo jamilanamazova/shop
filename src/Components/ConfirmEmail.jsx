@@ -16,6 +16,19 @@ const ConfirmEmail = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
 
+  const [errorMessage, setErrorMessage] = useState("");
+  const [showErrorMessage, setShowErrorMessage] = useState(false);
+
+  const showError = (message) => {
+    setErrorMessage(message);
+    setShowErrorMessage(true);
+
+    setTimeout(() => {
+      setShowErrorMessage(false);
+      setErrorMessage("");
+    }, 4000);
+  };
+
   const inputRefs = useRef([]);
 
   const initializeTimer = () => {
@@ -164,7 +177,7 @@ const ConfirmEmail = () => {
   const handleVerifyCode = async () => {
     const verificationCode = code.join("");
     if (verificationCode.length < 6) {
-      alert("Please enter the complete 6-digit code.");
+      showError("Please enter the complete 6-digit code.");
       return;
     }
     setIsVerifying(true);
@@ -220,17 +233,17 @@ const ConfirmEmail = () => {
         }, 2000);
       } else {
         console.log("❌ Tokens not found in response");
-        alert("Verification failed. No tokens received.");
+        showError("Verification failed. No tokens received.");
         return;
       }
     } catch (error) {
       console.error("Verification failed:", error);
       if (error.response?.data?.message) {
-        alert("Invalid or expired verification code. Please try again.");
+        showError("Invalid or expired verification code. Please try again.");
         setCode(["", "", "", "", "", ""]);
         inputRefs.current[0]?.focus();
       } else {
-        alert("Verification failed. Please try again");
+        showError("Verification failed. Please try again");
       }
     } finally {
       setIsVerifying(false);
@@ -238,7 +251,10 @@ const ConfirmEmail = () => {
   };
 
   const handleInputChange = (index, value) => {
-    if (!/^\d*$/.test(value)) return;
+    if (!/^\d*$/.test(value)) {
+      showError("Please enter only numbers.");
+      return;
+    }
 
     if (value.length === 6 && index === 0) {
       const newCode = value.split("").slice(0, 6);
@@ -282,6 +298,28 @@ const ConfirmEmail = () => {
   return (
     <>
       <Header />
+      {showErrorMessage && (
+        <div className="fixed top-4 right-4 z-50 max-w-sm">
+          <div className="bg-red-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 animate-slide-in">
+            <div className="flex-shrink-0">
+              <i className="fa-solid fa-exclamation-circle text-xl"></i>
+            </div>
+            <div className="flex-1">
+              <p className="font-medium">{errorMessage}</p>
+            </div>
+            <button
+              onClick={() => {
+                setShowErrorMessage(false);
+                setErrorMessage("");
+              }}
+              className="flex-shrink-0 text-white hover:text-red-200"
+            >
+              <i className="fa-solid fa-times"></i>
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4 py-8">
         {showSuccessModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">

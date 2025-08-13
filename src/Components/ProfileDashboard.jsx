@@ -56,6 +56,10 @@ const ProfileDashboard = () => {
   const [validationErrors, setValidationErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("AZ");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [showErrorMessage, setShowErrorMessage] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+
   const navigate = useNavigate();
   const authenticated = isAuthenticated();
 
@@ -93,6 +97,26 @@ const ProfileDashboard = () => {
       pattern: /^[0-9]{10}$/,
     },
   ];
+
+  const showError = (message) => {
+    setErrorMessage(message);
+    setShowErrorMessage(true);
+
+    setTimeout(() => {
+      setShowErrorMessage(false);
+      setErrorMessage("");
+    }, 5000);
+  };
+
+  const showSuccess = (message) => {
+    setSuccessMessage(message);
+    setShowSuccessMessage(true);
+
+    setTimeout(() => {
+      setShowSuccessMessage(false);
+      setSuccessMessage("");
+    }, 5000);
+  };
 
   const validatePhone = (phone) => {
     if (!phone) return true;
@@ -239,7 +263,7 @@ const ProfileDashboard = () => {
       if (response.data.status === "OK") {
         await handleGetPhotoURL(true);
         await fetchUserProfile();
-        alert("Profile image updated successfully!");
+        showSuccess("Profile image updated successfully!");
       }
     } catch (error) {
       console.error("Image upload error:", error);
@@ -248,7 +272,7 @@ const ProfileDashboard = () => {
         logout();
         navigate("/signin");
       } else {
-        alert("Failed to update profile image");
+        showError("Failed to update profile image");
       }
     }
   };
@@ -328,7 +352,7 @@ const ProfileDashboard = () => {
           profilePhotoUrl: null,
         }));
 
-        alert("profile image deleted successfully!");
+        showSuccess("profile image deleted successfully!");
       }
     } catch (error) {
       console.error("Failed to delete profile image", error);
@@ -337,7 +361,7 @@ const ProfileDashboard = () => {
         logout();
         navigate("/signin");
       } else {
-        alert("Failed to delete profile image");
+        showError("Failed to delete profile image");
       }
     }
   };
@@ -566,11 +590,11 @@ const ProfileDashboard = () => {
 
     if (file) {
       if (!file.type.startsWith("image/")) {
-        alert("Please select a valid image file.");
+        showError("Please select a valid image file.");
         return;
       }
       if (file.size > 5 * 1024 * 1024) {
-        alert("File size must be less than 5MB.");
+        showError("File size must be less than 5MB.");
         return;
       }
       console.log(
@@ -614,6 +638,50 @@ const ProfileDashboard = () => {
 
   return (
     <>
+      {showSuccessMessage && (
+        <div className="fixed top-4 right-4 z-50 max-w-sm">
+          <div className="bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 animate-slide-in">
+            <div className="flex-shrink-0">
+              <i className="fa-solid fa-check-circle text-xl"></i>
+            </div>
+            <div className="flex-1">
+              <p className="font-medium">{successMessage}</p>
+            </div>
+            <button
+              onClick={() => {
+                setShowSuccessMessage(false);
+                setSuccessMessage("");
+              }}
+              className="flex-shrink-0 text-white hover:text-green-200"
+            >
+              <i className="fa-solid fa-times"></i>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showErrorMessage && (
+        <div className="fixed top-4 right-4 z-50 max-w-sm">
+          <div className="bg-red-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 animate-slide-in">
+            <div className="flex-shrink-0">
+              <i className="fa-solid fa-exclamation-circle text-xl"></i>
+            </div>
+            <div className="flex-1">
+              <p className="font-medium">{errorMessage}</p>
+            </div>
+            <button
+              onClick={() => {
+                setShowErrorMessage(false);
+                setErrorMessage("");
+              }}
+              className="flex-shrink-0 text-white hover:text-red-200"
+            >
+              <i className="fa-solid fa-times"></i>
+            </button>
+          </div>
+        </div>
+      )}
+
       <Header />
       <div className="min-h-screen bg-gray-100 py-8">
         <div className="max-w-4xl mx-auto px-4">

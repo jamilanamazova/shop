@@ -432,7 +432,7 @@ const Settings = () => {
                 Home
               </Link>
               <i className="fa-solid fa-chevron-right text-xs"></i>
-              <Link to="/profile" className="hover:text-gray-800">
+              <Link to="/customer/profile" className="hover:text-gray-800">
                 Profile
               </Link>
               <i className="fa-solid fa-chevron-right text-xs"></i>
@@ -485,7 +485,7 @@ const Settings = () => {
 
           <div className="text-center mt-8">
             <Link
-              to="/profile"
+              to="/customer/profile"
               className="inline-flex items-center text-gray-600 hover:text-gray-800 transition-colors"
             >
               <i className="fa-solid fa-arrow-left mr-2"></i>

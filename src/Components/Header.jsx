@@ -130,6 +130,17 @@ const Header = () => {
         <div className="rightHeader">
           <div className="flex items-center gap-2 md:gap-4">
             <div className="flex items-center gap-2 md:gap-3">
+              {authenticated && (
+                <div className="hidden lg:block">
+                  <button className="relative bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-full font-bold text-sm hover:from-orange-600 hover:to-red-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 animate-pulse">
+                    <i className="fa-solid fa-store mr-2"></i>
+                    Be a Merchant
+                    <span className="absolute -top-1 -right-1 bg-yellow-400 text-red-600 text-xs px-1.5 py-0.5 rounded-full font-bold">
+                      NEW
+                    </span>
+                  </button>
+                </div>
+              )}
               <div className="search-icon cursor-pointer hover:text-gray-600 transition-colors">
                 <i className="fa-solid fa-magnifying-glass text-lg"></i>
               </div>
@@ -145,7 +156,7 @@ const Header = () => {
                     Hi, {currentUser?.firstName || user?.fullName}!
                   </span>
                   <Link
-                    to="/profile"
+                    to="/customer/profile"
                     className="text-gray-700 hover:text-green-600 transition-colors"
                     title="Profile"
                   >
@@ -161,7 +172,7 @@ const Header = () => {
 
                 <div className="flex md:hidden items-center space-x-2">
                   <Link
-                    to="/profile"
+                    to="/customer/profile"
                     className="text-gray-700 hover:text-green-600 transition-colors"
                     title="Profile"
                   >
@@ -270,7 +281,7 @@ const Header = () => {
               </div>
 
               <Link
-                to="/profile"
+                to="/customer/profile"
                 className="flex items-center space-x-3 py-2 hover:bg-gray-100 rounded px-2 transition-colors"
                 onClick={toggleSideBar}
               >

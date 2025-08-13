@@ -91,8 +91,21 @@ const Addresses = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
+  const [errorMessage, setErrorMessage] = useState("");
+  const [showErrorMessage, setShowErrorMessage] = useState(false);
+
   const navigate = useNavigate();
   const authenticated = isAuthenticated();
+
+  const showError = (message) => {
+    setErrorMessage(message);
+    setShowErrorMessage(true);
+
+    setTimeout(() => {
+      setShowErrorMessage(false);
+      setErrorMessage("");
+    }, 4000);
+  };
 
   const setAddressLoading = (addressId, isLoading) => {
     setLoadingStates((prev) => ({
@@ -208,7 +221,7 @@ const Addresses = () => {
         logout();
         navigate("/signin");
       } else {
-        alert("Failed to add address. Please try again.");
+        showError("Failed to add address. Please try again.");
       }
     } finally {
       setModalSubmitting(false);
@@ -291,7 +304,7 @@ const Addresses = () => {
         logout();
         navigate("/signin");
       } else {
-        alert("Failed to update address");
+        showError("Failed to update address");
       }
     } finally {
       setModalSubmitting(false);
@@ -328,7 +341,7 @@ const Addresses = () => {
 
         showSuccess("Address deleted successfully!");
       } else {
-        alert("Failed to delete address");
+        showError("Failed to delete address");
       }
     } catch (error) {
       console.error("Error deleting address:", error);
@@ -337,7 +350,7 @@ const Addresses = () => {
         logout();
         navigate("/signin");
       } else {
-        alert("Failed to delete address. Please try again.");
+        showError("Failed to delete address. Please try again.");
       }
     } finally {
       setModalSubmitting(false);
@@ -380,7 +393,7 @@ const Addresses = () => {
         showSuccess("Default address updated successfully!");
       } else {
         console.error("❌ Backend did not confirm success");
-        alert("Failed to set default address");
+        showError("Failed to set default address");
       }
     } catch (error) {
       console.error("💥 Error setting default address:", error);
@@ -389,7 +402,7 @@ const Addresses = () => {
         logout();
         navigate("/signin");
       } else {
-        alert("Failed to set default address. Please try again.");
+        showError("Failed to set default address. Please try again.");
       }
     } finally {
       setAddressLoading(addressId, false);
@@ -453,7 +466,7 @@ const Addresses = () => {
       !formState.postalCode.trim() ||
       !formState.addressType.trim()
     ) {
-      alert("Please fill in all required fields");
+      showError("Please fill in all required fields");
       return;
     }
 
@@ -469,12 +482,12 @@ const Addresses = () => {
       !formState.country.trim() ||
       !formState.postalCode.trim()
     ) {
-      alert("Please fill in all required fields");
+      showError("Please fill in all required fields");
       return;
     }
 
     if (!selectedAddress) {
-      alert("No address selected for editing");
+      showError("No address selected for editing");
       return;
     }
 
@@ -499,7 +512,7 @@ const Addresses = () => {
 
   const handleDeleteConfirm = async () => {
     if (!selectedAddress) {
-      alert("No address selected for deletion");
+      showError("No address selected for deletion");
       return;
     }
 
@@ -551,6 +564,28 @@ const Addresses = () => {
                 setSuccessMessage("");
               }}
               className="flex-shrink-0 text-white hover:text-green-200"
+            >
+              <i className="fa-solid fa-times"></i>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showErrorMessage && (
+        <div className="fixed top-4 right-4 z-50 max-w-sm">
+          <div className="bg-red-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 animate-slide-in">
+            <div className="flex-shrink-0">
+              <i className="fa-solid fa-exclamation-circle text-xl"></i>
+            </div>
+            <div className="flex-1">
+              <p className="font-medium">{errorMessage}</p>
+            </div>
+            <button
+              onClick={() => {
+                setShowErrorMessage(false);
+                setErrorMessage("");
+              }}
+              className="flex-shrink-0 text-white hover:text-red-200"
             >
               <i className="fa-solid fa-times"></i>
             </button>
@@ -703,7 +738,7 @@ const Addresses = () => {
           )}
           <div className="text-center mt-8">
             <Link
-              to="/profile"
+              to="/customer/profile"
               className="inline-flex items-center text-gray-600 hover:text-gray-800 transition-colors"
             >
               <i className="fa-solid fa-arrow-left mr-2"></i>

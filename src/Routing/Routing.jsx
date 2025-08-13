@@ -104,7 +104,7 @@ const Routing = () => {
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/confirm-email" element={<ConfirmEmail />} />
       <Route
-        path="/profile"
+        path="/customer/profile"
         element={
           <ProtectedRoute>
             <Profile />

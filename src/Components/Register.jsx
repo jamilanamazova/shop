@@ -36,9 +36,34 @@ const Register = () => {
     borderColor: "",
   });
   const [showRedirectModal, setShowRedirectModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [showErrorMessage, setShowErrorMessage] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+
   const errorRef = useRef(null);
   const passwordInputRef = useRef(null);
   const fullNameInputRef = useRef(null);
+
+  const showError = (message) => {
+    setErrorMessage(message);
+    setShowErrorMessage(true);
+
+    setTimeout(() => {
+      setShowErrorMessage(false);
+      setErrorMessage("");
+    }, 5000);
+  };
+
+  const showSuccess = (message) => {
+    setSuccessMessage(message);
+    setShowSuccessMessage(true);
+
+    setTimeout(() => {
+      setShowSuccessMessage(false);
+      setSuccessMessage("");
+    }, 4000);
+  };
 
   const calculatePasswordStrength = (password) => {
     if (!password) {
@@ -234,24 +259,24 @@ const Register = () => {
 
         if (status === 400) {
           if (data.message) {
-            alert(data.message);
+            showError(data.message);
           } else if (data.errors) {
             const errorMessages = Object.values(data.errors).join("\n");
-            alert(`Validation Errors:\n${errorMessages}`);
+            showError(`Validation Errors:\n${errorMessages}`);
           } else {
-            alert("Invalid data. Please check your inputs.");
+            showError("Invalid data. Please check your inputs.");
           }
         } else if (status === 409) {
-          alert("Email already exists. Please use a different email.");
+          showError("Email already exists. Please use a different email.");
         } else {
-          alert("Registration failed. Please try again.");
+          showError("Registration failed. Please try again.");
         }
       } else if (error.request) {
-        alert(
+        showError(
           "Cannot connect to server. Please check your connection and try again."
         );
       } else {
-        alert("An unexpected error occurred. Please try again.");
+        showError("An unexpected error occurred. Please try again.");
       }
     }
   };
@@ -303,6 +328,50 @@ const Register = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4 py-8">
+      {showSuccessMessage && (
+        <div className="fixed top-4 right-4 z-50 max-w-sm">
+          <div className="bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 animate-slide-in">
+            <div className="flex-shrink-0">
+              <i className="fa-solid fa-check-circle text-xl"></i>
+            </div>
+            <div className="flex-1">
+              <p className="font-medium">{successMessage}</p>
+            </div>
+            <button
+              onClick={() => {
+                setShowSuccessMessage(false);
+                setSuccessMessage("");
+              }}
+              className="flex-shrink-0 text-white hover:text-green-200"
+            >
+              <i className="fa-solid fa-times"></i>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showErrorMessage && (
+        <div className="fixed top-4 right-4 z-50 max-w-sm">
+          <div className="bg-red-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 animate-slide-in">
+            <div className="flex-shrink-0">
+              <i className="fa-solid fa-exclamation-circle text-xl"></i>
+            </div>
+            <div className="flex-1">
+              <p className="font-medium">{errorMessage}</p>
+            </div>
+            <button
+              onClick={() => {
+                setShowErrorMessage(false);
+                setErrorMessage("");
+              }}
+              className="flex-shrink-0 text-white hover:text-red-200"
+            >
+              <i className="fa-solid fa-times"></i>
+            </button>
+          </div>
+        </div>
+      )}
+
       {showRedirectModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full mx-4 transform animate-pulse">
