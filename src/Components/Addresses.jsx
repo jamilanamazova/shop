@@ -12,6 +12,7 @@ const initialState = {
   city: "",
   country: "",
   postalCode: "",
+  addressType: "",
   default: false,
 };
 
@@ -20,11 +21,34 @@ const countries = [
   { value: "Azerbaijan", label: "Azerbaijan" },
   { value: "Turkey", label: "Turkey" },
   { value: "United States", label: "United States" },
-  { value: "United Kingdom", label: "United Kingdom" },
-  { value: "Germany", label: "Germany" },
-  { value: "France", label: "France" },
   { value: "Russia", label: "Russia" },
 ];
+
+const addressTypes = [
+  { value: "", label: "Select Address Type" },
+  { value: "HOUSE", label: "House" },
+  { value: "OFFICE", label: "Office" },
+  { value: "APARTMENT", label: "Apartment" },
+  { value: "HOTEL", label: "Hotel" },
+  { value: "OTHER", label: "Other" },
+];
+
+const getAddressIcon = (addressType) => {
+  switch (addressType) {
+    case "HOUSE":
+      return "fa-home";
+    case "OFFICE":
+      return "fa-building";
+    case "APARTMENT":
+      return "fa-building-user";
+    case "HOTEL":
+      return "fa-bed";
+    case "OTHER":
+      return "fa-location-dot";
+    default:
+      return "fa-location-dot";
+  }
+};
 
 const formReducer = (state, action) => {
   switch (action.type) {
@@ -36,6 +60,7 @@ const formReducer = (state, action) => {
         city: action.payload.city || "",
         country: action.payload.country || "",
         postalCode: action.payload.postalCode || "",
+        addressType: action.payload.addressType || "",
         default: action.payload.default || false,
       };
     case "UPDATE_FIELD":
@@ -144,6 +169,7 @@ const Addresses = () => {
         city: formState.city,
         country: formState.country,
         postalCode: formState.postalCode,
+        addressType: formState.addressType,
         default: formState.default,
       };
 
@@ -424,7 +450,8 @@ const Addresses = () => {
       !formState.addressLine1.trim() ||
       !formState.city.trim() ||
       !formState.country.trim() ||
-      !formState.postalCode.trim()
+      !formState.postalCode.trim() ||
+      !formState.addressType.trim()
     ) {
       alert("Please fill in all required fields");
       return;
@@ -457,6 +484,7 @@ const Addresses = () => {
       city: formState.city,
       country: formState.country,
       postalCode: formState.postalCode,
+      addressType: formState.addressType,
       default: formState.default,
     };
 
@@ -488,6 +516,7 @@ const Addresses = () => {
         city: address.city,
         country: address.country,
         postalCode: address.postalCode,
+        addressType: address.addressType,
         default: address.default,
       },
     });
@@ -541,14 +570,24 @@ const Addresses = () => {
                   Manage your delivery addresses
                 </p>
               </div>
-              <button
-                onClick={() => setShowAddModal(true)}
-                className="bg-green-600 text-white py-2 px-4 sm:px-6 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center gap-2 w-full sm:w-auto"
-              >
-                <i className="fa-solid fa-plus"></i>
-                <span className="hidden sm:inline">Add New Address</span>
-                <span className="sm:hidden">Add</span>
-              </button>
+              {addresses.length < 6 && (
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  className="bg-green-600 text-white py-2 px-4 sm:px-6 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center gap-2 w-full sm:w-auto"
+                >
+                  <i className="fa-solid fa-plus"></i>
+                  <span className="hidden sm:inline">Add New Address</span>
+                  <span className="sm:hidden">Add</span>
+                </button>
+              )}
+
+              {addresses.length >= 6 && (
+                <div className="text-center py-4">
+                  <p className="text-red-500">
+                    You've reached the maximum limit of 6 addresses
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -573,78 +612,93 @@ const Addresses = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {addresses.map((address) => (
-                <div
-                  key={address.id}
-                  className={`bg-white rounded-xl shadow-lg p-4 sm:p-6 border-2 ${
-                    address.default ? "border-green-500" : "border-transparent"
-                  }`}
-                >
-                  {address.default && (
-                    <div className="mb-3 sm:mb-4">
-                      <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                        <i className="fa-solid fa-star mr-1"></i>
-                        <span className="hidden sm:inline">
-                          Default Address
+              {[...addresses]
+                .sort((a, b) => {
+                  if (a.default && !b.default) return -1;
+                  if (!a.default && b.default) return 1;
+                  return 0;
+                })
+                .map((address) => (
+                  <div
+                    key={address.id}
+                    className={`bg-white rounded-xl shadow-lg p-4 sm:p-6 border-2 ${
+                      address.default
+                        ? "border-green-500"
+                        : "border-transparent"
+                    }`}
+                  >
+                    {address.default && (
+                      <div className="mb-3 sm:mb-4">
+                        <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                          <i className="fa-solid fa-star mr-1"></i>
+                          <span className="hidden sm:inline">
+                            Default Address
+                          </span>
+                          <span className="sm:hidden">Default</span>
                         </span>
-                        <span className="sm:hidden">Default</span>
-                      </span>
-                    </div>
-                  )}
-
-                  <div className="mb-3 sm:mb-4">
-                    <h3 className="font-bold text-gray-800 mb-2 text-sm sm:text-base">
-                      <i className="fa-solid fa-location-dot mr-2 text-gray-600"></i>
-                      Address
-                    </h3>
-                    <div className="text-gray-700 text-xs sm:text-sm space-y-1">
-                      <p>{address.addressLine1}</p>
-                      {address.addressLine2 && <p>{address.addressLine2}</p>}
-                      <p>
-                        {address.city}, {address.country}
-                      </p>
-                      <p>{address.postalCode}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    {!address.default && (
-                      <button
-                        onClick={() => setDefaultAddress(address.id)}
-                        disabled={isAddressLoading(address.id)}
-                        className={`flex-1 py-2 px-2 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
-                          isAddressLoading(address.id)
-                            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                            : "bg-blue-50 text-blue-600 hover:bg-blue-100"
-                        }`}
-                      >
-                        {isAddressLoading(address.id) ? (
-                          "Setting..."
-                        ) : (
-                          <>
-                            <span className="hidden sm:inline">
-                              Set Default
-                            </span>
-                            <span className="sm:hidden">Default</span>
-                          </>
-                        )}
-                      </button>
+                      </div>
                     )}
-                    <button
-                      onClick={() => openEditModal(address)}
-                      className="flex-1 py-2 px-2 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-colors bg-gray-50 text-gray-600 hover:bg-gray-100"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => openDeleteModal(address)}
-                      className="flex-1 py-2 px-2 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-colors bg-red-50 text-red-600 hover:bg-red-100"
-                    >
-                      Delete
-                    </button>
+
+                    <div className="mb-3 sm:mb-4">
+                      <h3 className="font-bold text-gray-800 mb-2 text-sm sm:text-base">
+                        <i
+                          className={`${getAddressIcon(
+                            address.addressType
+                          )} mr-2 text-gray-600`}
+                        ></i>
+                        {address.addressType
+                          ? address.addressType.charAt(0) +
+                            address.addressType.slice(1).toLowerCase()
+                          : "Address"}
+                      </h3>
+                      <div className="text-gray-700 text-xs sm:text-sm space-y-1">
+                        <p>{address.addressLine1}</p>
+                        {address.addressLine2 && <p>{address.addressLine2}</p>}
+                        <p>
+                          {address.city}, {address.country}
+                        </p>
+                        <p>{address.postalCode}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      {!address.default && (
+                        <button
+                          onClick={() => setDefaultAddress(address.id)}
+                          disabled={isAddressLoading(address.id)}
+                          className={`flex-1 py-2 px-2 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                            isAddressLoading(address.id)
+                              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                              : "bg-blue-50 text-blue-600 hover:bg-blue-100"
+                          }`}
+                        >
+                          {isAddressLoading(address.id) ? (
+                            "Setting..."
+                          ) : (
+                            <>
+                              <span className="hidden sm:inline">
+                                Set Default
+                              </span>
+                              <span className="sm:hidden">Default</span>
+                            </>
+                          )}
+                        </button>
+                      )}
+                      <button
+                        onClick={() => openEditModal(address)}
+                        className="flex-1 py-2 px-2 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-colors bg-gray-50 text-gray-600 hover:bg-gray-100"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => openDeleteModal(address)}
+                        className="flex-1 py-2 px-2 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-colors bg-red-50 text-red-600 hover:bg-red-100"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
             </div>
           )}
           <div className="text-center mt-8">
@@ -682,6 +736,25 @@ const Addresses = () => {
                     {countries.map((country) => (
                       <option key={country.value} value={country.value}>
                         {country.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 text-left">
+                    Address Type <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={formState.addressType}
+                    onChange={(e) =>
+                      handleInputChange("addressType", e.target.value)
+                    }
+                    required
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  >
+                    {addressTypes.map((type) => (
+                      <option key={type.value} value={type.value}>
+                        {type.label}
                       </option>
                     ))}
                   </select>
@@ -786,6 +859,25 @@ const Addresses = () => {
                 Edit Address
               </h3>
               <form onSubmit={handleEditSubmit} className="space-y-4">
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 text-left">
+                    Address Type *
+                  </label>
+                  <select
+                    value={formState.addressType}
+                    onChange={(e) =>
+                      handleInputChange("addressType", e.target.value)
+                    }
+                    required
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  >
+                    {addressTypes.map((type) => (
+                      <option key={type.value} value={type.value}>
+                        {type.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2 text-left">
                     Address Line 1 *

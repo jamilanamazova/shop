@@ -93,12 +93,6 @@ const Settings = () => {
       description: "Manage your notification preferences",
     },
     {
-      id: "addresses",
-      title: "Addresses",
-      icon: "fa-location-dot",
-      description: "Manage shipping and billing addresses",
-    },
-    {
       id: "payment",
       title: "Payment Methods",
       icon: "fa-credit-card",
@@ -302,48 +296,6 @@ const Settings = () => {
     </div>
   );
 
-  const renderAddressesSection = () => (
-    <div className="space-y-6">
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-gray-800">
-            Saved Addresses
-          </h3>
-          <button className="bg-black text-white py-2 px-4 rounded-lg font-medium hover:bg-gray-800 transition-colors">
-            Add New Address
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {[
-            { type: "Home", address: "123 Main Street, City, State 12345" },
-            {
-              type: "Work",
-              address: "456 Business Ave, Downtown, State 67890",
-            },
-          ].map((addr, index) => (
-            <div key={index} className="border border-gray-200 rounded-lg p-4">
-              <div className="flex justify-between items-start mb-2">
-                <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2 py-1 rounded">
-                  {addr.type}
-                </span>
-                <div className="flex space-x-2">
-                  <button className="text-blue-600 hover:text-blue-800 text-sm">
-                    Edit
-                  </button>
-                  <button className="text-red-600 hover:text-red-800 text-sm">
-                    Delete
-                  </button>
-                </div>
-              </div>
-              <p className="text-gray-600 text-sm">{addr.address}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
   const renderPaymentSection = () => (
     <div className="space-y-6">
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -459,8 +411,6 @@ const Settings = () => {
         return renderSecuritySection();
       case "notifications":
         return renderNotificationsSection();
-      case "addresses":
-        return renderAddressesSection();
       case "payment":
         return renderPaymentSection();
       case "preferences":

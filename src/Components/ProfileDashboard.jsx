@@ -53,8 +53,68 @@ const ProfileDashboard = () => {
   const [imageLoadError, setImageLoadError] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
   const [showDeletePhotoModal, setShowDeletePhotoModal] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({});
+  const [successMessage, setSuccessMessage] = useState("");
+  const [selectedCountry, setSelectedCountry] = useState("AZ");
   const navigate = useNavigate();
   const authenticated = isAuthenticated();
+
+  const countries = [
+    {
+      value: "AZ",
+      label: "Azerbaijan",
+      code: "+994",
+      flag: "🇦🇿",
+      phoneLength: 9,
+      pattern: /^[0-9]{9}$/,
+    },
+    {
+      value: "TR",
+      label: "Turkey",
+      code: "+90",
+      flag: "🇹🇷",
+      phoneLength: 10,
+      pattern: /^[0-9]{10}$/,
+    },
+    {
+      value: "US",
+      label: "United States",
+      code: "+1",
+      flag: "🇺🇸",
+      phoneLength: 10,
+      pattern: /^[0-9]{10}$/,
+    },
+    {
+      value: "RU",
+      label: "Russia",
+      code: "+7",
+      flag: "🇷🇺",
+      phoneLength: 10,
+      pattern: /^[0-9]{10}$/,
+    },
+  ];
+
+  const validatePhone = (phone) => {
+    if (!phone) return true;
+
+    const cleanPhone = phone.replace(/[\s\-\(\)]/g, "");
+
+    const country = countries.find((c) => c.value === selectedCountry);
+
+    if (!country) return false;
+
+    if (cleanPhone.startsWith(country.code)) {
+      const phoneWithoutCode = cleanPhone.substring(country.code.length);
+      return country.pattern.test(phoneWithoutCode);
+    }
+
+    if (cleanPhone.startsWith("0")) {
+      const phoneWithoutZero = cleanPhone.substring(1);
+      return country.pattern.test(phoneWithoutZero);
+    }
+
+    return country.pattern.test(cleanPhone);
+  };
 
   const fetchUserProfile = async () => {
     try {
@@ -122,19 +182,33 @@ const ProfileDashboard = () => {
       if (response.data.status === "OK") {
         await fetchUserProfile();
         setShowEditProfileModal(false);
-        alert("Profile updated successfully!");
+        setSuccessMessage("Profile updated successfully!");
+        setValidationErrors({});
+
+        setTimeout(() => {
+          setSuccessMessage("");
+        }, 5000);
       } else {
-        alert("Failed to update profile");
+        setValidationErrors({
+          general: "Failed to update profile. Please try again.",
+        });
       }
     } catch (error) {
       console.error("Update error:", error);
-      console.log("error", error.response.status);
       if (error.response?.status === 401) {
         logout();
         navigate("/signin");
+      } else if (error.response?.data?.message) {
+        setValidationErrors({
+          general: error.response.data.message,
+        });
       } else {
-        alert("Failed to update profile");
+        setValidationErrors({
+          general: "Failed to update profile. Please try again.",
+        });
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -372,6 +446,17 @@ const ProfileDashboard = () => {
       field,
       value,
     });
+
+    if (validationErrors[field]) {
+      setValidationErrors((prevErrors) => ({
+        ...prevErrors,
+        [field]: "",
+      }));
+    }
+
+    if (successMessage) {
+      setSuccessMessage("");
+    }
   };
 
   const validateName = (name) => {
@@ -385,36 +470,95 @@ const ProfileDashboard = () => {
     return /^[A-Za-zƏÖÜÇŞĞİəıöüçşğ\s]+$/.test(trimmedName);
   };
 
+  const validateField = (field, value) => {
+    if (!value) return;
+
+    const validations = {
+      firstName: () =>
+        !validateName(value) &&
+        "First name must be 2-25 characters and contain only letters",
+      lastName: () =>
+        !validateName(value) &&
+        "Last name must be 2-25 characters and contain only letters",
+      phone: () => {
+        const country = countries.find((c) => c.value === selectedCountry);
+        return (
+          !validatePhone(value, selectedCountry) &&
+          `Please enter a valid ${country?.label} phone number (e.g., ${country?.code})`
+        );
+      },
+    };
+
+    const errorMessage = validations[field]?.();
+    if (errorMessage) {
+      setValidationErrors((prev) => ({
+        ...prev,
+        [field]: errorMessage,
+      }));
+    }
+  };
+
   const handleEditSubmit = async (e) => {
     e.preventDefault();
 
-    if (formState.firstName && !validateName(formState.firstName)) {
-      alert("Please enter a valid first name format.");
+    setValidationErrors({});
+    setSuccessMessage("");
+
+    const errors = {
+      ...(formState.firstName &&
+        !validateName(formState.firstName) && {
+          firstName:
+            "First name must be 2-25 characters and contain only letters",
+        }),
+      ...(formState.lastName &&
+        !validateName(formState.lastName) && {
+          lastName:
+            "Last name must be 2-25 characters and contain only letters",
+        }),
+      ...(formState.phone &&
+        !validatePhone(formState.phone) && {
+          phone: "Please enter a valid phone number",
+        }),
+    };
+
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
       return;
     }
 
-    if (formState.lastName && !validateName(formState.lastName)) {
-      alert("Please enter a valid last name format.");
-      return;
-    }
+    const formatPhoneForAPI = (phone, countryCode) => {
+      if (!phone) return phone;
 
-    const updateData = {};
-    if (formState.firstName) updateData.firstName = formState.firstName;
-    if (formState.lastName) updateData.lastName = formState.lastName;
-    if (formState.phone) {
-      updateData.phone = String(formState.phone);
-    }
-    if (formState.dateOfBirth) {
-      updateData.dateOfBirth = new Date(formState.dateOfBirth).toISOString();
-    }
+      const cleanPhone = phone.replace(/[\s\-\(\)]/g, "");
+      const country = countries.find((c) => c.value === countryCode);
+
+      if (cleanPhone.startsWith(country.code)) {
+        return cleanPhone;
+      }
+
+      if (cleanPhone.startsWith("0")) {
+        return country.code + cleanPhone.substring(1);
+      }
+
+      return country.code + cleanPhone;
+    };
+
+    const updateData = {
+      ...(formState.firstName && { firstName: formState.firstName }),
+      ...(formState.lastName && { lastName: formState.lastName }),
+      ...(formState.phone && {
+        phone: formatPhoneForAPI(formState.phone, selectedCountry),
+      }),
+      ...(formState.dateOfBirth && {
+        dateOfBirth: new Date(formState.dateOfBirth).toISOString(),
+      }),
+    };
 
     console.log("Update data being sent:", updateData);
 
-    if (Object.keys(updateData).length > 0) {
-      await updateUserProfile(updateData);
-    } else {
-      setShowEditProfileModal(false);
-    }
+    Object.keys(updateData).length > 0
+      ? await updateUserProfile(updateData)
+      : setShowEditProfileModal(false);
   };
 
   const handleProfileImageChange = async (e) => {
@@ -467,10 +611,6 @@ const ProfileDashboard = () => {
     setImageLoadError(false);
     setImageLoading(false);
   };
-
-  // const fullName = `${currentUser.firstName || ""} ${
-  //   currentUser.lastName || ""
-  // }`.trim();
 
   return (
     <>
@@ -800,6 +940,25 @@ const ProfileDashboard = () => {
               <h3 className="text-lg font-bold text-gray-800 mb-4">
                 Edit Profile
               </h3>
+
+              {successMessage && (
+                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <span className="text-green-800 text-sm font-medium">
+                    <i className="fa-solid fa-check-circle mr-2"></i>
+                    {successMessage}
+                  </span>
+                </div>
+              )}
+
+              {validationErrors.general && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <span className="text-red-800 text-sm font-medium">
+                    <i className="fa-solid fa-exclamation-circle mr-2"></i>
+                    {validationErrors.general}
+                  </span>
+                </div>
+              )}
+
               <form onSubmit={handleEditSubmit} className="space-y-4">
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2 text-left">
@@ -814,11 +973,22 @@ const ProfileDashboard = () => {
                         ""
                       );
                       handleInputChange("firstName", filteredValue);
+                      validateField("firstName", filteredValue);
                     }}
                     maxLength={25}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      validationErrors.firstName
+                        ? "border-red-300 bg-red-50"
+                        : "border-gray-300"
+                    }`}
                     placeholder="Enter your first name"
                   />
+                  {validationErrors.firstName && (
+                    <span className="text-red-600 text-sm mt-1 block">
+                      <i className="fa-solid fa-exclamation-triangle mr-1"></i>
+                      {validationErrors.firstName}
+                    </span>
+                  )}
                 </div>
 
                 <div className="mb-4">
@@ -834,31 +1004,76 @@ const ProfileDashboard = () => {
                         ""
                       );
                       handleInputChange("lastName", filteredValue);
+                      validateField("lastName", filteredValue);
                     }}
                     maxLength={25}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      validationErrors.lastName
+                        ? "border-red-300 bg-red-50"
+                        : "border-gray-300"
+                    }`}
                     placeholder="Enter your last name"
                   />
+                  {validationErrors.lastName && (
+                    <span className="text-red-600 text-sm mt-1 block">
+                      <i className="fa-solid fa-exclamation-triangle mr-1"></i>
+                      {validationErrors.lastName}
+                    </span>
+                  )}
                 </div>
 
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2 text-left">
                     Phone Number
                   </label>
-                  <input
-                    type="tel"
-                    defaultValue={currentUser.phone}
-                    onChange={(e) => {
-                      // Yalnız rəqəm və + işarəsinə icazə ver
-                      const value = e.target.value.replace(
-                        /[^0-9+\-\s()]/g,
-                        ""
-                      );
-                      handleInputChange("phone", value);
-                    }}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter your phone number"
-                  />
+                  <div className="flex gap-2">
+                    <select
+                      value={selectedCountry}
+                      onChange={(e) => {
+                        setSelectedCountry(e.target.value);
+                        if (validationErrors.phone) {
+                          setValidationErrors((prev) => ({
+                            ...prev,
+                            phone: "",
+                          }));
+                        }
+                      }}
+                      className="w-32 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                    >
+                      {countries.map((country) => (
+                        <option key={country.value} value={country.value}>
+                          {country.flag} {country.value}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="tel"
+                      defaultValue={currentUser.phone}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(
+                          /[^0-9+\-\s()]/g,
+                          ""
+                        );
+                        handleInputChange("phone", value);
+                        validateField("phone", value);
+                      }}
+                      className={`flex-1 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                        validationErrors.phone
+                          ? "border-red-300 bg-red-50"
+                          : "border-gray-300"
+                      }`}
+                      placeholder={`Enter phone number (e.g., ${
+                        countries.find((c) => c.value === selectedCountry)?.code
+                      })`}
+                    />
+                  </div>
+
+                  {validationErrors.phone && (
+                    <span className="text-red-600 text-sm mt-1 block">
+                      <i className="fa-solid fa-exclamation-triangle mr-1"></i>
+                      {validationErrors.phone}
+                    </span>
+                  )}
                 </div>
 
                 <div className="mb-4">
@@ -896,12 +1111,23 @@ const ProfileDashboard = () => {
                       : "bg-blue-600 text-white hover:bg-blue-700"
                   }`}
                 >
-                  Save Changes
+                  {loading ? (
+                    <span className="flex items-center justify-center">
+                      <i className="fa-solid fa-spinner fa-spin mr-2"></i>
+                      Saving...
+                    </span>
+                  ) : (
+                    "Save Changes"
+                  )}
                 </button>
               </form>
 
               <button
-                onClick={() => setShowEditProfileModal(false)}
+                onClick={() => {
+                  setShowEditProfileModal(false);
+                  setValidationErrors({});
+                  setSuccessMessage("");
+                }}
                 className="mt-4 text-gray-600 hover:text-gray-800 transition-colors"
               >
                 Cancel
