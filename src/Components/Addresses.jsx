@@ -124,7 +124,7 @@ const Addresses = () => {
 
       console.log("📥 Fetching addresses from backend...");
 
-      const response = await axios.get(`${apiURL}/customers/me/addresses`, {
+      const response = await axios.get(`${apiURL}/users/me/addresses`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -170,7 +170,7 @@ const Addresses = () => {
       };
 
       const response = await axios.post(
-        `${apiURL}/customers/me/addresses`,
+        `${apiURL}/users/me/addresses`,
         addressData,
         {
           headers: {
@@ -239,7 +239,7 @@ const Addresses = () => {
       console.log("📤 Making PUT request to backend...");
 
       const response = await axios.put(
-        `${apiURL}/customers/me/addresses/${addressId}`,
+        `${apiURL}/users/me/addresses/${addressId}`,
         addressData,
         {
           headers: {
@@ -305,7 +305,7 @@ const Addresses = () => {
       }
 
       const response = await axios.delete(
-        `${apiURL}/customers/me/addresses/${addressId}`,
+        `${apiURL}/users/me/addresses/${addressId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -356,7 +356,7 @@ const Addresses = () => {
       );
 
       const response = await axios.put(
-        `${apiURL}/customers/me/addresses/${addressId}/default`,
+        `${apiURL}/users/me/addresses/${addressId}/default`,
         {},
         {
           headers: {
@@ -385,7 +385,7 @@ const Addresses = () => {
         logout();
         navigate("/signin");
       } else {
-        showErr("Failed to set default address. Please try again.");
+        showError("Failed to set default address. Please try again.");
       }
     } finally {
       setAddressLoading(addressId, false);
@@ -449,7 +449,7 @@ const Addresses = () => {
       !formState.postalCode.trim() ||
       !formState.addressType.trim()
     ) {
-      showErr("Please fill in all required fields");
+      showError("Please fill in all required fields");
       return;
     }
 
@@ -465,12 +465,12 @@ const Addresses = () => {
       !formState.country.trim() ||
       !formState.postalCode.trim()
     ) {
-      showErr("Please fill in all required fields");
+      showError("Please fill in all required fields");
       return;
     }
 
     if (!selectedAddress) {
-      showErr("No address selected for editing");
+      showError("No address selected for editing");
       return;
     }
 
@@ -495,7 +495,7 @@ const Addresses = () => {
 
   const handleDeleteConfirm = async () => {
     if (!selectedAddress) {
-      showErr("No address selected for deletion");
+      showError("No address selected for deletion");
       return;
     }
 

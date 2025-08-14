@@ -151,7 +151,7 @@ const ProfileDashboard = () => {
         return;
       }
 
-      const response = await axios.get(`${apiURL}/customers/me/profile`, {
+      const response = await axios.get(`${apiURL}/users/me/profile`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -189,7 +189,7 @@ const ProfileDashboard = () => {
       const token = localStorage.getItem("accessToken");
 
       const response = await axios.put(
-        `${apiURL}/customers/me/profile`,
+        `${apiURL}/users/me/profile`,
         updateData,
         {
           headers: {
@@ -248,7 +248,7 @@ const ProfileDashboard = () => {
       }
 
       const response = await axios.post(
-        `${apiURL}/customers/me/profile/photo`,
+        `${apiURL}/users/me/profile/photo`,
         formData,
         {
           headers: {
@@ -286,16 +286,13 @@ const ProfileDashboard = () => {
         return;
       }
 
-      const response = await axios.get(
-        `${apiURL}/customers/me/profile/photo/url`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          params: forceRefresh ? { t: Date.now() } : {},
-        }
-      );
+      const response = await axios.get(`${apiURL}/users/me/profile/photo/url`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        params: forceRefresh ? { t: Date.now() } : {},
+      });
 
       console.log("Photo URL API Response:", response.data);
 
@@ -330,15 +327,12 @@ const ProfileDashboard = () => {
         return;
       }
 
-      const response = await axios.delete(
-        `${apiURL}/customers/me/profile/photo`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await axios.delete(`${apiURL}/users/me/profile/photo`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
       console.log("Delete response:", response);
       console.log("Delete response data:", response.data);
@@ -375,7 +369,7 @@ const ProfileDashboard = () => {
         return;
       }
 
-      const response = await axios.get(`${apiURL}/customers/me/addresses`, {
+      const response = await axios.get(`${apiURL}/users/me/addresses`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",

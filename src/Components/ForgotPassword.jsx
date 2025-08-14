@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { apiURL } from "../Backend/Api/api";
@@ -11,6 +11,37 @@ const ForgotPassword = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [error, setError] = useState("");
   const [resendMessage, setResendMessage] = useState("");
+  const [cooldownTime, setCooldownTime] = useState(0);
+  const [canResend, setCanResend] = useState(true);
+
+  useEffect(() => {
+    let interval;
+
+    if (cooldownTime > 0) {
+      interval = setInterval(() => {
+        setCooldownTime((prev) => {
+          if (prev <= 1) {
+            setCanResend(true);
+            return;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+
+    return () => clearInterval(interval);
+  }, [cooldownTime]);
+
+  const startCooldown = () => {
+    setCooldownTime(60);
+    setCanResend(false);
+  };
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
 
   const handleResend = async () => {
     if (isResending) return;
@@ -27,6 +58,7 @@ const ForgotPassword = () => {
 
       if (response.status === 200) {
         setResendMessage("New reset link sent successfully!");
+        startCooldown();
 
         setTimeout(() => {
           setResendMessage("");
@@ -165,9 +197,9 @@ const ForgotPassword = () => {
                   Didn't receive the email?{" "}
                   <button
                     onClick={handleResend}
-                    disabled={isResending}
+                    disabled={isResending || !canResend}
                     className={`font-medium transition-colors ${
-                      isResending
+                      isResending || !canResend
                         ? "text-gray-400 cursor-not-allowed"
                         : "text-green-600 hover:text-green-800"
                     }`}
@@ -177,6 +209,11 @@ const ForgotPassword = () => {
                         <i className="fa-solid fa-spinner fa-spin mr-2"></i>
                         Sending...
                       </span>
+                    ) : !canResend ? (
+                      <span className="flex items-center justify-center">
+                        <i className="fa-solid fa-clock mr-2"></i>
+                        Resend in {formatTime(cooldownTime)}
+                      </span>
                     ) : (
                       <span>
                         <i className="fa-solid fa-paper-plane mr-2"></i>
@@ -185,6 +222,11 @@ const ForgotPassword = () => {
                     )}
                   </button>
                 </p>
+                {!canResend && (
+                  <p className="text-xs text-gray-500 mt-2">
+                    Please wait before requesting another reset link
+                  </p>
+                )}
               </div>
             </div>
           </motion.div>

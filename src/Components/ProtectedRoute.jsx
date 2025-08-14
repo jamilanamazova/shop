@@ -19,7 +19,7 @@ const ProtectedRoute = ({ children }) => {
         return;
       }
 
-      const response = await axios.get(`${apiURL}/customers/me/profile`, {
+      const response = await axios.get(`${apiURL}/users/me/profile`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
