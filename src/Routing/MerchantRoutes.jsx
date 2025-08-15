@@ -1,7 +1,7 @@
 import React from "react";
 import { Route, Routes } from "react-router-dom";
 import MerchantRoute from "./MerchantRoute";
-import MerchantDashboard from "../components/merchant/MerchantDashboard";
+import MerchantDashboard from "../Components/Merchant/MerchantDashboard";
 // Gələcəkdə əlavə ediləcək komponentlər
 // import MerchantProducts from "../Components/MerchantProducts";
 // import MerchantOrders from "../Components/MerchantOrders";
