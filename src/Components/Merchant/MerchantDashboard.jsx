@@ -13,7 +13,7 @@ const MerchantDashboard = () => {
     setAppMode("merchant");
   }, []);
 
-  const stats = [
+const stats = [
     {
       icon: "fa-solid fa-box",
       title: "Total Products",

@@ -153,10 +153,6 @@ const ProfileDashboard = () => {
         },
       });
 
-      console.log("RESPONSE DATA", response.data);
-      console.log("RESPONSE DATA STATUS", response.data.status);
-      console.log(response.data.data);
-
       if (response.data.status === "OK" && response.data.data) {
         setCurrentUser(response.data.data);
         dispatch({
@@ -194,10 +190,6 @@ const ProfileDashboard = () => {
         }
       );
 
-      console.log("RESPONSE", response);
-      console.log("RESPONSE DATA", response.data);
-      console.log("RESPONSE DATA STATUS", response.data.status);
-
       if (response.data.status === "OK") {
         await fetchUserProfile();
         setShowEditProfileModal(false);
@@ -213,7 +205,6 @@ const ProfileDashboard = () => {
         });
       }
     } catch (error) {
-      console.error("Update error:", error);
       if (error.response?.status === 401) {
         logout();
         navigate("/signin");
@@ -237,20 +228,11 @@ const ProfileDashboard = () => {
       const formData = new FormData();
       formData.append("file", file);
 
-      console.log("Formdata entries: ");
-      for (let [key, value] of formData.entries()) {
-        console.log(key, value);
-      }
-
-      const response = await axios.post(
-        `${apiURL}/users/me/profile/photo`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await axios.post(`${apiURL}/users/me/photo`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       console.log("response ", response);
       console.log("response data", response.data);
@@ -281,7 +263,7 @@ const ProfileDashboard = () => {
         return;
       }
 
-      const response = await axios.get(`${apiURL}/users/me/profile/photo/url`, {
+      const response = await axios.get(`${apiURL}/users/me/photo/url`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -289,11 +271,8 @@ const ProfileDashboard = () => {
         params: forceRefresh ? { t: Date.now() } : {},
       });
 
-      console.log("Photo URL API Response:", response.data);
-
       if (response.data.status === "OK" && response.data.data) {
         const photoUrl = response.data.data;
-        console.log("Setting photo URL:", photoUrl);
 
         setImageLoadError(false);
         setProfilePhotoUrl(photoUrl);
@@ -322,7 +301,7 @@ const ProfileDashboard = () => {
         return;
       }
 
-      const response = await axios.delete(`${apiURL}/users/me/profile/photo`, {
+      const response = await axios.delete(`${apiURL}/users/me/photo`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -383,14 +362,6 @@ const ProfileDashboard = () => {
       console.error("error while getting current address", error);
     }
   };
-
-  console.log(defaultAddress);
-
-  useEffect(() => {
-    if (profilePhotoUrl) {
-      console.log("Profile photo URL updated:", profilePhotoUrl);
-    }
-  }, [profilePhotoUrl]);
 
   useEffect(() => {
     if (authenticated) {
@@ -567,8 +538,6 @@ const ProfileDashboard = () => {
       }),
     };
 
-    console.log("Update data being sent:", updateData);
-
     Object.keys(updateData).length > 0
       ? await updateUserProfile(updateData)
       : setShowEditProfileModal(false);
@@ -601,15 +570,10 @@ const ProfileDashboard = () => {
     }
   };
 
-  const handleImageError = async (e) => {
-    console.error("Image load error:", e);
-    console.log("Failed image URL:", e.target.src);
-
+  const handleImageError = async () => {
     setImageLoadError(true);
 
-    // URL-ni yenidən almağı cəhd et
     setTimeout(async () => {
-      console.log("Attempting to refresh image URL...");
       try {
         await handleGetPhotoURL();
         setImageLoadError(false);
@@ -620,7 +584,6 @@ const ProfileDashboard = () => {
   };
 
   const handleImageLoad = () => {
-    console.log("Image loaded successfully");
     setImageLoadError(false);
     setImageLoading(false);
   };

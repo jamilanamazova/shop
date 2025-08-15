@@ -1,4 +1,4 @@
-  import React, { useEffect, useReducer, useState } from "react";
+import React, { useEffect, useReducer, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { isAuthenticated, logout } from "../../utils/auth";
 import axios from "axios";
@@ -122,8 +122,6 @@ const Addresses = () => {
         return;
       }
 
-      console.log("📥 Fetching addresses from backend...");
-
       const response = await axios.get(`${apiURL}/users/me/addresses`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -132,7 +130,6 @@ const Addresses = () => {
       });
 
       if (response.data.status === "OK" && response.data.data) {
-        console.log("📥 Fetched addresses:", response.data.data);
         setAddresses(response.data.data);
       }
     } catch (error) {
@@ -221,12 +218,7 @@ const Addresses = () => {
         return;
       }
 
-      console.log("🔄 Starting updateAddress function");
-      console.log("📥 Received addressId:", addressId);
-      console.log("📥 Received addressData:", addressData);
-
       const currentAddress = addresses.find((addr) => addr.id === addressId);
-      console.log("📍 Current address found:", currentAddress);
 
       if (!currentAddress?.default && addressData.default) {
         setAddresses((prevAddresses) =>
@@ -235,8 +227,6 @@ const Addresses = () => {
           )
         );
       }
-
-      console.log("📤 Making PUT request to backend...");
 
       const response = await axios.put(
         `${apiURL}/users/me/addresses/${addressId}`,
@@ -249,16 +239,8 @@ const Addresses = () => {
         }
       );
 
-      console.log("📥 Backend response:", response.data);
-      console.log("✅ Backend status:", response.data.status);
-      console.log("📄 Backend data:", response.data.data);
-
       if (response.data.status === "OK" && response.data.data) {
-        console.log("✅ Update successful, updating local state");
         if (addressData.default) {
-          console.log(
-            "🔄 Setting this address as default, making others false"
-          );
           setAddresses((prevAddresses) =>
             prevAddresses.map((address) =>
               address.id === addressId
@@ -350,11 +332,6 @@ const Addresses = () => {
         return;
       }
 
-      console.log(
-        "🔄 Setting default address via specialized endpoint:",
-        addressId
-      );
-
       const response = await axios.put(
         `${apiURL}/users/me/addresses/${addressId}/default`,
         {},
@@ -366,11 +343,7 @@ const Addresses = () => {
         }
       );
 
-      console.log("📥 Backend response:", response.data);
-
       if (response.data.status === "OK") {
-        console.log("✅ Backend confirmed success, updating local state");
-
         await fetchAddresses();
 
         showSuccess("Default address updated successfully!");
@@ -483,12 +456,6 @@ const Addresses = () => {
       addressType: formState.addressType,
       default: formState.default,
     };
-
-    console.log("🔄 Editing address:", selectedAddress.id);
-    console.log("📝 Form state:", formState);
-    console.log("📤 Sending address data:", addressData);
-    console.log("🎯 Default checkbox value:", formState.default);
-    console.log("📍 Selected address before edit:", selectedAddress);
 
     await updateAddress(selectedAddress.id, addressData);
   };

@@ -110,10 +110,6 @@ const Header = () => {
         },
       });
 
-      console.log("RESPONSE DATA", response.data);
-      console.log("RESPONSE DATA STATUS", response.data.status);
-      console.log(response.data.data);
-
       if (response.data.status === "OK") {
         setCurrentUser(response.data.data);
       }

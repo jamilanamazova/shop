@@ -1,6 +1,7 @@
 import axios from "axios";
 import { isTokenExpired, refreshAccessToken } from "./tokenService";
 import { getAppMode } from "./roleMode";
+import { apiURL } from "../Backend/Api/api";
 
 // Queue system for multiple requests during refresh
 let isRefreshing = false;
@@ -8,36 +9,39 @@ let failedQueue = [];
 
 const processQueue = (error, token = null) => {
   failedQueue.forEach(({ resolve, reject }) => {
-    if (error) {
-      reject(error);
-    } else {
-      resolve(token);
-    }
+    if (error) reject(error);
+    else resolve(token);
   });
-
   failedQueue = [];
 };
 
 axios.interceptors.request.use(async (config) => {
   config.headers = config.headers || {};
+
   // Skip auth logic for refresh calls or when explicitly requested
   const isRefreshCall =
     (config.url || "").includes("/auth/refresh-token") ||
     (config.url || "").includes("/auth-refresh");
+
+  // Prefer meta flag; if header exists, use it but DO NOT send it to server
+  const hasSkipHeader = config.headers["X-Skip-Auth"] === "1";
   const skipAuth =
-    config.headers["X-Skip-Auth"] === "1" ||
-    (config.meta && config.meta.skipAuth === true);
+    hasSkipHeader || (config.meta && config.meta.skipAuth === true);
+  if (hasSkipHeader) delete config.headers["X-Skip-Auth"]; // prevent CORS preflight
 
   if (isRefreshCall || skipAuth) {
     return config;
   }
+
   const mode = getAppMode();
   let customerAT = localStorage.getItem("accessToken");
   const merchantAT = localStorage.getItem("merchantAccessToken");
 
-  const useMerchant =
-    config.headers["X-Use-Merchant"] === "1" ||
-    (config.meta && config.meta.useMerchant);
+  // Use meta flag; if header exists, treat as flag then remove it
+  let useMerchant =
+    (config.meta && config.meta.useMerchant) ||
+    config.headers["X-Use-Merchant"] === "1";
+  if (config.headers["X-Use-Merchant"]) delete config.headers["X-Use-Merchant"]; // avoid sending custom header
 
   const headerToken = (config.headers.Authorization || "").replace(
     /^Bearer\s+/i,
@@ -48,13 +52,13 @@ axios.interceptors.request.use(async (config) => {
   if (headerIsCustomerToken && isTokenExpired(customerAT)) {
     if (!isRefreshing) {
       isRefreshing = true;
-      customerAT = await refreshAccessToken();
+      customerAT = await refreshAccessToken({ meta: { skipAuth: true } }); // ensure refresh call skips
       processQueue(null, customerAT);
       isRefreshing = false;
     } else {
-      customerAT = await new Promise((resolve, reject) => {
-        failedQueue.push({ resolve, reject });
-      });
+      customerAT = await new Promise((resolve, reject) =>
+        failedQueue.push({ resolve, reject })
+      );
     }
     config.headers.Authorization = `Bearer ${customerAT}`;
   }
@@ -63,13 +67,13 @@ axios.interceptors.request.use(async (config) => {
     if (!useMerchant && customerAT && isTokenExpired(customerAT)) {
       if (!isRefreshing) {
         isRefreshing = true;
-        customerAT = await refreshAccessToken();
+        customerAT = await refreshAccessToken({ meta: { skipAuth: true } });
         processQueue(null, customerAT);
         isRefreshing = false;
       } else {
-        customerAT = await new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        });
+        customerAT = await new Promise((resolve, reject) =>
+          failedQueue.push({ resolve, reject })
+        );
       }
     }
 
@@ -86,80 +90,72 @@ axios.interceptors.request.use(async (config) => {
 });
 
 axios.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   async (error) => {
-    const originalRequest = error.config;
-    const isRefreshCall =
-      (originalRequest?.url || "").includes("/auth/refresh-token") ||
-      (originalRequest?.url || "").includes("/auth-refresh");
+    const original = error.config || {};
+    const isRefresh =
+      (original.url || "").includes("/auth/refresh-token") ||
+      (original.url || "").includes("/auth-refresh");
 
-    // 401 error və retry edilməyibsə
-    if (
-      error.response?.status === 401 &&
-      !originalRequest._retry &&
-      !isRefreshCall
-    ) {
-      // Əgər artıq refresh edirsə, queue-ya əlavə et
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            return axios(originalRequest);
-          })
-          .catch((err) => {
-            return Promise.reject(err);
-          });
-      }
-
-      originalRequest._retry = true;
-      isRefreshing = true;
-
+    if (!isRefresh && error.response?.status === 401 && !original._retry) {
+      console.log("[AUTH] 401 caught → try refresh...");
+      original._retry = true;
       try {
-        console.log("🔄 401 error, attempting token refresh...");
-        const newToken = await refreshAccessToken();
+        const refreshToken = localStorage.getItem("refreshToken");
+        if (!refreshToken) throw new Error("No refreshToken");
 
-        // Queue-daki bütün request-ləri yenilə
-        processQueue(null, newToken);
+        const response = await axios.post(
+          `${apiURL}/auth/refresh-token`,
+          { refreshToken },
+          {
+            headers: { "Content-Type": "application/json" },
+            meta: { skipAuth: true },
+          } // no custom header
+        );
+        const data = response.data?.data || response.data;
+        if (!data?.accessToken) throw new Error("No accessToken from refresh");
+        localStorage.setItem("accessToken", data.accessToken);
+        if (data.refreshToken)
+          localStorage.setItem("refreshToken", data.refreshToken);
 
-        // Original request-i yenilənmiş token ilə təkrar et
-        originalRequest.headers.Authorization = `Bearer ${newToken}`;
-        return axios(originalRequest);
-      } catch (refreshError) {
-        console.error("❌ Refresh failed on 401:", refreshError);
-        processQueue(refreshError, null);
-
-        // Refresh fail olsa logout
-        return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
+        console.log("[AUTH] refresh OK, retrying original");
+        original.headers = original.headers || {};
+        original.headers.Authorization = `Bearer ${data.accessToken}`;
+        return axios(original);
+      } catch (e) {
+        console.log("[AUTH] refresh FAILED", e);
+        return Promise.reject(e);
       }
     }
 
-    // Some backends return 403 on expired tokens. If we know the customer token is expired, try refresh once.
-    if (
-      error.response?.status === 403 &&
-      !originalRequest._retry &&
-      !isRefreshCall
-    ) {
-      const headerToken = (
-        originalRequest.headers?.Authorization || ""
-      ).replace(/^Bearer\s+/i, "");
-      const customerAT = localStorage.getItem("accessToken");
-      const looksExpired =
-        customerAT && headerToken === customerAT && isTokenExpired(customerAT);
-      if (looksExpired) {
-        originalRequest._retry = true;
-        try {
-          const newToken = await refreshAccessToken();
-          originalRequest.headers.Authorization = `Bearer ${newToken}`;
-          return axios(originalRequest);
-        } catch (e) {
-          return Promise.reject(e);
-        }
+    if (!isRefresh && error.response?.status === 403 && !original._retry) {
+      console.log("[AUTH] 403 caught → force one refresh then retry...");
+      original._retry = true;
+      try {
+        const refreshToken = localStorage.getItem("refreshToken");
+        if (!refreshToken) throw new Error("No refreshToken");
+
+        const response = await axios.post(
+          `${apiURL}/auth/refresh-token`,
+          { refreshToken },
+          {
+            headers: { "Content-Type": "application/json" },
+            meta: { skipAuth: true },
+          }
+        );
+        const data = response.data?.data || response.data;
+        if (!data?.accessToken) throw new Error("No accessToken from refresh");
+        localStorage.setItem("accessToken", data.accessToken);
+        if (data.refreshToken)
+          localStorage.setItem("refreshToken", data.refreshToken);
+
+        console.log("[AUTH] refresh OK (403 path), retrying original");
+        original.headers = original.headers || {};
+        original.headers.Authorization = `Bearer ${data.accessToken}`;
+        return axios(original);
+      } catch (e) {
+        console.log("[AUTH] refresh FAILED (403 path)", e);
+        return Promise.reject(e);
       }
     }
 
