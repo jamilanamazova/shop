@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import { apiURL } from "../Backend/Api/api";
+import { apiURL } from "../../Backend/Api/api";
 import { motion } from "framer-motion";
 
 const ForgotPassword = () => {
@@ -363,7 +363,7 @@ const ForgotPassword = () => {
         <motion.div className="text-center space-y-4" variants={itemVariants}>
           <div className="flex justify-center space-x-6 text-sm">
             <Link
-              to="/support"
+              to="/customer/support"
               className="text-gray-600 hover:text-gray-800 transition-colors"
             >
               <i className="fa-solid fa-life-ring mr-1"></i>

@@ -1,6 +1,6 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
-import { isAuthenticated, getCurrentUser } from "../utils/auth";
+import { isAuthenticated, getCurrentUser } from "../../utils/auth";
 
 const PublicRoute = ({ children }) => {
   const authenticated = isAuthenticated();

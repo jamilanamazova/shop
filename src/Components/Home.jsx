@@ -1,12 +1,12 @@
 import React, { useEffect } from "react";
 import Header from "./Header";
-import Hero from "./Hero";
-import Categories from "./Categories";
-import ProductShowCase from "./ProductShowCase";
+import Hero from "./Pages/Hero";
+import Categories from "./Pages/Categories";
+import ProductShowCase from "./Pages/ProductShowCase";
 import Footer from "./Footer";
 import "../CSS/Home.css";
 import noise from "../Images/noise.jpg";
-import { checkTokens, isAuthenticated, getCurrentUser } from "../utils/auth";
+import { isAuthenticated, getCurrentUser } from "../utils/auth";
 import { motion } from "framer-motion";
 
 const Home = () => {
@@ -14,8 +14,6 @@ const Home = () => {
   const user = getCurrentUser();
 
   useEffect(() => {
-    checkTokens();
-
     if (authenticated) {
       console.log("✅ User is authenticated and ready!");
       console.log("User info:", user);

@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { isAuthenticated, getCurrentUser, logout } from "../utils/auth";
 import axios from "axios";
 import { apiURL } from "../Backend/Api/api";
+import { hasMerchantAccount, setAppMode } from "../utils/roleMode";
 
 const Header = () => {
   const [currentUser, setCurrentUser] = useState();
@@ -73,13 +74,15 @@ const Header = () => {
           response.data.data.refreshToken
         );
 
+        setAppMode("merchant");
+
         setShowMerchantModal(false);
 
         handleShowSuccessMessage("Welcome to your merchant dashboard!");
 
         setTimeout(() => {
           navigate("/merchant/dashboard");
-        }, 2000);
+        }, 1000);
       }
     } catch (error) {
       console.error("Error becoming merchant:", error);
@@ -214,19 +217,19 @@ const Header = () => {
               </Link>
               <Link
                 className="font-bold text-sm xl:text-base hover:text-gray-600 transition-colors"
-                to={"/products"}
+                to={"/customer/products"}
               >
                 PRODUCTS
               </Link>
               <Link
                 className="font-bold text-sm xl:text-base hover:text-gray-600 transition-colors"
-                to={"/blog"}
+                to={"/customer/blog"}
               >
                 BLOG
               </Link>
               <Link
                 className="font-bold text-sm xl:text-base hover:text-gray-600 transition-colors"
-                to={"/support"}
+                to={"/customer/support"}
               >
                 SUPPORT
               </Link>
@@ -239,16 +242,25 @@ const Header = () => {
             <div className="flex items-center gap-2 md:gap-3">
               {authenticated && (
                 <div className="hidden lg:block">
-                  <button
-                    className="relative bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-full font-bold text-sm hover:from-orange-600 hover:to-red-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 animate-pulse"
-                    onClick={handleBecomeMerchant}
-                  >
-                    <i className="fa-solid fa-store mr-2"></i>
-                    Be a Merchant
-                    <span className="absolute -top-1 -right-1 bg-yellow-400 text-red-600 text-xs px-1.5 py-0.5 rounded-full font-bold">
-                      NEW
-                    </span>
-                  </button>
+                  {hasMerchantAccount() ? (
+                    <Link
+                      to="/merchant/dashboard"
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg"
+                    >
+                      Merchant Dashboard
+                    </Link>
+                  ) : (
+                    <button
+                      className="relative bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-full font-bold text-sm hover:from-orange-600 hover:to-red-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 animate-pulse"
+                      onClick={handleBecomeMerchant}
+                    >
+                      <i className="fa-solid fa-store mr-2"></i>
+                      Be a Merchant
+                      <span className="absolute -top-1 -right-1 bg-yellow-400 text-red-600 text-xs px-1.5 py-0.5 rounded-full font-bold">
+                        NEW
+                      </span>
+                    </button>
+                  )}
                 </div>
               )}
               <div className="search-icon cursor-pointer hover:text-gray-600 transition-colors">
@@ -445,7 +457,7 @@ const Header = () => {
           </li>
           <li>
             <Link
-              to="/products"
+              to="/customer/products"
               className="font-bold text-lg hover:text-gray-600 transition-colors block py-2"
               onClick={toggleSideBar}
             >
@@ -454,7 +466,7 @@ const Header = () => {
           </li>
           <li>
             <Link
-              to="/blog"
+              to="/customer/blog"
               className="font-bold text-lg hover:text-gray-600 transition-colors block py-2"
               onClick={toggleSideBar}
             >
@@ -463,7 +475,7 @@ const Header = () => {
           </li>
           <li>
             <Link
-              to="/support"
+              to="/customer/support"
               className="font-bold text-lg hover:text-gray-600 transition-colors block py-2"
               onClick={toggleSideBar}
             >
@@ -486,7 +498,6 @@ const Header = () => {
                   </p>
                 </div>
               </div>
-
               <Link
                 to="/customer/profile"
                 className="flex items-center space-x-3 py-2 hover:bg-gray-100 rounded px-2 transition-colors"
@@ -495,7 +506,25 @@ const Header = () => {
                 <i className="fa-solid fa-user text-gray-600"></i>
                 <span className="font-medium">My Profile</span>
               </Link>
-
+              {hasMerchantAccount() ? (
+                <Link
+                  to="/merchant/dashboard"
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg"
+                >
+                  Merchant Dashboard
+                </Link>
+              ) : (
+                <button
+                  className="relative bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-full font-bold text-sm hover:from-orange-600 hover:to-red-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 animate-pulse"
+                  onClick={handleBecomeMerchant}
+                >
+                  <i className="fa-solid fa-store mr-2"></i>
+                  Be a Merchant
+                  <span className="absolute -top-1 -right-1 bg-yellow-400 text-red-600 text-xs px-1.5 py-0.5 rounded-full font-bold">
+                    NEW
+                  </span>
+                </button>
+              )}
               <button
                 onClick={() => {
                   handleLogout();

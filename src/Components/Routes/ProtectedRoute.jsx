@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { isAuthenticated } from "../utils/auth";
+import { isAuthenticated } from "../../utils/auth";
 import axios from "axios";
-import { apiURL } from "../Backend/Api/api";
+import { apiURL } from "../../Backend/Api/api";
 
 const ProtectedRoute = ({ children }) => {
   const location = useLocation();

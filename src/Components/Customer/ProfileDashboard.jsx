@@ -1,16 +1,11 @@
 import React, { useState, useEffect, useReducer } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Header from "./Header";
-import Footer from "./Footer";
-import "../CSS/ProfileDashboard.css";
-import {
-  isAuthenticated,
-  getCurrentUser,
-  logout,
-  checkTokens,
-} from "../utils/auth";
+import Header from "../Header";
+import Footer from "../Footer";
+import "../../CSS/ProfileDashboard.css";
+import { isAuthenticated, getCurrentUser, logout } from "../../utils/auth";
 import { Navigate } from "react-router-dom";
-import { apiURL } from "../Backend/Api/api";
+import { apiURL } from "../../Backend/Api/api";
 import axios from "axios";
 
 const initialState = {
@@ -883,7 +878,7 @@ const ProfileDashboard = () => {
                       <div className="no-address p-4 border rounded-lg bg-gray-50">
                         <p className="text-gray-500">No default address set</p>
                         <Link
-                          to="/addresses"
+                          to="/customer/addresses"
                           className="text-blue-600 hover:underline mt-2 inline-block"
                         >
                           Add an address
@@ -926,7 +921,7 @@ const ProfileDashboard = () => {
                   </Link>
 
                   <Link
-                    to="/addresses"
+                    to="/customer/addresses"
                     className="flex items-center p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     <i className="fa-solid fa-location-dot text-gray-600 mr-3"></i>
@@ -937,7 +932,7 @@ const ProfileDashboard = () => {
                   </Link>
 
                   <Link
-                    to="/settings"
+                    to="/customer/settings"
                     className="flex items-center p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     <i className="fa-solid fa-gear text-gray-600 mr-3"></i>
@@ -1119,6 +1114,7 @@ const ProfileDashboard = () => {
                         handleInputChange("phone", value);
                         validateField("phone", value);
                       }}
+                      maxLength={15}
                       className={`flex-1 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                         validationErrors.phone
                           ? "border-red-300 bg-red-50"

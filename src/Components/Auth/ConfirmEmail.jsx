@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import Header from "./Header";
-import Footer from "./Footer";
+import Header from "../Header";
+import Footer from "../Footer";
 import axios from "axios";
-import { apiURL } from "../Backend/Api/api";
+import { apiURL } from "../../Backend/Api/api";
 
 const ConfirmEmail = () => {
   const [code, setCode] = useState(["", "", "", "", "", ""]);
@@ -516,7 +516,7 @@ const ConfirmEmail = () => {
                   <p className="text-xs text-gray-500">
                     Need help? Contact our{" "}
                     <Link
-                      to="/support"
+                      to="/customer/support"
                       className="text-black hover:text-gray-800 font-medium"
                     >
                       support team

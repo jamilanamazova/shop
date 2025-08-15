@@ -1,7 +1,7 @@
 import React from "react";
 import { useParams, Link } from "react-router-dom";
-import Header from "./Header";
-import Footer from "./Footer";
+import Header from "../Header";
+import Footer from "../Footer";
 
 const Product = ({ products }) => {
   const { id } = useParams();
@@ -54,7 +54,7 @@ const Product = ({ products }) => {
               </li>
               <li>
                 <Link
-                  to="/products"
+                  to="/customer/products"
                   className="hover:text-gray-800 transition-colors"
                 >
                   Products

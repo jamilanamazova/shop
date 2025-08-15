@@ -1,10 +1,10 @@
-import React, { useEffect, useReducer, useState } from "react";
+  import React, { useEffect, useReducer, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
-import { isAuthenticated, logout } from "../utils/auth";
+import { isAuthenticated, logout } from "../../utils/auth";
 import axios from "axios";
-import { apiURL } from "../Backend/Api/api";
-import Header from "./Header";
-import Footer from "./Footer";
+import { apiURL } from "../../Backend/Api/api";
+import Header from "../Header";
+import Footer from "../Footer";
 
 const initialState = {
   addressLine1: "",
@@ -712,7 +712,7 @@ const Addresses = () => {
           )}
           <div className="text-center mt-8">
             <Link
-              to="/profile"
+              to="/customer/profile"
               className="inline-flex items-center text-gray-600 hover:text-gray-800 transition-colors"
             >
               <i className="fa-solid fa-arrow-left mr-2"></i>

@@ -84,7 +84,7 @@ const NotFound = () => {
                 <p className="text-sm text-yellow-800">
                   Still need help? Contact our{" "}
                   <Link
-                    to="/support"
+                    to="/customer/support"
                     className="font-medium text-yellow-900 hover:text-yellow-700"
                   >
                     support team
@@ -95,14 +95,14 @@ const NotFound = () => {
 
             <div className="grid grid-cols-2 gap-3 text-xs">
               <Link
-                to="/products"
+                to="/customer/products"
                 className="flex items-center justify-center py-2 px-3 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors"
               >
                 <i className="fa-solid fa-shopping-bag mr-1"></i>
                 Shop Now
               </Link>
               <Link
-                to="/blog"
+                to="/customer/blog"
                 className="flex items-center justify-center py-2 px-3 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors"
               >
                 <i className="fa-solid fa-newspaper mr-1"></i>
@@ -115,7 +115,7 @@ const NotFound = () => {
             <p className="text-xs text-gray-500">
               If you believe this is an error, please{" "}
               <Link
-                to="/support"
+                to="/customer/support"
                 className="text-gray-700 hover:text-gray-900 font-medium"
               >
                 report it

@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import { apiURL } from "../Backend/Api/api";
+import { apiURL } from "../../Backend/Api/api";
+import { setTokens } from "../../utils/tokenService";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -60,14 +61,12 @@ const Login = () => {
       console.log("data.data:", data.data);
       console.log("========================");
 
-      let accessToken, refreshToken;
+      let accessToken, refreshToken, userData;
 
       if (data.data && data.data.accessToken) {
         accessToken = data.data.accessToken;
         refreshToken = data.data.refreshToken;
-      } else if (data.accessToken) {
-        accessToken = data.accessToken;
-        refreshToken = data.refreshToken;
+        userData = data.data.user;
       } else {
         console.log("❌ Unknown response structure");
         setError("Login response format error. Please try again.");
@@ -80,19 +79,32 @@ const Login = () => {
 
       console.log("✅ Login successful - tokens updated");
 
-      if (accessToken && refreshToken) {
-        localStorage.setItem("accessToken", accessToken);
-        localStorage.setItem("refreshToken", refreshToken);
-
-        setShowSuccessModal(true);
-
-        setTimeout(() => {
-          window.location.href = "/";
-        }, 2000);
-      } else {
-        console.log("❌ No tokens received from backend");
+      if (!accessToken || !refreshToken) {
+        console.error("❌ Missing tokens in response");
         setError("Login failed. No authentication tokens received.");
+        return;
       }
+
+      setTokens(accessToken, refreshToken);
+
+      if (userData) {
+        const userWithEmailVerified = {
+          ...userData,
+          isEmailVerified: userData.isEmailVerified ?? true,
+        };
+
+        localStorage.setItem(
+          "currentUser",
+          JSON.stringify(userWithEmailVerified)
+        );
+        console.log("User data saved: ", userWithEmailVerified);
+      }
+
+      setShowSuccessModal(true);
+
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 2000);
     } catch (error) {
       console.error("❌ LOGIN ERROR:", error);
 

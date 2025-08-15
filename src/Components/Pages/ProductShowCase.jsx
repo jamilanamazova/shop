@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import "../CSS/ProductShowcase.css";
-import catWithToys from "../Images/catwithtoys.jpg";
+import "../../CSS/ProductShowcase.css";
+import catWithToys from "../../Images/catwithtoys.jpg";
 import { Link } from "react-router-dom";
 
 const ProductShowCase = ({ products }) => {
@@ -109,7 +109,7 @@ const ProductShowCase = ({ products }) => {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
               {products.map((product) => (
-                <Link to={`/product/${product.id}`} key={product.id}>
+                <Link to={`/customer/product/${product.id}`} key={product.id}>
                   <div
                     key={product.id}
                     className="bg-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"

@@ -1,7 +1,8 @@
 import React, { useEffect, useReducer, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { apiURL } from "../Backend/Api/api";
+import { apiURL } from "../../Backend/Api/api";
 import axios from "axios";
+import { setTokens } from "../../utils/tokenService";
 
 const initialState = {
   fullName: "",
@@ -227,21 +228,31 @@ const Register = () => {
 
       const data = response.data;
 
-      if (data.token) {
-        console.log("Token found:", data.token);
-        localStorage.setItem("authToken", data.token);
-        localStorage.setItem("currentUser", JSON.stringify(data.user));
+      let accessToken, refreshToken, userData;
+
+      if (data.data) {
+        accessToken = data.data.accessToken;
+        refreshToken = data.data.refreshToken;
+        userData = data.data.userProfileResponseDto || data.data.user;
       } else {
-        console.log("No token in response");
+        accessToken = data.accessToken;
+        refreshToken = data.refreshToken;
+        userData = data.user || data;
       }
 
-      localStorage.setItem("pendingMail", formData.email);
-      localStorage.setItem("pendingUserName", formData.fullName);
+      console.log("Extracted data:");
+      console.log("Access Token:", accessToken ? "✅ Found" : "❌ Missing");
+      console.log("Refresh Token:", refreshToken ? "✅ Found" : "❌ Missing");
+      console.log("User Data:", userData);
 
-      if (data.error) {
-        console.error("Registration error:", data.error);
-        return;
+      if (accessToken && refreshToken) {
+        setTokens(accessToken, refreshToken);
       }
+
+      const pendingEmail = formData.email;
+      const pendingName = formData.fullName;
+      localStorage.setItem("pendingMail", pendingEmail);
+      localStorage.setItem("pendingUserName", pendingName);
 
       dispatch({ type: "RESET_FORM" });
       setShowPassword(false);
