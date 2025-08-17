@@ -745,7 +745,7 @@ const Addresses = () => {
                     onChange={(e) =>
                       handleInputChange("addressLine1", e.target.value)
                     }
-                    maxLength={30}
+                    maxLength={20}
                     required
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Enter street address"
@@ -762,7 +762,7 @@ const Addresses = () => {
                     onChange={(e) =>
                       handleInputChange("addressLine2", e.target.value)
                     }
-                    maxLength={30}
+                    maxLength={20}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Apartment, suite, etc. (optional)"
                   />

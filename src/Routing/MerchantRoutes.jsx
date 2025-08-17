@@ -1,7 +1,7 @@
 import React from "react";
 import { Route, Routes } from "react-router-dom";
 import MerchantRoute from "./MerchantRoute";
-import MerchantDashboard from "../Components/Merchant/MerchantDashboard";
+import Shops from "../Components/Merchant/Shops";
 // Gələcəkdə əlavə ediləcək komponentlər
 // import MerchantProducts from "../Components/MerchantProducts";
 // import MerchantOrders from "../Components/MerchantOrders";
@@ -12,10 +12,10 @@ const MerchantRoutes = () => {
   return (
     <Routes>
       <Route
-        path="/dashboard"
+        path="/shops"
         element={
           <MerchantRoute>
-            <MerchantDashboard />
+            <Shops />
           </MerchantRoute>
         }
       />

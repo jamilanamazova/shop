@@ -81,7 +81,7 @@ const Header = () => {
         handleShowSuccessMessage("Welcome to your merchant dashboard!");
 
         setTimeout(() => {
-          navigate("/merchant/dashboard");
+          navigate("/");
         }, 1000);
       }
     } catch (error) {
@@ -225,9 +225,9 @@ const Header = () => {
               </Link>
               <Link
                 className="font-bold text-sm xl:text-base hover:text-gray-600 transition-colors"
-                to={"/customer/support"}
+                to={hasMerchantAccount() ? "/merchant/shops" : "/"}
               >
-                SUPPORT
+                SHOPS
               </Link>
             </ul>
           </div>
@@ -239,19 +239,14 @@ const Header = () => {
               {authenticated && (
                 <div className="hidden lg:block">
                   {hasMerchantAccount() ? (
-                    <Link
-                      to="/merchant/dashboard"
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg"
-                    >
-                      Merchant Dashboard
-                    </Link>
+                    <Link></Link>
                   ) : (
                     <button
                       className="relative bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-full font-bold text-sm hover:from-orange-600 hover:to-red-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 animate-pulse"
                       onClick={handleBecomeMerchant}
                     >
                       <i className="fa-solid fa-store mr-2"></i>
-                      Be a Merchant
+                      Create Your Own Shop
                       <span className="absolute -top-1 -right-1 bg-yellow-400 text-red-600 text-xs px-1.5 py-0.5 rounded-full font-bold">
                         NEW
                       </span>
@@ -358,16 +353,6 @@ const Header = () => {
                 </ul>
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                <div className="flex items-start">
-                  <i className="fa-solid fa-info-circle text-blue-600 mr-2 mt-0.5"></i>
-                  <p className="text-left text-sm text-blue-800">
-                    You can switch between customer and merchant modes anytime.
-                    Your shopping experience will remain unchanged.
-                  </p>
-                </div>
-              </div>
-
               <p className="text-gray-700 font-medium mb-8">
                 Are you ready to start your merchant journey?
               </p>
@@ -471,11 +456,11 @@ const Header = () => {
           </li>
           <li>
             <Link
-              to="/customer/support"
+              to={hasMerchantAccount() ? "/merchant/shops" : "/"}
               className="font-bold text-lg hover:text-gray-600 transition-colors block py-2"
               onClick={toggleSideBar}
             >
-              SUPPORT
+              SHOPS
             </Link>
           </li>
         </ul>
@@ -503,19 +488,14 @@ const Header = () => {
                 <span className="font-medium">My Profile</span>
               </Link>
               {hasMerchantAccount() ? (
-                <Link
-                  to="/merchant/dashboard"
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg"
-                >
-                  Merchant Dashboard
-                </Link>
+                <Link></Link>
               ) : (
                 <button
                   className="relative bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-full font-bold text-sm hover:from-orange-600 hover:to-red-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 animate-pulse"
                   onClick={handleBecomeMerchant}
                 >
                   <i className="fa-solid fa-store mr-2"></i>
-                  Be a Merchant
+                  Create Your Own Shop
                   <span className="absolute -top-1 -right-1 bg-yellow-400 text-red-600 text-xs px-1.5 py-0.5 rounded-full font-bold">
                     NEW
                   </span>
