@@ -368,10 +368,9 @@ const Shops = () => {
             </div>
           </div>
         </div>
-
         <div className="relative -mt-8 z-10">
           <div className="max-w-7xl mx-auto px-4">
-            <div className="bg-white rounded-2xl shadow-xl p-8 mb-8 border border-gray-100 transform transition-all duration-300">
+            <div className="bg-white rounded-2xl shadow-xl p-4 mb-8 border border-gray-100 transform transition-all duration-300 h-[100px]">
               <form
                 onSubmit={handleManualSearch}
                 className="flex flex-col lg:flex-row gap-6"
@@ -422,226 +421,230 @@ const Shops = () => {
                 </button>
               </form>
             </div>
+            <div className="flex flex-col lg:flex-row gap-8">
+              <div className="w-full lg:w-80 space-y-6">
+                <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100 lg:sticky lg:top-8">
+                  <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                    <i className="fa-solid fa-filter mr-2 text-emerald-600"></i>
+                    Filters
+                  </h3>
 
-            <div className="bg-white rounded-xl shadow-lg p-6 mb-8 border border-gray-100">
-              <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-                <div className="flex flex-wrap gap-4">
-                  <select
-                    value={`${sortBy},${sortDirection}`}
-                    onChange={(e) => {
-                      const [field, direction] = e.target.value.split(",");
-                      setSortBy(field);
-                      setSortDirection(direction);
-                      setCurrentPage(0);
-                    }}
-                    className="px-6 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-emerald-500 text-sm font-medium bg-gray-50 hover:bg-white transition-all"
-                  >
-                    <option value="createdAt,desc">🆕 Newest First</option>
-                    <option value="createdAt,asc">⏰ Oldest First</option>
-                    <option value="shopName,asc">🔤 Name A-Z</option>
-                    <option value="shopName,desc">🔤 Name Z-A</option>
-                  </select>
-                </div>
+                  <div className="space-y-6 lg:space-y-6">
+                    <div className="flex-1 lg:flex-none">
+                      <label className="block text-sm font-semibold text-gray-700 mb-3">
+                        <i className="fa-solid fa-sort mr-2 text-emerald-600"></i>
+                        Sort By
+                      </label>
+                      <select
+                        value={`${sortBy},${sortDirection}`}
+                        onChange={(e) => {
+                          const [field, direction] = e.target.value.split(",");
+                          setSortBy(field);
+                          setSortDirection(direction);
+                          setCurrentPage(0);
+                        }}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-emerald-500 text-sm font-medium bg-gray-50 hover:bg-white transition-all"
+                      >
+                        <option value="createdAt,desc">🆕 Newest First</option>
+                        <option value="createdAt,asc">⏰ Oldest First</option>
+                        <option value="shopName,asc">🔤 Name A-Z</option>
+                        <option value="shopName,desc">🔤 Name Z-A</option>
+                      </select>
+                    </div>
 
-                <div className="flex items-center gap-4">
-                  <div className="text-gray-600 text-sm font-medium bg-gray-50 px-4 py-2 rounded-lg">
-                    <i className="fa-solid fa-store mr-2 text-emerald-600"></i>
-                    Showing {shops.length} of {totalElements} shops
-                    {lastSearchTerm && (
-                      <span className="ml-2 text-emerald-600">
-                        for "{lastSearchTerm}"
-                      </span>
-                    )}
+                    <div className="flex flex-col sm:flex-row lg:flex-col gap-4 lg:gap-6">
+                      <div className="flex-1 lg:flex-none bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <div className="text-gray-600 text-sm font-medium">
+                          <i className="fa-solid fa-store mr-2 text-emerald-600"></i>
+                          <span className="hidden sm:inline">Showing </span>
+                          {shops.length} of {totalElements} shops
+                          {lastSearchTerm && (
+                            <div className="mt-2 text-emerald-600 truncate">
+                              for "{lastSearchTerm}"
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {hasMerchantAccount() && shops.length <= 1 && (
+                        <div className="flex-1 lg:flex-none">
+                          <button
+                            onClick={() => setShowCreateModal(true)}
+                            className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 text-white px-6 py-3 rounded-lg font-semibold text-sm hover:from-emerald-700 hover:to-emerald-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center gap-2"
+                          >
+                            <i className="fa-solid fa-plus"></i>
+                            <span className="hidden sm:inline">
+                              Create Shop
+                            </span>
+                            <span className="sm:hidden">Create</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
-
-                  {hasMerchantAccount() && (
-                    <button
-                      onClick={() => setShowCreateModal(true)}
-                      className="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white px-6 py-3 rounded-lg font-semibold text-sm hover:from-emerald-700 hover:to-emerald-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-2"
-                    >
-                      <i className="fa-solid fa-plus"></i>
-                      Create Shop
-                    </button>
-                  )}
                 </div>
+              </div>
+
+              <div className="flex-1 min-w-0">
+                {error ? (
+                  <div className="bg-white rounded-2xl shadow-lg p-8 lg:p-12 text-center border border-red-100 transform transition-all duration-300">
+                    <div className="text-red-500 mb-6">
+                      <i className="fa-solid fa-exclamation-triangle text-4xl lg:text-6xl"></i>
+                    </div>
+                    <h3 className="text-xl lg:text-2xl font-bold text-gray-800 mb-4">
+                      Oops! Something went wrong
+                    </h3>
+                    <p className="text-gray-600 mb-8 text-base lg:text-lg">
+                      {error}
+                    </p>
+                    <button
+                      onClick={() => fetchShops(lastSearchTerm, false)}
+                      className="bg-gradient-to-r from-red-500 to-red-600 text-white px-6 lg:px-8 py-3 rounded-xl font-semibold hover:from-red-600 hover:to-red-700 transition-all duration-300 transform hover:scale-105"
+                    >
+                      <i className="fa-solid fa-refresh mr-2"></i>
+                      Try Again
+                    </button>
+                  </div>
+                ) : searchLoading && shops.length === 0 ? (
+                  <div className="bg-white rounded-2xl shadow-lg p-12 lg:p-16 text-center transform transition-all duration-300">
+                    <div className="text-emerald-500 mb-8">
+                      <i className="fa-solid fa-search text-6xl lg:text-8xl animate-pulse"></i>
+                    </div>
+                    <h3 className="text-2xl lg:text-3xl font-bold text-gray-800 mb-6">
+                      Searching for shops...
+                    </h3>
+                    <p className="text-gray-600 text-base lg:text-lg">
+                      Please wait while we find shops matching "{searchTerm}"
+                    </p>
+                  </div>
+                ) : shops.length === 0 ? (
+                  <div className="bg-white rounded-2xl shadow-lg p-12 lg:p-16 text-center transform transition-all duration-300">
+                    <div className="text-gray-300 mb-8">
+                      <i className="fa-solid fa-store text-6xl lg:text-8xl"></i>
+                    </div>
+                    <h3 className="text-2xl lg:text-3xl font-bold text-gray-800 mb-6">
+                      {lastSearchTerm ? "No shops found" : "No shops available"}
+                    </h3>
+                    <p className="text-gray-600 mb-10 max-w-lg mx-auto text-base lg:text-lg leading-relaxed">
+                      {lastSearchTerm
+                        ? `We couldn't find any shops matching "${lastSearchTerm}". Please try a different search term or browse all shops.`
+                        : "Be the pioneer! Create the first shop and start your entrepreneurial journey with us."}
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                      {lastSearchTerm && (
+                        <button
+                          onClick={handleClearSearch}
+                          className="inline-flex items-center bg-gray-600 text-white px-6 lg:px-8 py-3 rounded-xl font-semibold hover:bg-gray-700 transition-all duration-300"
+                        >
+                          <i className="fa-solid fa-times mr-2"></i>
+                          Clear Search
+                        </button>
+                      )}
+                      {hasMerchantAccount() && (
+                        <button
+                          onClick={() => setShowCreateModal(true)}
+                          className="inline-flex items-center bg-gradient-to-r from-emerald-600 to-emerald-700 text-white px-8 lg:px-10 py-3 lg:py-4 rounded-xl font-semibold text-base lg:text-lg hover:from-emerald-700 hover:to-emerald-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                        >
+                          <i className="fa-solid fa-plus mr-2 lg:mr-3"></i>
+                          Create Your Shop
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid gap-4 sm:gap-6 lg:gap-8 mb-8 lg:mb-12 transition-all duration-300 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3">
+                      {shops.map((shop, index) => (
+                        <div
+                          key={shop.id || index}
+                          className="bg-white rounded-xl lg:rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden group border border-gray-100 transform hover:-translate-y-2 cursor-pointer"
+                        >
+                          <div className="p-4 lg:p-6">
+                            <h3 className="font-bold text-lg lg:text-xl text-gray-800 mb-2 lg:mb-3 truncate group-hover:text-emerald-600 transition-colors">
+                              {shop.shopName || `Shop ${index + 1}`}
+                            </h3>
+                            <div className="text-gray-600 text-sm mb-4 h-12 lg:h-16 overflow-hidden">
+                              <p className="leading-relaxed line-clamp-2 lg:line-clamp-3">
+                                {shop.description ||
+                                  "Discover amazing products and exceptional service at this wonderful shop"}
+                              </p>
+                            </div>
+
+                            <div className="flex items-center justify-between mb-4 lg:mb-6">
+                              <div className="flex items-center">
+                                <div className="flex text-yellow-400 text-base lg:text-lg">
+                                  {[1, 2, 3, 4, 5].map((star) => (
+                                    <i
+                                      key={star}
+                                      className="fa-solid fa-star"
+                                    ></i>
+                                  ))}
+                                </div>
+                                <span className="text-gray-700 text-sm ml-2 font-semibold">
+                                  {shop.rating || "4.8"}
+                                </span>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-gray-500 text-xs">
+                                  Products
+                                </div>
+                                <div className="text-gray-800 font-bold">
+                                  {shop.productCount || "0"}
+                                </div>
+                              </div>
+                            </div>
+
+                            <button className="w-full bg-gradient-to-r from-gray-800 to-gray-900 text-white py-2.5 lg:py-3 px-4 lg:px-6 rounded-lg lg:rounded-xl font-semibold text-sm lg:text-base hover:from-gray-900 hover:to-black transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
+                              <i className="fa-solid fa-arrow-right mr-2"></i>
+                              Visit Shop
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="bg-white rounded-xl lg:rounded-2xl shadow-lg p-4 lg:p-6 h-[100px]">
+                      <div className="flex flex-col sm:flex-row justify-center items-center gap-3">
+                        <button
+                          onClick={() => handlePageChange(currentPage - 1)}
+                          disabled={currentPage === 0}
+                          className="w-full sm:w-auto px-4 lg:px-6 py-2.5 lg:py-3 border-2 border-gray-200 rounded-lg lg:rounded-xl hover:border-emerald-500 hover:bg-emerald-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium transform hover:scale-105 text-sm lg:text-base"
+                        >
+                          <i className="fa-solid fa-chevron-left mr-1"></i>
+                          Previous
+                        </button>
+
+                        <div className="flex gap-1 lg:gap-2 overflow-x-auto pb-2 sm:pb-0">
+                          {getPageNumbers().map((pageNum) => (
+                            <button
+                              key={pageNum}
+                              onClick={() => handlePageChange(pageNum)}
+                              className={`w-10 lg:w-12 h-10 lg:h-12 rounded-lg lg:rounded-xl font-bold transition-all text-sm lg:text-base flex-shrink-0 ${
+                                currentPage === pageNum
+                                  ? "bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-lg"
+                                  : "border-2 border-gray-200 hover:border-emerald-500 hover:bg-emerald-50"
+                              }`}
+                            >
+                              {pageNum + 1}
+                            </button>
+                          ))}
+                        </div>
+
+                        <button
+                          onClick={() => handlePageChange(currentPage + 1)}
+                          disabled={currentPage === totalPages - 1}
+                          className="w-full sm:w-auto px-4 lg:px-6 py-2.5 lg:py-3 border-2 border-gray-200 rounded-lg lg:rounded-xl hover:border-emerald-500 hover:bg-emerald-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium transform hover:scale-105 text-sm lg:text-base"
+                        >
+                          Next
+                          <i className="fa-solid fa-chevron-right ml-1"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4 pb-16">
-          {error ? (
-            <div className="bg-white rounded-2xl shadow-lg p-12 text-center border border-red-100 transform transition-all duration-300">
-              <div className="text-red-500 mb-6">
-                <i className="fa-solid fa-exclamation-triangle text-6xl"></i>
-              </div>
-              <h3 className="text-2xl font-bold text-gray-800 mb-4">
-                Oops! Something went wrong
-              </h3>
-              <p className="text-gray-600 mb-8 text-lg">{error}</p>
-              <button
-                onClick={() => fetchShops(lastSearchTerm, false)}
-                className="bg-gradient-to-r from-red-500 to-red-600 text-white px-8 py-3 rounded-xl font-semibold hover:from-red-600 hover:to-red-700 transition-all duration-300 transform hover:scale-105"
-              >
-                <i className="fa-solid fa-refresh mr-2"></i>
-                Try Again
-              </button>
-            </div>
-          ) : searchLoading && shops.length === 0 ? (
-            <div className="bg-white rounded-2xl shadow-lg p-16 text-center transform transition-all duration-300">
-              <div className="text-emerald-500 mb-8">
-                <i className="fa-solid fa-search text-8xl animate-pulse"></i>
-              </div>
-              <h3 className="text-3xl font-bold text-gray-800 mb-6">
-                Searching for shops...
-              </h3>
-              <p className="text-gray-600 text-lg">
-                Please wait while we find shops matching "{searchTerm}"
-              </p>
-            </div>
-          ) : shops.length === 0 ? (
-            <div className="bg-white rounded-2xl shadow-lg p-16 text-center transform transition-all duration-300">
-              <div className="text-gray-300 mb-8">
-                <i className="fa-solid fa-store text-8xl"></i>
-              </div>
-              <h3 className="text-3xl font-bold text-gray-800 mb-6">
-                {lastSearchTerm ? "No shops found" : "No shops available"}
-              </h3>
-              <p className="text-gray-600 mb-10 max-w-lg mx-auto text-lg leading-relaxed">
-                {lastSearchTerm
-                  ? `We couldn't find any shops matching "${lastSearchTerm}". Please try a different search term or browse all shops.`
-                  : "Be the pioneer! Create the first shop and start your entrepreneurial journey with us."}
-              </p>
-              <div className="flex gap-4 justify-center">
-                {lastSearchTerm && (
-                  <button
-                    onClick={handleClearSearch}
-                    className="inline-flex items-center bg-gray-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-gray-700 transition-all duration-300"
-                  >
-                    <i className="fa-solid fa-times mr-2"></i>
-                    Clear Search
-                  </button>
-                )}
-                {hasMerchantAccount() && (
-                  <button
-                    onClick={() => setShowCreateModal(true)}
-                    className="inline-flex items-center bg-gradient-to-r from-emerald-600 to-emerald-700 text-white px-10 py-4 rounded-xl font-semibold text-lg hover:from-emerald-700 hover:to-emerald-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
-                  >
-                    <i className="fa-solid fa-plus mr-3"></i>
-                    Create Your Shop
-                  </button>
-                )}
-              </div>
-            </div>
-          ) : (
-            <>
-              {/* Həmişə Grid görünüş */}
-              <div className="grid gap-8 mb-12 transition-all duration-300 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {shops.map((shop, index) => (
-                  <div
-                    key={shop.id || index}
-                    className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden group border border-gray-100 transform hover:-translate-y-2"
-                  >
-                    <div className="relative aspect-square bg-gradient-to-br from-emerald-100 via-teal-50 to-blue-100 group-hover:from-emerald-200 group-hover:to-blue-200 transition-all duration-500">
-                      <div className="absolute inset-0 opacity-30">
-                        <div
-                          className="absolute inset-0"
-                          style={{
-                            backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23000' fill-opacity='0.02'%3E%3Cpath d='M20 20L0 0h40v40L20 20z'/%3E%3C/g%3E%3C/svg%3E")`,
-                          }}
-                        ></div>
-                      </div>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-20 h-20 bg-white rounded-2xl shadow-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                          <i className="fa-solid fa-store text-3xl text-emerald-600"></i>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="p-6">
-                      <h3 className="font-bold text-xl text-gray-800 mb-3 truncate group-hover:text-emerald-600 transition-colors">
-                        {shop.shopName || `Shop ${index + 1}`}
-                      </h3>
-                      <div className="text-gray-600 text-sm mb-4 h-16 overflow-hidden">
-                        <p className="leading-relaxed">
-                          {shop.description ||
-                            "Discover amazing products and exceptional service at this wonderful shop"}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center">
-                          <div className="flex text-yellow-400 text-lg">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <i key={star} className="fa-solid fa-star"></i>
-                            ))}
-                          </div>
-                          <span className="text-gray-700 text-sm ml-2 font-semibold">
-                            {shop.rating || "4.8"}
-                          </span>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-gray-500 text-xs">Products</div>
-                          <div className="text-gray-800 font-bold">
-                            {shop.productCount || "0"}
-                          </div>
-                        </div>
-                      </div>
-
-                      <button className="w-full bg-gradient-to-r from-gray-800 to-gray-900 text-white py-3 px-6 rounded-xl font-semibold hover:from-gray-900 hover:to-black transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
-                        <i className="fa-solid fa-arrow-right mr-2"></i>
-                        Visit Shop
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Həmişə Pagination göstər */}
-              <div className="bg-white rounded-2xl shadow-lg p-8">
-                <div className="flex justify-center items-center gap-3">
-                  <button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 0}
-                    className="px-6 py-3 border-2 border-gray-200 rounded-xl hover:border-emerald-500 hover:bg-emerald-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium transform hover:scale-105"
-                  >
-                    <i className="fa-solid fa-chevron-left mr-1"></i>
-                    Previous
-                  </button>
-
-                  <div className="flex gap-2">
-                    {getPageNumbers().map((pageNum) => (
-                      <button
-                        key={pageNum}
-                        onClick={() => handlePageChange(pageNum)}
-                        className={`w-12 h-12 rounded-xl font-bold transition-all transform hover:scale-110 ${
-                          currentPage === pageNum
-                            ? "bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-lg"
-                            : "border-2 border-gray-200 hover:border-emerald-500 hover:bg-emerald-50"
-                        }`}
-                      >
-                        {pageNum + 1}
-                      </button>
-                    ))}
-                  </div>
-
-                  <button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages - 1}
-                    className="px-6 py-3 border-2 border-gray-200 rounded-xl hover:border-emerald-500 hover:bg-emerald-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium transform hover:scale-105"
-                  >
-                    Next
-                    <i className="fa-solid fa-chevron-right ml-1"></i>
-                  </button>
-                </div>
-
-                <div className="text-center mt-6 text-gray-600 text-sm">
-                  Page {currentPage + 1} of {totalPages} • Showing{" "}
-                  {shops.length} of {totalElements} shops
-                </div>
-              </div>
-            </>
-          )}
         </div>
       </div>
 

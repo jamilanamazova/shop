@@ -1,7 +1,7 @@
 import React from "react";
 import { Route, Routes } from "react-router-dom";
-import MerchantRoute from "./MerchantRoute";
-import Shops from "../Components/Merchant/Shops";
+// import MerchantRoute from "./MerchantRoute";
+// import Shops from "../Components/Merchant/Shops";
 // Gələcəkdə əlavə ediləcək komponentlər
 // import MerchantProducts from "../Components/MerchantProducts";
 // import MerchantOrders from "../Components/MerchantOrders";
@@ -11,14 +11,14 @@ import Shops from "../Components/Merchant/Shops";
 const MerchantRoutes = () => {
   return (
     <Routes>
-      <Route
+      {/* <Route
         path="/shops"
         element={
           <MerchantRoute>
             <Shops />
           </MerchantRoute>
         }
-      />
+      /> */}
 
       {/* Gələcəkdə əlavə ediləcək route-lar */}
       {/* 

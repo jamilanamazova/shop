@@ -10,6 +10,7 @@ import ForgotPassword from "../Components/Auth/ForgotPassword";
 import ResetPassword from "../Components/Auth/ResetPassword";
 import MerchantRoutes from "./MerchantRoutes";
 import CustomerRoutes from "./CustomerRoutes";
+import Shops from "../Components/Merchant/Shops";
 
 const Routing = () => {
   return (
@@ -39,6 +40,8 @@ const Routing = () => {
           </PublicRoute>
         }
       />
+
+      <Route path="/shops" element={<Shops />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/confirm-email" element={<ConfirmEmail />} />
 

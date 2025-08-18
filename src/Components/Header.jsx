@@ -225,7 +225,7 @@ const Header = () => {
               </Link>
               <Link
                 className="font-bold text-sm xl:text-base hover:text-gray-600 transition-colors"
-                to={hasMerchantAccount() ? "/merchant/shops" : "/"}
+                to="/shops"
               >
                 SHOPS
               </Link>
@@ -456,7 +456,7 @@ const Header = () => {
           </li>
           <li>
             <Link
-              to={hasMerchantAccount() ? "/merchant/shops" : "/"}
+              to="/shops"
               className="font-bold text-lg hover:text-gray-600 transition-colors block py-2"
               onClick={toggleSideBar}
             >
