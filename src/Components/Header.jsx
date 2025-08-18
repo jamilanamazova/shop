@@ -1,4 +1,11 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import "../CSS/header.module.css";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { isAuthenticated, getCurrentUser, logout } from "../utils/auth";
@@ -6,7 +13,7 @@ import axios from "axios";
 import { apiURL } from "../Backend/Api/api";
 import { hasMerchantAccount, setAppMode } from "../utils/roleMode";
 
-const Header = () => {
+const Header = memo(() => {
   const [currentUser, setCurrentUser] = useState();
   const [showMerchantModal, setShowMerchantModal] = useState(false);
   const [isBecomingMerchant, setIsBecomingMerchant] = useState(false);
@@ -14,35 +21,49 @@ const Header = () => {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [showErrorMessage, setShowErrorMessage] = useState(false);
-  const authenticated = isAuthenticated();
-  const navigate = useNavigate();
-  const user = getCurrentUser();
-  const location = useLocation();
-  const isEmailVerified = user?.isEmailVerified;
+  const [openSideBar, setOpenSideBar] = useState(false);
 
-  const handleShowSuccessMessage = (message) => {
+  const hamburgerMenuRef = useRef(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const authenticated = useMemo(() => isAuthenticated(), []);
+  const user = useMemo(() => getCurrentUser(), []);
+  const hasMerchantAccess = useMemo(() => hasMerchantAccount(), []);
+
+  const handleShowSuccessMessage = useCallback((message) => {
     setSuccessMessage(message);
     setShowSuccessMessage(true);
-    setTimeout(() => {
+
+    const timer = setTimeout(() => {
       setShowSuccessMessage(false);
       setSuccessMessage("");
     }, 3000);
-  };
 
-  const handleShowErrorMessage = (message) => {
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleShowErrorMessage = useCallback((message) => {
     setErrorMessage(message);
     setShowErrorMessage(true);
-    setTimeout(() => {
+
+    const timer = setTimeout(() => {
       setShowErrorMessage(false);
       setErrorMessage("");
     }, 4000);
-  };
 
-  const handleBecomeMerchant = () => {
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleBecomeMerchant = useCallback(() => {
     setShowMerchantModal(true);
-  };
+  }, []);
 
-  const confirmBecomeMerchant = async () => {
+  const closeModal = useCallback(() => {
+    setShowMerchantModal(false);
+  }, []);
+
+  const confirmBecomeMerchant = useCallback(async () => {
     try {
       setIsBecomingMerchant(true);
       const token = localStorage.getItem("accessToken");
@@ -92,9 +113,10 @@ const Header = () => {
     } finally {
       setIsBecomingMerchant(false);
     }
-  };
+  }, [navigate, handleShowSuccessMessage, handleShowErrorMessage]);
 
-  const handleGetUserProfile = async () => {
+  const handleGetUserProfile = useCallback(async () => {
+    if (currentUser) return;
     try {
       const token = localStorage.getItem("accessToken");
 
@@ -116,40 +138,194 @@ const Header = () => {
     } catch (error) {
       console.error("Error fetching user profile:", error);
     }
-  };
+  }, [currentUser, navigate]);
 
-  useEffect(() => {
-    if (authenticated) {
-      handleGetUserProfile();
-    }
-  }, [authenticated]);
-
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     logout();
     window.location.href = "/";
-  };
+  }, []);
 
-  const hamburgerMenuRef = useRef(null);
-  const [openSideBar, setOpenSideBar] = useState(false);
+  const toggleSideBar = useCallback(() => {
+    setOpenSideBar((prev) => {
+      const newState = !prev;
 
-  const toggleSideBar = () => {
-    setOpenSideBar(!openSideBar);
-    if (hamburgerMenuRef.current) {
-      if (!openSideBar) {
-        hamburgerMenuRef.current.style.transform = "translateX(0)";
-        hamburgerMenuRef.current.style.backgroundColor = "white";
-        hamburgerMenuRef.current.style.boxShadow = "2px 0 10px rgba(0,0,0,0.1)";
-      } else {
-        hamburgerMenuRef.current.style.transform = "translateX(-100%)";
+      if (hamburgerMenuRef.current) {
+        if (newState) {
+          hamburgerMenuRef.current.style.transform = "translateX(0)";
+          hamburgerMenuRef.current.style.backgroundColor = "white";
+          hamburgerMenuRef.current.style.boxShadow =
+            "2px 0 10px rgba(0,0,0,0.1)";
+          document.body.style.overflow = "hidden";
+        } else {
+          hamburgerMenuRef.current.style.transform = "translateX(-100%)";
+          document.body.style.overflow = "auto";
+        }
       }
+
+      document.body.style.transition = "overflow 0.3s ease-in-out";
+      return newState;
+    });
+  }, []);
+
+  const closeSideBarAndNavigate = useCallback(() => {
+    toggleSideBar();
+  }, [toggleSideBar]);
+
+  useEffect(() => {
+    if (authenticated && !currentUser) {
+      handleGetUserProfile();
     }
+  }, [authenticated, currentUser, handleGetUserProfile]);
+
+  useEffect(() => {
+    if (showSuccessMessage) {
+      const timer = setTimeout(() => {
+        setShowSuccessMessage(false);
+        setSuccessMessage("");
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccessMessage]);
+
+  useEffect(() => {
+    if (showErrorMessage) {
+      const timer = setTimeout(() => {
+        setShowErrorMessage(false);
+        setErrorMessage("");
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [showErrorMessage]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        openSideBar &&
+        hamburgerMenuRef.current &&
+        !hamburgerMenuRef.current.contains(event.target)
+      ) {
+        setOpenSideBar(false);
+      }
+    };
+
     if (openSideBar) {
-      document.body.style.overflow = "auto";
-    } else {
-      document.body.style.overflow = "hidden";
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }
-    document.body.style.transition = "overflow 0.3s ease-in-out";
-  };
+  }, [openSideBar]);
+
+  const NavigationLinks = memo(() => (
+    <ul className="flex gap-8 xl:gap-12 items-center list-none">
+      <Link
+        className="font-bold text-sm xl:text-base hover:text-gray-600 transition-colors"
+        to={"/"}
+      >
+        HOME
+      </Link>
+      <Link
+        className="font-bold text-sm xl:text-base hover:text-gray-600 transition-colors"
+        to={"/customer/products"}
+      >
+        PRODUCTS
+      </Link>
+      <Link
+        className="font-bold text-sm xl:text-base hover:text-gray-600 transition-colors"
+        to={"/customer/blog"}
+      >
+        BLOG
+      </Link>
+      <Link
+        className="font-bold text-sm xl:text-base hover:text-gray-600 transition-colors"
+        to="/shops"
+      >
+        SHOPS
+      </Link>
+    </ul>
+  ));
+
+  const MobileNavigationLinks = memo(() => (
+    <ul className="flex flex-col gap-4 list-none mb-6">
+      <li>
+        <Link
+          to="/"
+          className="font-bold text-lg hover:text-gray-600 transition-colors block py-2"
+          onClick={closeSideBarAndNavigate}
+        >
+          HOME
+        </Link>
+      </li>
+      <li>
+        <Link
+          to="/customer/products"
+          className="font-bold text-lg hover:text-gray-600 transition-colors block py-2"
+          onClick={closeSideBarAndNavigate}
+        >
+          PRODUCTS
+        </Link>
+      </li>
+      <li>
+        <Link
+          to="/customer/blog"
+          className="font-bold text-lg hover:text-gray-600 transition-colors block py-2"
+          onClick={closeSideBarAndNavigate}
+        >
+          BLOG
+        </Link>
+      </li>
+      <li>
+        <Link
+          to="/shops"
+          className="font-bold text-lg hover:text-gray-600 transition-colors block py-2"
+          onClick={closeSideBarAndNavigate}
+        >
+          SHOPS
+        </Link>
+      </li>
+    </ul>
+  ));
+
+  const MerchantButton = memo(() => {
+    if (hasMerchantAccess) return null;
+
+    return (
+      <button
+        className="relative bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-full font-bold text-sm hover:from-orange-600 hover:to-red-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 animate-pulse"
+        onClick={handleBecomeMerchant}
+      >
+        <i className="fa-solid fa-store mr-2"></i>
+        Create Your Own Shop
+        <span className="absolute -top-1 -right-1 bg-yellow-400 text-red-600 text-xs px-1.5 py-0.5 rounded-full font-bold">
+          NEW
+        </span>
+      </button>
+    );
+  });
+
+  const NotificationComponent = memo(({ type, message, onClose }) => (
+    <div className="fixed top-4 right-4 z-50 max-w-sm">
+      <div
+        className={`${
+          type === "success" ? "bg-green-500" : "bg-red-500"
+        } text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 animate-slide-in`}
+      >
+        <i
+          className={`fa-solid ${
+            type === "success" ? "fa-check-circle" : "fa-exclamation-circle"
+          } text-xl`}
+        ></i>
+        <p className="font-medium">{message}</p>
+        <button
+          onClick={onClose}
+          className={`text-white hover:${
+            type === "success" ? "text-green-200" : "text-red-200"
+          }`}
+        >
+          <i className="fa-solid fa-times"></i>
+        </button>
+      </div>
+    </div>
+  ));
 
   if (location.pathname === "/confirm-email") {
     return null;
@@ -158,34 +334,21 @@ const Header = () => {
   return (
     <>
       {showSuccessMessage && (
-        <div className="fixed top-4 right-4 z-50 max-w-sm">
-          <div className="bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 animate-slide-in">
-            <i className="fa-solid fa-check-circle text-xl"></i>
-            <p className="font-medium">{successMessage}</p>
-            <button
-              onClick={() => setShowSuccessMessage(false)}
-              className="text-white hover:text-green-200"
-            >
-              <i className="fa-solid fa-times"></i>
-            </button>
-          </div>
-        </div>
+        <NotificationComponent
+          type="success"
+          message={successMessage}
+          onClose={() => setShowSuccessMessage(false)}
+        />
       )}
 
       {showErrorMessage && (
-        <div className="fixed top-4 right-4 z-50 max-w-sm">
-          <div className="bg-red-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 animate-slide-in">
-            <i className="fa-solid fa-exclamation-circle text-xl"></i>
-            <p className="font-medium">{errorMessage}</p>
-            <button
-              onClick={() => setShowErrorMessage(false)}
-              className="text-white hover:text-red-200"
-            >
-              <i className="fa-solid fa-times"></i>
-            </button>
-          </div>
-        </div>
+        <NotificationComponent
+          type="error"
+          message={errorMessage}
+          onClose={() => setShowErrorMessage(false)}
+        />
       )}
+
       <header className="p-4 lg:p-7 flex justify-between items-center max-w-[93%] m-auto relative">
         <div className="leftHeader flex gap-3 md:gap-12 items-center">
           <div className="bagIcon">
@@ -204,32 +367,7 @@ const Header = () => {
           </div>
 
           <div className="headerLinks hidden lg:block">
-            <ul className="flex gap-8 xl:gap-12 items-center list-none">
-              <Link
-                className="font-bold text-sm xl:text-base hover:text-gray-600 transition-colors"
-                to={"/"}
-              >
-                HOME
-              </Link>
-              <Link
-                className="font-bold text-sm xl:text-base hover:text-gray-600 transition-colors"
-                to={"/customer/products"}
-              >
-                PRODUCTS
-              </Link>
-              <Link
-                className="font-bold text-sm xl:text-base hover:text-gray-600 transition-colors"
-                to={"/customer/blog"}
-              >
-                BLOG
-              </Link>
-              <Link
-                className="font-bold text-sm xl:text-base hover:text-gray-600 transition-colors"
-                to="/shops"
-              >
-                SHOPS
-              </Link>
-            </ul>
+            <NavigationLinks />
           </div>
         </div>
 
@@ -238,20 +376,7 @@ const Header = () => {
             <div className="flex items-center gap-2 md:gap-3">
               {authenticated && (
                 <div className="hidden lg:block">
-                  {hasMerchantAccount() ? (
-                    <Link></Link>
-                  ) : (
-                    <button
-                      className="relative bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-full font-bold text-sm hover:from-orange-600 hover:to-red-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 animate-pulse"
-                      onClick={handleBecomeMerchant}
-                    >
-                      <i className="fa-solid fa-store mr-2"></i>
-                      Create Your Own Shop
-                      <span className="absolute -top-1 -right-1 bg-yellow-400 text-red-600 text-xs px-1.5 py-0.5 rounded-full font-bold">
-                        NEW
-                      </span>
-                    </button>
-                  )}
+                  <MerchantButton />
                 </div>
               )}
               <div className="search-icon cursor-pointer hover:text-gray-600 transition-colors">
@@ -359,7 +484,7 @@ const Header = () => {
 
               <div className="flex gap-4">
                 <button
-                  onClick={() => setShowMerchantModal(false)}
+                  onClick={closeModal}
                   disabled={isBecomingMerchant}
                   className="flex-1 bg-gray-200 text-gray-800 py-3 px-4 rounded-lg font-medium hover:bg-gray-300 transition-colors disabled:opacity-50"
                 >
@@ -426,44 +551,7 @@ const Header = () => {
           </button>
         </div>
 
-        <ul className="flex flex-col gap-4 list-none mb-6">
-          <li>
-            <Link
-              to="/"
-              className="font-bold text-lg hover:text-gray-600 transition-colors block py-2"
-              onClick={toggleSideBar}
-            >
-              HOME
-            </Link>
-          </li>
-          <li>
-            <Link
-              to="/customer/products"
-              className="font-bold text-lg hover:text-gray-600 transition-colors block py-2"
-              onClick={toggleSideBar}
-            >
-              PRODUCTS
-            </Link>
-          </li>
-          <li>
-            <Link
-              to="/customer/blog"
-              className="font-bold text-lg hover:text-gray-600 transition-colors block py-2"
-              onClick={toggleSideBar}
-            >
-              BLOG
-            </Link>
-          </li>
-          <li>
-            <Link
-              to="/shops"
-              className="font-bold text-lg hover:text-gray-600 transition-colors block py-2"
-              onClick={toggleSideBar}
-            >
-              SHOPS
-            </Link>
-          </li>
-        </ul>
+        <MobileNavigationLinks />
 
         <div className="border-t pt-4">
           {authenticated ? (
@@ -482,25 +570,12 @@ const Header = () => {
               <Link
                 to="/customer/profile"
                 className="flex items-center space-x-3 py-2 hover:bg-gray-100 rounded px-2 transition-colors"
-                onClick={toggleSideBar}
+                onClick={closeSideBarAndNavigate}
               >
                 <i className="fa-solid fa-user text-gray-600"></i>
                 <span className="font-medium">My Profile</span>
               </Link>
-              {hasMerchantAccount() ? (
-                <Link></Link>
-              ) : (
-                <button
-                  className="relative bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-full font-bold text-sm hover:from-orange-600 hover:to-red-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 animate-pulse"
-                  onClick={handleBecomeMerchant}
-                >
-                  <i className="fa-solid fa-store mr-2"></i>
-                  Create Your Own Shop
-                  <span className="absolute -top-1 -right-1 bg-yellow-400 text-red-600 text-xs px-1.5 py-0.5 rounded-full font-bold">
-                    NEW
-                  </span>
-                </button>
-              )}
+              <MerchantButton />
               <button
                 onClick={() => {
                   handleLogout();
@@ -517,14 +592,14 @@ const Header = () => {
               <Link
                 to="/signin"
                 className="block w-full text-center bg-gray-200 text-gray-800 py-3 rounded-lg font-medium hover:bg-gray-300 transition-colors"
-                onClick={toggleSideBar}
+                onClick={closeSideBarAndNavigate}
               >
                 Sign In
               </Link>
               <Link
                 to="/register"
                 className="block w-full text-center bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
-                onClick={toggleSideBar}
+                onClick={closeSideBarAndNavigate}
               >
                 Sign Up
               </Link>
@@ -543,6 +618,7 @@ const Header = () => {
       <hr className="max-w-[95%] m-auto text-gray-500" />
     </>
   );
-};
+});
 
+Header.displayName = "Header";
 export default Header;

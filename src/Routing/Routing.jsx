@@ -11,6 +11,8 @@ import ResetPassword from "../Components/Auth/ResetPassword";
 import MerchantRoutes from "./MerchantRoutes";
 import CustomerRoutes from "./CustomerRoutes";
 import Shops from "../Components/Merchant/Shops";
+import ProtectedRoute from "../Components/Routes/ProtectedRoute";
+import ShopDetail from "../Components/Merchant/ShopDetail";
 
 const Routing = () => {
   return (
@@ -42,6 +44,14 @@ const Routing = () => {
       />
 
       <Route path="/shops" element={<Shops />} />
+      <Route
+        path="/shop/:shopId"
+        element={
+          <ProtectedRoute>
+            <ShopDetail />
+          </ProtectedRoute>
+        }
+      />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/confirm-email" element={<ConfirmEmail />} />
 

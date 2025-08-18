@@ -9,14 +9,12 @@ export const isAuthenticated = () => {
   const accessToken = getAccessToken();
   const refreshToken = getRefreshToken();
 
-  // Access token var və valid
   if (accessToken && !isTokenExpired(accessToken)) {
     return true;
   }
 
-  // Access token expire amma refresh token var
   if (refreshToken) {
-    return true; // Interceptor refresh edəcək
+    return true;
   }
 
   return false;
