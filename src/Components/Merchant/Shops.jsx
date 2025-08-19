@@ -26,13 +26,26 @@ const SearchLoadingSpinner = memo(() => (
 ));
 SearchLoadingSpinner.displayName = "SearchLoadingSpinner";
 
-const ShopCard = memo(({ shop, index, onVisit }) => {
+const ShopCard = memo(({ shop, index, onVisit, currentUserShop = false }) => {
   const handleVisit = useCallback(() => {
-    onVisit(shop.id);
-  }, [shop.id, onVisit]);
+    onVisit(shop.id, currentUserShop);
+  }, [shop.id, onVisit, currentUserShop]);
 
   return (
-    <div className="bg-white rounded-xl lg:rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden group border border-gray-100 transform hover:-translate-y-2 cursor-pointer">
+    <div
+      className={`bg-white rounded-xl lg:rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden group border transform hover:-translate-y-2 cursor-pointer ${
+        currentUserShop
+          ? "border-emerald-500 ring-2 ring-emerald-200"
+          : "border-gray-100"
+      }`}
+    >
+      {currentUserShop && (
+        <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white px-4 py-2 text-sm font-semibold flex items-center justify-center">
+          <i className="fa-solid fa-crown mr-2"></i>
+          Your Shop
+        </div>
+      )}
+
       <div className="p-4 lg:p-6">
         <h3 className="font-bold text-lg lg:text-xl text-gray-800 mb-2 lg:mb-3 truncate group-hover:text-emerald-600 transition-colors">
           {shop.shopName || `Shop ${index + 1}`}
@@ -64,13 +77,22 @@ const ShopCard = memo(({ shop, index, onVisit }) => {
         </div>
 
         <button
-          onClick={handleVisit}
-          className="w-full bg-gradient-to-r from-gray-800 to-gray-900 text-white py-2.5 lg:py-3 px-4 lg:px-6 rounded-lg lg:rounded-xl font-semibold text-sm lg:text-base hover:from-gray-900 hover:to-black transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+          onClick={() => onVisit(shop.id, false)} // Always false for "Visit Shop"
+          className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 text-white py-3 px-4 rounded-xl font-semibold hover:from-emerald-700 hover:to-emerald-800 transition-all duration-300 flex items-center justify-center gap-2"
         >
-          <i className="fa-solid fa-arrow-right mr-2"></i>
+          <i className="fa-solid fa-store"></i>
           Visit Shop
         </button>
       </div>
+      {currentUserShop && (
+        <button
+          onClick={() => onVisit(shop.id, true)} // true for merchant dashboard
+          className="w-full mt-2 bg-blue-600 text-white py-3 px-4 rounded-xl font-semibold hover:bg-blue-700 transition-all duration-300 flex items-center justify-center gap-2"
+        >
+          <i className="fa-solid fa-tachometer-alt"></i>
+          Manage Shop
+        </button>
+      )}
     </div>
   );
 });
@@ -116,6 +138,8 @@ const FilterSidebar = memo(
     lastSearchTerm,
     hasMerchantAccess,
     onCreateShop,
+    userOwnedShop,
+    onGoToDashboard,
   }) => {
     const handleSortChange = useCallback(
       (e) => {
@@ -134,6 +158,27 @@ const FilterSidebar = memo(
           </h3>
 
           <div className="space-y-6 lg:space-y-6">
+            {hasMerchantAccess && userOwnedShop && (
+              <div className="bg-gradient-to-r from-emerald-50 to-emerald-100 rounded-lg p-4 border border-emerald-200">
+                <div className="flex items-center mb-3">
+                  <i className="fa-solid fa-store text-emerald-600 mr-2"></i>
+                  <span className="font-semibold text-emerald-800">
+                    Your Shop
+                  </span>
+                </div>
+                <p className="text-sm text-emerald-700 mb-4">
+                  {userOwnedShop.shopName}
+                </p>
+                <button
+                  onClick={onGoToDashboard}
+                  className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 text-white px-4 py-2.5 rounded-lg font-semibold text-sm hover:from-emerald-700 hover:to-emerald-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center gap-2"
+                >
+                  <i className="fa-solid fa-tachometer-alt"></i>
+                  Go to Dashboard
+                </button>
+              </div>
+            )}
+
             <div className="flex-1 lg:flex-none">
               <label className="block text-sm font-semibold text-gray-700 mb-3">
                 <i className="fa-solid fa-sort mr-2 text-emerald-600"></i>
@@ -165,7 +210,7 @@ const FilterSidebar = memo(
                 </div>
               </div>
 
-              {hasMerchantAccess && shops.length <= 1 && (
+              {hasMerchantAccess && !userOwnedShop && (
                 <div className="flex-1 lg:flex-none">
                   <button
                     onClick={onCreateShop}
@@ -375,6 +420,11 @@ const Shops = memo(() => {
     formErrors: {},
   });
 
+  const [userShopData, setUserShopData] = useState({
+    userOwnedShop: null,
+    loadingUserShop: false,
+  });
+
   const [notification, setNotification] = useState(null);
   const [error, setError] = useState("");
 
@@ -387,8 +437,66 @@ const Shops = memo(() => {
   const { loading, searchLoading, createLoading } = loadingStates;
   const { searchTerm, lastSearchTerm, sortBy, sortDirection } = searchState;
   const { showCreateModal, formData, formErrors } = modalState;
+  const { userOwnedShop, loadingUserShop } = userShopData;
 
   const hasMerchantAccess = useMemo(() => hasMerchantAccount(), []);
+
+  const processedShops = useMemo(() => {
+    if (!userOwnedShop) return shops;
+
+    return shops.map((shop) => ({
+      ...shop,
+      isUserShop: shop.id === userOwnedShop.id,
+    }));
+  }, [shops, userOwnedShop]);
+
+  const fetchUserShop = useCallback(async () => {
+    if (!hasMerchantAccess) return;
+
+    try {
+      setUserShopData((prev) => ({ ...prev, loadingUserShop: true }));
+
+      const token = localStorage.getItem("merchantAccessToken");
+
+      console.log("🔍 Token Debug:");
+      console.log("Token exists:", !!token);
+      console.log("Token length:", token?.length || 0);
+      console.log(
+        "Token preview:",
+        token ? token.substring(0, 30) + "..." : "No token"
+      );
+
+      if (!token) {
+        console.error("❌ No merchant token found");
+        setUserShopData((prev) => ({ ...prev, userOwnedShop: null }));
+        return;
+      }
+
+      const response = await axios.get(`${apiURL}/merchant/shops/dashboard`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.data.status === "OK" && response.data.data) {
+        setUserShopData((prev) => ({
+          ...prev,
+          userOwnedShop: response.data.data,
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching user shop:", error);
+      if (error.response?.status === 403) {
+        console.error("Access denied - check authentication/authorization");
+      }
+      setUserShopData((prev) => ({ ...prev, userOwnedShop: null }));
+    } finally {
+      setUserShopData((prev) => ({ ...prev, loadingUserShop: false }));
+    }
+  }, [hasMerchantAccess]);
+
+  console.log("hasMerchantAccount result: ", hasMerchantAccess);
 
   const fetchShops = useCallback(
     async (searchQuery = "", showLoader = true) => {
@@ -477,6 +585,8 @@ const Shops = memo(() => {
     [currentPage, sortBy, sortDirection]
   );
 
+  console.log(userShopData);
+
   const handleSortChange = useCallback((field, direction) => {
     setSearchState((prev) => ({
       ...prev,
@@ -520,11 +630,23 @@ const Shops = memo(() => {
   }, [fetchShops]);
 
   const handleShopVisit = useCallback(
-    (shopId) => {
-      navigate(`/shop/${shopId}`);
+    (shopId, isUserShop = false) => {
+      if (isUserShop) {
+        navigate(`/merchant/shops/${shopId}/dashboard`);
+      } else {
+        navigate(`/shop/${shopId}`);
+      }
     },
     [navigate]
   );
+
+  const handleGoToDashboard = useCallback(() => {
+    if (userOwnedShop?.id) {
+      navigate(`/merchant/shops/${userOwnedShop.id}/dashboard`);
+    } else {
+      navigate("/merchant/dashboard");
+    }
+  }, [navigate, userOwnedShop]);
 
   const handleCreateShop = useCallback(() => {
     setModalState((prev) => ({ ...prev, showCreateModal: true }));
@@ -568,7 +690,7 @@ const Shops = memo(() => {
       try {
         setLoadingStates((prev) => ({ ...prev, createLoading: true }));
 
-        const response = await axios.post(`${apiURL}/shops`, formData, {
+        const response = await axios.post(`${apiURL}/users/me/shop`, formData, {
           headers: { "Content-Type": "application/json" },
         });
 
@@ -579,6 +701,7 @@ const Shops = memo(() => {
           });
           handleCloseModal();
           fetchShops("", false);
+          fetchUserShop();
         }
       } catch (error) {
         console.error("Error creating shop:", error);
@@ -590,20 +713,19 @@ const Shops = memo(() => {
         setLoadingStates((prev) => ({ ...prev, createLoading: false }));
       }
     },
-    [formData, handleCloseModal, fetchShops]
+    [formData, handleCloseModal, fetchShops, fetchUserShop]
   );
-
-  const showNotification = useCallback((message, type = "success") => {
-    setNotification({ message, type });
-  }, []);
 
   const hideNotification = useCallback(() => {
     setNotification(null);
   }, []);
 
   useEffect(() => {
+    if (hasMerchantAccess) {
+      fetchUserShop();
+    }
     fetchShops(lastSearchTerm, true);
-  }, [fetchShops, lastSearchTerm]);
+  }, [fetchShops, fetchUserShop, lastSearchTerm, hasMerchantAccess]);
 
   useEffect(() => {
     if (searchTimeoutRef.current) {
@@ -645,7 +767,9 @@ const Shops = memo(() => {
           <div className="text-center">
             <LoadingSpinner />
             <p className="mt-6 text-gray-600 font-medium">
-              Discovering amazing shops...
+              {loadingUserShop
+                ? "Loading your shop data..."
+                : "Discovering amazing shops..."}
             </p>
           </div>
         </div>
@@ -681,6 +805,18 @@ const Shops = memo(() => {
               Explore a curated collection of unique stores offering quality
               products and exceptional service
             </p>
+
+            {hasMerchantAccess && userOwnedShop && (
+              <div className="mt-8">
+                <button
+                  onClick={handleGoToDashboard}
+                  className="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:from-emerald-700 hover:to-emerald-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                >
+                  <i className="fa-solid fa-tachometer-alt mr-3"></i>
+                  Go to Your Shop Dashboard
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -748,6 +884,8 @@ const Shops = memo(() => {
                 lastSearchTerm={lastSearchTerm}
                 hasMerchantAccess={hasMerchantAccess}
                 onCreateShop={handleCreateShop}
+                userOwnedShop={userOwnedShop}
+                onGoToDashboard={handleGoToDashboard}
               />
 
               <div className="flex-1 min-w-0">
@@ -806,7 +944,7 @@ const Shops = memo(() => {
                           Clear Search
                         </button>
                       )}
-                      {hasMerchantAccess && (
+                      {hasMerchantAccess && !userOwnedShop && (
                         <button
                           onClick={handleCreateShop}
                           className="inline-flex items-center bg-gradient-to-r from-emerald-600 to-emerald-700 text-white px-8 lg:px-10 py-3 lg:py-4 rounded-xl font-semibold text-base lg:text-lg hover:from-emerald-700 hover:to-emerald-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
@@ -820,12 +958,13 @@ const Shops = memo(() => {
                 ) : (
                   <>
                     <div className="grid gap-4 sm:gap-6 lg:gap-8 mb-8 lg:mb-12 transition-all duration-300 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3">
-                      {shops.map((shop, index) => (
+                      {processedShops.map((shop, index) => (
                         <ShopCard
                           key={shop.id || index}
                           shop={shop}
                           index={index}
                           onVisit={handleShopVisit}
+                          currentUserShop={shop.isUserShop}
                         />
                       ))}
                     </div>

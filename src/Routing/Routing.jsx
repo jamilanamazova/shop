@@ -12,7 +12,9 @@ import MerchantRoutes from "./MerchantRoutes";
 import CustomerRoutes from "./CustomerRoutes";
 import Shops from "../Components/Merchant/Shops";
 import ProtectedRoute from "../Components/Routes/ProtectedRoute";
-import ShopDetail from "../Components/Merchant/ShopDetail";
+
+import PublicShopDetail from "../Components/Shop/ShopDetail";
+import ShopDashboard from "../Components/Merchant/Dashboard/ShopDashboard";
 
 const Routing = () => {
   return (
@@ -44,14 +46,14 @@ const Routing = () => {
       />
 
       <Route path="/shops" element={<Shops />} />
+      <Route path="/shop/:shopId" element={<PublicShopDetail />} />
+
       <Route
-        path="/shop/:shopId"
-        element={
-          <ProtectedRoute>
-            <ShopDetail />
-          </ProtectedRoute>
-        }
+        path="/merchant/shops/:shopId/dashboard"
+        element={<ShopDashboard />}
       />
+      <Route path="/merchant/dashboard" element={<ShopDashboard />} />
+
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/confirm-email" element={<ConfirmEmail />} />
 
