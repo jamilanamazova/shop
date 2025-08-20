@@ -86,14 +86,262 @@ const RecentOrders = memo(() => (
 ));
 RecentOrders.displayName = "RecentOrders";
 
+const AddProductModal = memo(({ open, onClose, onProductAdded }) => {
+  const [form, setForm] = useState({
+    productName: "",
+    description: "",
+    condition: "NEW",
+    category: "ELECTRONICS",
+    price: "",
+    stockQuantity: "",
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleChange = useCallback((e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  }, []);
+
+  const handleSubmit = useCallback(
+    async (e) => {
+      e.preventDefault();
+      setLoading(true);
+      setError("");
+      try {
+        await axios.post(
+          `${apiURL}/merchant/products`,
+          {
+            ...form,
+            price: Number(form.price),
+            stockQuantity: Number(form.stockQuantity),
+          },
+          { headers: { "Content-Type": "application/json" } }
+        );
+        onProductAdded();
+        onClose();
+      } catch (err) {
+        setError("Failed to add product. Please check your input.", err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [form, onProductAdded, onClose]
+  );
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md relative">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+        >
+          <i className="fa-solid fa-xmark text-xl"></i>
+        </button>
+        <h2 className="text-xl font-bold mb-4">Add Product</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            name="productName"
+            value={form.productName}
+            onChange={handleChange}
+            placeholder="Product Name"
+            className="w-full border rounded p-2"
+            required
+          />
+          <textarea
+            name="description"
+            value={form.description}
+            onChange={handleChange}
+            placeholder="Description"
+            className="w-full border rounded p-2"
+            required
+          />
+          <select
+            name="condition"
+            value={form.condition}
+            onChange={handleChange}
+            className="w-full border rounded p-2"
+          >
+            <option value="NEW">NEW</option>
+            <option value="USED">USED</option>
+            <option value="REFURBISHED">REFURBISHED</option>
+          </select>
+          <select
+            name="category"
+            value={form.category}
+            onChange={handleChange}
+            className="w-full border rounded p-2"
+          >
+            <option value="ELECTRONICS">ELECTRONICS</option>
+            <option value="FASHION">FASHION</option>
+            <option value="HOME">HOME</option>
+            <option value="BEAUTY">BEAUTY</option>
+            <option value="SPORTS">SPORTS</option>
+            <option value="TOYS">TOYS</option>
+          </select>
+          <input
+            name="price"
+            type="number"
+            value={form.price}
+            onChange={handleChange}
+            placeholder="Price"
+            className="w-full border rounded p-2"
+            required
+            min="0"
+          />
+          <input
+            name="stockQuantity"
+            type="number"
+            value={form.stockQuantity}
+            onChange={handleChange}
+            placeholder="Stock Quantity"
+            className="w-full border rounded p-2"
+            required
+            min="0"
+          />
+          {error && <p className="text-red-500">{error}</p>}
+          <button
+            type="submit"
+            className="bg-emerald-600 text-white px-4 py-2 rounded w-full font-semibold"
+            disabled={loading}
+          >
+            {loading ? "Adding..." : "Add Product"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+});
+AddProductModal.displayName = "AddProductModal";
+
+const SuccessToast = memo(({ message, onClose }) => (
+  <div className="fixed top-6 right-6 z-[9999]">
+    <div className="bg-emerald-600 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-3 animate-slide-in">
+      <i className="fa-solid fa-circle-check text-2xl"></i>
+      <span className="font-semibold">{message}</span>
+      <button
+        onClick={onClose}
+        className="ml-4 text-white hover:text-emerald-200"
+      >
+        <i className="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <style>
+      {`
+        @keyframes slide-in {
+          from { opacity: 0; transform: translateY(-20px);}
+          to { opacity: 1; transform: translateY(0);}
+        }
+        .animate-slide-in {
+          animation: slide-in 0.3s ease;
+        }
+      `}
+    </style>
+  </div>
+));
+SuccessToast.displayName = "SuccessToast";
+
+const ProductsSection = memo(({ products }) => {
+  if (!products || products.length === 0) {
+    return (
+      <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100 mt-8">
+        <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
+          <i className="fa-solid fa-box mr-2 text-emerald-600"></i>
+          Your Products
+        </h3>
+        <div className="text-center py-8">
+          <i className="fa-solid fa-box-open text-4xl text-gray-300 mb-3"></i>
+          <p className="text-gray-600">No products yet</p>
+          <p className="text-gray-500 text-sm mt-1">
+            Products you add will appear here.
+          </p>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100 mt-8">
+      <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
+        <i className="fa-solid fa-box mr-2 text-emerald-600"></i>
+        Your Products
+      </h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {products.map((product) => (
+          <div
+            key={product.id}
+            className="border rounded-lg p-4 flex flex-col gap-2 hover:shadow-md transition"
+          >
+            <div className="flex items-center gap-2">
+              <i className="fa-solid fa-cube text-emerald-500"></i>
+              <span className="font-semibold">{product.productName}</span>
+            </div>
+            <p className="text-gray-600 text-sm">{product.description}</p>
+            <div className="flex justify-between items-center mt-2">
+              <span className="text-emerald-700 font-bold">
+                ${product.currentPrice}
+              </span>
+              <span className="text-xs bg-gray-100 rounded px-2 py-1">
+                {product.category}
+              </span>
+            </div>
+            <span className="text-xs text-gray-500">
+              Stock: {product.stockQuantity ?? "N/A"}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+});
+ProductsSection.displayName = "ProductsSection";
+
 const ShopDashboard = memo(() => {
   const navigate = useNavigate();
 
+  const [products, setProducts] = useState([]);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [showAddProduct, setShowAddProduct] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [shopData, setShopData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const hasMerchantAccess = hasMerchantAccount();
+
+  const fetchProducts = useCallback(async () => {
+    setProductsLoading(true);
+    const token = localStorage.getItem("merchantAccessToken");
+    try {
+      const response = await axios.get(`${apiURL}/merchant/products`, {
+        params: {
+          pageable: JSON.stringify({
+            page: 0,
+            size: 12,
+            sort: ["createdAt, desc"],
+          }),
+        },
+
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.data.status === "OK" && response.data.data) {
+        setProducts(response.data.data.content);
+      } else {
+        setProducts([]);
+      }
+    } catch (err) {
+      console.error("Error fetching products:", err);
+      setProducts([]);
+    } finally {
+      setProductsLoading(false);
+    }
+  }, []);
 
   const fetchDashboardData = useCallback(async () => {
     if (!hasMerchantAccess) {
@@ -125,8 +373,17 @@ const ShopDashboard = memo(() => {
   }, [hasMerchantAccess, navigate]);
 
   const handleQuickAction = useCallback((action) => {
-    console.log(`Quick action clicked: ${action}`);
+    if (action === "add-product") {
+      setShowAddProduct(true);
+    }
   }, []);
+
+  const handleProductAdded = useCallback(() => {
+    fetchDashboardData();
+    fetchProducts();
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 3000);
+  }, [fetchDashboardData, fetchProducts]);
 
   const handleBackToShops = useCallback(() => {
     navigate("/shops");
@@ -134,7 +391,8 @@ const ShopDashboard = memo(() => {
 
   useEffect(() => {
     fetchDashboardData();
-  }, [fetchDashboardData]);
+    fetchProducts();
+  }, [fetchDashboardData, fetchProducts]);
 
   if (loading) {
     return (
@@ -265,8 +523,26 @@ const ShopDashboard = memo(() => {
               </div>
             </div>
           </div>
+          {productsLoading ? (
+            <LoadingSpinner />
+          ) : (
+            <ProductsSection products={products} />
+          )}
         </div>
       </div>
+
+      <AddProductModal
+        open={showAddProduct}
+        onClose={() => setShowAddProduct(false)}
+        onProductAdded={handleProductAdded}
+      />
+
+      {showSuccess && (
+        <SuccessToast
+          message="Product successfully added!"
+          onClose={() => setShowSuccess(false)}
+        />
+      )}
 
       <Footer />
     </Suspense>
