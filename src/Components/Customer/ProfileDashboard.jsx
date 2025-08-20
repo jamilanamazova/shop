@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Header from "../Header";
 import Footer from "../Footer";
 import "../../CSS/ProfileDashboard.css";
-import { isAuthenticated, getCurrentUser, logout } from "../../utils/auth";
+import { isAuthenticated, logout } from "../../utils/auth";
 import { Navigate } from "react-router-dom";
 import { apiURL } from "../../Backend/Api/api";
 import axios from "axios";

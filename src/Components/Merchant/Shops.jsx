@@ -26,76 +26,78 @@ const SearchLoadingSpinner = memo(() => (
 ));
 SearchLoadingSpinner.displayName = "SearchLoadingSpinner";
 
-const ShopCard = memo(({ shop, index, onVisit, currentUserShop = false }) => {
-  const handleVisit = useCallback(() => {
-    onVisit(shop.id, currentUserShop);
-  }, [shop.id, onVisit, currentUserShop]);
+const ShopCard = memo(
+  ({ shop, index, onVisit, currentUserShop = false, products }) => {
+    const handleVisit = useCallback(() => {
+      onVisit(shop.id, currentUserShop);
+    }, [shop.id, onVisit, currentUserShop]);
 
-  return (
-    <div
-      className={`bg-white rounded-xl lg:rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden group border transform hover:-translate-y-2 cursor-pointer ${
-        currentUserShop
-          ? "border-emerald-500 ring-2 ring-emerald-200"
-          : "border-gray-100"
-      }`}
-    >
-      {currentUserShop && (
-        <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white px-4 py-2 text-sm font-semibold flex items-center justify-center">
-          <i className="fa-solid fa-crown mr-2"></i>
-          Your Shop
-        </div>
-      )}
-
-      <div className="p-4 lg:p-6">
-        <h3 className="font-bold text-lg lg:text-xl text-gray-800 mb-2 lg:mb-3 truncate group-hover:text-emerald-600 transition-colors">
-          {shop.shopName || `Shop ${index + 1}`}
-        </h3>
-        <div className="text-gray-600 text-sm mb-4 h-12 lg:h-16 overflow-hidden">
-          <p className="leading-relaxed line-clamp-2 lg:line-clamp-3">
-            {shop.description ||
-              "Discover amazing products and exceptional service at this wonderful shop"}
-          </p>
-        </div>
-
-        <div className="flex items-center justify-between mb-4 lg:mb-6">
-          <div className="flex items-center">
-            <div className="flex text-yellow-400 text-base lg:text-lg">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <i key={star} className="fa-solid fa-star"></i>
-              ))}
-            </div>
-            <span className="text-gray-700 text-sm ml-2 font-semibold">
-              {shop.rating || "4.8"}
-            </span>
+    return (
+      <div
+        className={`bg-white rounded-xl lg:rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden group border transform hover:-translate-y-2 cursor-pointer ${
+          currentUserShop
+            ? "border-emerald-500 ring-2 ring-emerald-200"
+            : "border-gray-100"
+        }`}
+      >
+        {currentUserShop && (
+          <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white px-4 py-2 text-sm font-semibold flex items-center justify-center">
+            <i className="fa-solid fa-crown mr-2"></i>
+            Your Shop
           </div>
-          <div className="text-right">
-            <div className="text-gray-500 text-xs">Products</div>
-            <div className="text-gray-800 font-bold">
-              {shop.productCount || "0"}
+        )}
+
+        <div className="p-4 lg:p-6">
+          <h3 className="font-bold text-lg lg:text-xl text-gray-800 mb-2 lg:mb-3 truncate group-hover:text-emerald-600 transition-colors">
+            {shop.shopName || `Shop ${index + 1}`}
+          </h3>
+          <div className="text-gray-600 text-sm mb-4 h-12 lg:h-16 overflow-hidden">
+            <p className="leading-relaxed line-clamp-2 lg:line-clamp-3">
+              {shop.description ||
+                "Discover amazing products and exceptional service at this wonderful shop"}
+            </p>
+          </div>
+
+          <div className="flex items-center justify-between mb-4 lg:mb-6">
+            <div className="flex items-center">
+              <div className="flex text-yellow-400 text-base lg:text-lg">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <i key={star} className="fa-solid fa-star"></i>
+                ))}
+              </div>
+              <span className="text-gray-700 text-sm ml-2 font-semibold">
+                {shop.rating || "4.8"}
+              </span>
+            </div>
+            <div className="text-right">
+              <div className="text-gray-500 text-xs">Products</div>
+              <div className="text-gray-800 font-bold">
+                {products.length || "0"}
+              </div>
             </div>
           </div>
-        </div>
 
-        <button
-          onClick={() => onVisit(shop.id, false)} // Always false for "Visit Shop"
-          className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 text-white py-3 px-4 rounded-xl font-semibold hover:from-emerald-700 hover:to-emerald-800 transition-all duration-300 flex items-center justify-center gap-2"
-        >
-          <i className="fa-solid fa-store"></i>
-          Visit Shop
-        </button>
+          <button
+            onClick={() => onVisit(shop.id, false)}
+            className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 text-white py-3 px-4 rounded-xl font-semibold hover:from-emerald-700 hover:to-emerald-800 transition-all duration-300 flex items-center justify-center gap-2"
+          >
+            <i className="fa-solid fa-store"></i>
+            Visit Shop
+          </button>
+        </div>
+        {currentUserShop && (
+          <button
+            onClick={() => onVisit(shop.id, true)}
+            className="w-full mt-2 bg-blue-600 text-white py-3 px-4 rounded-xl font-semibold hover:bg-blue-700 transition-all duration-300 flex items-center justify-center gap-2"
+          >
+            <i className="fa-solid fa-tachometer-alt"></i>
+            Manage Shop
+          </button>
+        )}
       </div>
-      {currentUserShop && (
-        <button
-          onClick={() => onVisit(shop.id, true)} // true for merchant dashboard
-          className="w-full mt-2 bg-blue-600 text-white py-3 px-4 rounded-xl font-semibold hover:bg-blue-700 transition-all duration-300 flex items-center justify-center gap-2"
-        >
-          <i className="fa-solid fa-tachometer-alt"></i>
-          Manage Shop
-        </button>
-      )}
-    </div>
-  );
-});
+    );
+  }
+);
 ShopCard.displayName = "ShopCard";
 
 const Notification = memo(({ notification, onClose }) => {
@@ -427,6 +429,8 @@ const Shops = memo(() => {
 
   const [notification, setNotification] = useState(null);
   const [error, setError] = useState("");
+  const [products, setProducts] = useState([]);
+  const [productsLoading, setProductsLoading] = useState(true);
 
   const pageSize = 12;
   const navigate = useNavigate();
@@ -496,7 +500,39 @@ const Shops = memo(() => {
     }
   }, [hasMerchantAccess]);
 
-  console.log("hasMerchantAccount result: ", hasMerchantAccess);
+  const fetchProducts = useCallback(async () => {
+    setProductsLoading(true);
+    const token = localStorage.getItem("merchantAccessToken");
+    try {
+      const response = await axios.get(`${apiURL}/merchant/products`, {
+        params: {
+          pageable: JSON.stringify({
+            page: 0,
+            size: 12,
+            sort: "createdAt,desc",
+          }),
+        },
+
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.data.status === "OK" && response.data.data) {
+        setProducts(response.data.data.content);
+      } else {
+        setProducts([]);
+      }
+
+      console.log(response.data.data.content);
+    } catch (err) {
+      console.error("Error fetching products:", err);
+      setProducts([]);
+    } finally {
+      setProductsLoading(false);
+    }
+  }, []);
 
   const fetchShops = useCallback(
     async (searchQuery = "", showLoader = true) => {
@@ -584,8 +620,6 @@ const Shops = memo(() => {
     },
     [currentPage, sortBy, sortDirection]
   );
-
-  console.log(userShopData);
 
   const handleSortChange = useCallback((field, direction) => {
     setSearchState((prev) => ({
@@ -723,9 +757,16 @@ const Shops = memo(() => {
   useEffect(() => {
     if (hasMerchantAccess) {
       fetchUserShop();
+      fetchProducts();
     }
     fetchShops(lastSearchTerm, true);
-  }, [fetchShops, fetchUserShop, lastSearchTerm, hasMerchantAccess]);
+  }, [
+    fetchShops,
+    fetchUserShop,
+    lastSearchTerm,
+    hasMerchantAccess,
+    fetchProducts,
+  ]);
 
   useEffect(() => {
     if (searchTimeoutRef.current) {
@@ -965,6 +1006,7 @@ const Shops = memo(() => {
                           index={index}
                           onVisit={handleShopVisit}
                           currentUserShop={shop.isUserShop}
+                          products={products}
                         />
                       ))}
                     </div>

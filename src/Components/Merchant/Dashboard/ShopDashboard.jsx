@@ -6,13 +6,19 @@ import React, {
   lazy,
   Suspense,
 } from "react";
-import { useNavigate } from "react-router-dom";
+import { Form, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { apiURL } from "../../../Backend/Api/api";
 import { hasMerchantAccount } from "../../../utils/roleMode";
+import { isJwtExpired } from "../../../utils/jwt";
 
 const Header = lazy(() => import("../../Header"));
 const Footer = lazy(() => import("../../Footer"));
+
+const token = localStorage.getItem("merchantAccessToken");
+
+const expired = isJwtExpired(token);
+console.log("Token expired?", expired);
 
 const LoadingSpinner = memo(() => (
   <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-emerald-500 mx-auto"></div>
@@ -96,6 +102,8 @@ const AddProductModal = memo(({ open, onClose, onProductAdded }) => {
     stockQuantity: "",
   });
 
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -104,13 +112,23 @@ const AddProductModal = memo(({ open, onClose, onProductAdded }) => {
     setForm((prev) => ({ ...prev, [name]: value }));
   }, []);
 
+  const handleImageChange = useCallback((e) => {
+    const file = e.target.files[0];
+    setImageFile(file);
+    if (file) {
+      setImagePreview(URL.createObjectURL(file));
+    } else {
+      setImagePreview(null);
+    }
+  }, []);
+
   const handleSubmit = useCallback(
     async (e) => {
       e.preventDefault();
       setLoading(true);
       setError("");
       try {
-        await axios.post(
+        const response = await axios.post(
           `${apiURL}/merchant/products`,
           {
             ...form,
@@ -119,6 +137,21 @@ const AddProductModal = memo(({ open, onClose, onProductAdded }) => {
           },
           { headers: { "Content-Type": "application/json" } }
         );
+
+        const productId = response.data?.data?.id;
+        if (imageFile && productId) {
+          const formData = new FormData();
+          formData.append("image", imageFile);
+          await axios.post(
+            `${apiURL}/merchant/products/${productId}/image`,
+            formData,
+            {
+              headers: {
+                "Content-Type": "multipart/form-data",
+              },
+            }
+          );
+        }
         onProductAdded();
         onClose();
       } catch (err) {
@@ -127,88 +160,158 @@ const AddProductModal = memo(({ open, onClose, onProductAdded }) => {
         setLoading(false);
       }
     },
-    [form, onProductAdded, onClose]
+    [form, imageFile, onProductAdded, onClose]
   );
 
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md relative">
+      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md relative border border-gray-100">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
         >
           <i className="fa-solid fa-xmark text-xl"></i>
         </button>
-        <h2 className="text-xl font-bold mb-4">Add Product</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            name="productName"
-            value={form.productName}
-            onChange={handleChange}
-            placeholder="Product Name"
-            className="w-full border rounded p-2"
-            required
-          />
-          <textarea
-            name="description"
-            value={form.description}
-            onChange={handleChange}
-            placeholder="Description"
-            className="w-full border rounded p-2"
-            required
-          />
-          <select
-            name="condition"
-            value={form.condition}
-            onChange={handleChange}
-            className="w-full border rounded p-2"
-          >
-            <option value="NEW">NEW</option>
-            <option value="USED">USED</option>
-            <option value="REFURBISHED">REFURBISHED</option>
-          </select>
-          <select
-            name="category"
-            value={form.category}
-            onChange={handleChange}
-            className="w-full border rounded p-2"
-          >
-            <option value="ELECTRONICS">ELECTRONICS</option>
-            <option value="FASHION">FASHION</option>
-            <option value="HOME">HOME</option>
-            <option value="BEAUTY">BEAUTY</option>
-            <option value="SPORTS">SPORTS</option>
-            <option value="TOYS">TOYS</option>
-          </select>
-          <input
-            name="price"
-            type="number"
-            value={form.price}
-            onChange={handleChange}
-            placeholder="Price"
-            className="w-full border rounded p-2"
-            required
-            min="0"
-          />
-          <input
-            name="stockQuantity"
-            type="number"
-            value={form.stockQuantity}
-            onChange={handleChange}
-            placeholder="Stock Quantity"
-            className="w-full border rounded p-2"
-            required
-            min="0"
-          />
-          {error && <p className="text-red-500">{error}</p>}
+        <h2 className="text-2xl font-bold mb-6 text-emerald-700 text-center">
+          Add New Product
+        </h2>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Product Name
+            </label>
+            <input
+              name="productName"
+              value={form.productName}
+              onChange={handleChange}
+              placeholder="Product Name"
+              className="w-full border border-gray-200 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Description
+            </label>
+            <textarea
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+              placeholder="Description"
+              className="w-full border border-gray-200 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition resize-none"
+              required
+              rows={3}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Condition
+              </label>
+              <select
+                name="condition"
+                value={form.condition}
+                onChange={handleChange}
+                className="w-full border border-gray-200 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
+              >
+                <option value="NEW">NEW</option>
+                <option value="USED">USED</option>
+                <option value="REFURBISHED">REFURBISHED</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Category
+              </label>
+              <select
+                name="category"
+                value={form.category}
+                onChange={handleChange}
+                className="w-full border border-gray-200 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
+              >
+                <option value="ELECTRONICS">ELECTRONICS</option>
+                <option value="FASHION">FASHION</option>
+                <option value="HOME">HOME</option>
+                <option value="BEAUTY">BEAUTY</option>
+                <option value="SPORTS">SPORTS</option>
+                <option value="TOYS">TOYS</option>
+              </select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Price
+              </label>
+              <input
+                name="price"
+                type="number"
+                value={form.price}
+                onChange={handleChange}
+                placeholder="Price"
+                className="w-full border border-gray-200 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
+                required
+                min="0"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Stock Quantity
+              </label>
+              <input
+                name="stockQuantity"
+                type="number"
+                value={form.stockQuantity}
+                onChange={handleChange}
+                placeholder="Stock Quantity"
+                className="w-full border border-gray-200 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
+                required
+                min="0"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Product Image
+            </label>
+            <div className="flex items-center gap-4">
+              <label className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition">
+                <i className="fa-solid fa-upload text-emerald-600"></i>
+                <span className="text-emerald-700 font-medium">
+                  Choose Image
+                </span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
+              </label>
+              {imagePreview && (
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-16 h-16 object-cover rounded-lg border border-gray-200"
+                />
+              )}
+            </div>
+          </div>
+          {error && <p className="text-red-500 text-sm">{error}</p>}
           <button
             type="submit"
-            className="bg-emerald-600 text-white px-4 py-2 rounded w-full font-semibold"
+            className="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white px-4 py-2 rounded-lg w-full font-semibold shadow hover:from-emerald-700 hover:to-emerald-800 transition-all"
             disabled={loading}
           >
-            {loading ? "Adding..." : "Add Product"}
+            {loading ? (
+              <span>
+                <i className="fa-solid fa-spinner animate-spin mr-2"></i>
+                Adding...
+              </span>
+            ) : (
+              "Add Product"
+            )}
           </button>
         </form>
       </div>
@@ -244,7 +347,198 @@ const SuccessToast = memo(({ message, onClose }) => (
 ));
 SuccessToast.displayName = "SuccessToast";
 
-const ProductsSection = memo(({ products }) => {
+const EditProductModal = memo(
+  ({ open, product, onClose, onProductUpdated }) => {
+    const [form, setForm] = useState(product || {});
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+
+    useEffect(() => {
+      if (product) {
+        setForm({
+          productName: product.productName || "",
+          description: product.description || "",
+          condition: product.condition || "NEW",
+          category: product.category || "ELECTRONICS",
+          price:
+            product.price !== undefined
+              ? product.price
+              : product.currentPrice || "",
+          stockQuantity:
+            product.stockQuantity !== undefined ? product.stockQuantity : "",
+        });
+      }
+    }, [product]);
+
+    const handleChange = useCallback((e) => {
+      const { name, value } = e.target;
+      setForm((prev) => ({ ...prev, [name]: value }));
+    }, []);
+
+    const handleEditSubmit = useCallback(
+      async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setError("");
+        const token = localStorage.getItem("merchantAccessToken");
+        try {
+          await axios.put(
+            `${apiURL}/merchant/products/${product.id}`,
+            {
+              productName: form.productName,
+              description: form.description,
+              condition: form.condition,
+              category: form.category,
+              price: Number(form.price),
+              stockQuantity: Number(form.stockQuantity),
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          onProductUpdated();
+          onClose();
+        } catch (err) {
+          setError("Failed to update product.", err);
+        } finally {
+          setLoading(false);
+        }
+      },
+      [form, product, onProductUpdated, onClose]
+    );
+
+    if (!open || !product) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md relative border border-gray-100">
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+          >
+            <i className="fa-solid fa-xmark text-xl"></i>
+          </button>
+          <h2 className="text-2xl font-bold mb-6 text-emerald-700 text-center">
+            Edit Product
+          </h2>
+          <form onSubmit={handleEditSubmit} className="space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Product Name
+              </label>
+              <input
+                name="productName"
+                value={form.productName || ""}
+                onChange={handleChange}
+                className="w-full border border-gray-200 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Description
+              </label>
+              <textarea
+                name="description"
+                value={form.description || ""}
+                onChange={handleChange}
+                className="w-full border border-gray-200 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition resize-none"
+                required
+                rows={3}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Condition
+                </label>
+                <select
+                  name="condition"
+                  value={form.condition || "NEW"}
+                  onChange={handleChange}
+                  className="w-full border border-gray-200 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
+                >
+                  <option value="NEW">NEW</option>
+                  <option value="USED">USED</option>
+                  <option value="REFURBISHED">REFURBISHED</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Category
+                </label>
+                <select
+                  name="category"
+                  value={form.category || "ELECTRONICS"}
+                  onChange={handleChange}
+                  className="w-full border border-gray-200 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
+                >
+                  <option value="ELECTRONICS">ELECTRONICS</option>
+                  <option value="FASHION">FASHION</option>
+                  <option value="HOME">HOME</option>
+                  <option value="BEAUTY">BEAUTY</option>
+                  <option value="SPORTS">SPORTS</option>
+                  <option value="TOYS">TOYS</option>
+                </select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Price
+                </label>
+                <input
+                  name="price"
+                  type="number"
+                  value={form.price || ""}
+                  onChange={handleChange}
+                  className="w-full border border-gray-200 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
+                  required
+                  min="0"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Stock Quantity
+                </label>
+                <input
+                  name="stockQuantity"
+                  type="number"
+                  value={form.stockQuantity || ""}
+                  onChange={handleChange}
+                  className="w-full border border-gray-200 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
+                  required
+                  min="0"
+                />
+              </div>
+            </div>
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+            <button
+              type="submit"
+              className="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white px-4 py-2 rounded-lg w-full font-semibold shadow hover:from-emerald-700 hover:to-emerald-800 transition-all"
+              disabled={loading}
+            >
+              {loading ? (
+                <span>
+                  <i className="fa-solid fa-spinner animate-spin mr-2"></i>
+                  Saving...
+                </span>
+              ) : (
+                "Save Changes"
+              )}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+);
+EditProductModal.displayName = "EditProductModal";
+
+const ProductsSection = memo(({ products, onEdit }) => {
   if (!products || products.length === 0) {
     return (
       <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100 mt-8">
@@ -274,6 +568,20 @@ const ProductsSection = memo(({ products }) => {
             key={product.id}
             className="border rounded-lg p-4 flex flex-col gap-2 hover:shadow-md transition"
           >
+            <div className="flex items-center justify-center bg-gray-200 w-full aspect-[4/3] rounded-lg overflow-hidden">
+              {product.imageUrl ? (
+                <img
+                  src={product.imageUrl}
+                  alt={product.productName}
+                  className="w-full h-full object-cover object-center"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="flex items-center justify-center w-full h-full">
+                  <i className="fa-solid fa-image text-3xl text-gray-400"></i>
+                </div>
+              )}
+            </div>
             <div className="flex items-center gap-2">
               <i className="fa-solid fa-cube text-emerald-500"></i>
               <span className="font-semibold">{product.productName}</span>
@@ -290,6 +598,13 @@ const ProductsSection = memo(({ products }) => {
             <span className="text-xs text-gray-500">
               Stock: {product.stockQuantity ?? "N/A"}
             </span>
+            <button
+              className="mt-2 px-3 py-1 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-xs font-medium transition"
+              onClick={() => onEdit(product)}
+            >
+              <i className="fa-solid fa-pen-to-square mr-1"></i>
+              Edit
+            </button>
           </div>
         ))}
       </div>
@@ -308,6 +623,8 @@ const ShopDashboard = memo(() => {
   const [shopData, setShopData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [editProduct, setEditProduct] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const hasMerchantAccess = hasMerchantAccount();
 
@@ -320,7 +637,7 @@ const ShopDashboard = memo(() => {
           pageable: JSON.stringify({
             page: 0,
             size: 12,
-            sort: ["createdAt, desc"],
+            sort: "createdAt,desc",
           }),
         },
 
@@ -335,6 +652,8 @@ const ShopDashboard = memo(() => {
       } else {
         setProducts([]);
       }
+
+      console.log(response.data.data.content);
     } catch (err) {
       console.error("Error fetching products:", err);
       setProducts([]);
@@ -393,6 +712,17 @@ const ShopDashboard = memo(() => {
     fetchDashboardData();
     fetchProducts();
   }, [fetchDashboardData, fetchProducts]);
+
+  const handleEditProduct = useCallback((product) => {
+    setEditProduct(product);
+    setShowEditModal(true);
+  }, []);
+
+  const handleProductUpdated = useCallback(() => {
+    fetchProducts();
+    setShowEditModal(false);
+    setEditProduct(null);
+  }, [fetchProducts]);
 
   if (loading) {
     return (
@@ -478,7 +808,11 @@ const ShopDashboard = memo(() => {
               <RecentOrders orders={[]} />
             </div>
           </div>
-
+          {productsLoading ? (
+            <LoadingSpinner />
+          ) : (
+            <ProductsSection products={products} onEdit={handleEditProduct} />
+          )}
           <div className="mt-8">
             <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
               <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
@@ -523,11 +857,6 @@ const ShopDashboard = memo(() => {
               </div>
             </div>
           </div>
-          {productsLoading ? (
-            <LoadingSpinner />
-          ) : (
-            <ProductsSection products={products} />
-          )}
         </div>
       </div>
 
@@ -535,6 +864,13 @@ const ShopDashboard = memo(() => {
         open={showAddProduct}
         onClose={() => setShowAddProduct(false)}
         onProductAdded={handleProductAdded}
+      />
+
+      <EditProductModal
+        open={showEditModal}
+        product={editProduct}
+        onClose={() => setShowEditModal(false)}
+        onProductUpdated={handleProductUpdated}
       />
 
       {showSuccess && (

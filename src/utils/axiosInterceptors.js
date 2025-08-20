@@ -97,47 +97,62 @@ axios.interceptors.response.use(
       (original.url || "").includes("/auth/refresh-token") ||
       (original.url || "").includes("/auth-refresh");
 
-    if (!isRefresh && error.response?.status === 401 && !original._retry) {
-      console.log("[AUTH] 401 caught → try refresh...");
+    const mode = getAppMode();
+    const useMerchant =
+      (original.meta && original.meta.useMerchant) ||
+      original.headers?.["X-Use-Merchant"] === "1" ||
+      mode === "merchant";
+    const merchantRefreshToken = localStorage.getItem("merchantRefreshToken");
+
+    if (
+      useMerchant &&
+      !isRefresh &&
+      (error.response?.status === 401 || error.response?.status === 403) &&
+      !original._retry
+    ) {
+      console.log("[AUTH] Merchant token expired, refreshing...");
       original._retry = true;
       try {
-        const refreshToken = localStorage.getItem("refreshToken");
-        if (!refreshToken) throw new Error("No refreshToken");
-
+        if (!merchantRefreshToken) throw new Error("No merchantRefreshToken");
         const response = await axios.post(
           `${apiURL}/auth/refresh-token`,
-          { refreshToken },
+          { refreshToken: merchantRefreshToken },
           {
             headers: { "Content-Type": "application/json" },
-            meta: { skipAuth: true },
-          } // no custom header
+            meta: { skipAuth: true, useMerchant: true },
+          }
         );
         const data = response.data?.data || response.data;
-        if (!data?.accessToken) throw new Error("No accessToken from refresh");
-        localStorage.setItem("accessToken", data.accessToken);
+        if (!data?.accessToken)
+          throw new Error("No merchant accessToken from refresh");
+        localStorage.setItem("merchantAccessToken", data.accessToken);
         if (data.refreshToken)
-          localStorage.setItem("refreshToken", data.refreshToken);
+          localStorage.setItem("merchantRefreshToken", data.refreshToken);
 
-        console.log("[AUTH] refresh OK, retrying original");
+        console.log("[AUTH] Merchant refresh OK, retrying original");
         original.headers = original.headers || {};
         original.headers.Authorization = `Bearer ${data.accessToken}`;
         return axios(original);
       } catch (e) {
-        console.log("[AUTH] refresh FAILED", e);
+        console.log("[AUTH] Merchant refresh FAILED", e);
         return Promise.reject(e);
       }
     }
 
-    if (!isRefresh && error.response?.status === 403 && !original._retry) {
-      console.log("[AUTH] 403 caught → force one refresh then retry...");
+    const customerRefreshToken = localStorage.getItem("refreshToken");
+    if (
+      !useMerchant &&
+      !isRefresh &&
+      (error.response?.status === 401 || error.response?.status === 403) &&
+      !original._retry
+    ) {
+      console.log("[AUTH] Customer token expired, refreshing...");
       original._retry = true;
       try {
-        const refreshToken = localStorage.getItem("refreshToken");
-        if (!refreshToken) throw new Error("No refreshToken");
-
+        if (!customerRefreshToken) throw new Error("No refreshToken");
         const response = await axios.post(
           `${apiURL}/auth/refresh-token`,
-          { refreshToken },
+          { refreshToken: customerRefreshToken },
           {
             headers: { "Content-Type": "application/json" },
             meta: { skipAuth: true },
@@ -149,12 +164,12 @@ axios.interceptors.response.use(
         if (data.refreshToken)
           localStorage.setItem("refreshToken", data.refreshToken);
 
-        console.log("[AUTH] refresh OK (403 path), retrying original");
+        console.log("[AUTH] Customer refresh OK, retrying original");
         original.headers = original.headers || {};
         original.headers.Authorization = `Bearer ${data.accessToken}`;
         return axios(original);
       } catch (e) {
-        console.log("[AUTH] refresh FAILED (403 path)", e);
+        console.log("[AUTH] Customer refresh FAILED", e);
         return Promise.reject(e);
       }
     }

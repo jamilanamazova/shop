@@ -23,6 +23,8 @@ const Header = memo(() => {
   const [showErrorMessage, setShowErrorMessage] = useState(false);
   const [openSideBar, setOpenSideBar] = useState(false);
 
+  const userMode = localStorage.getItem("appMode");
+
   const hamburgerMenuRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -394,7 +396,7 @@ const Header = memo(() => {
                     Hi, {currentUser?.firstName || user?.fullName}!
                   </span>
                   <Link
-                    to="/customer/profile"
+                    to={`/${userMode}/profile`}
                     className="text-gray-700 hover:text-green-600 transition-colors"
                     title="Profile"
                   >

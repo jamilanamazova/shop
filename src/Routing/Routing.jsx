@@ -15,8 +15,10 @@ import ProtectedRoute from "../Components/Routes/ProtectedRoute";
 
 import PublicShopDetail from "../Components/Shop/ShopDetail";
 import ShopDashboard from "../Components/Merchant/Dashboard/ShopDashboard";
+import ProfileDashboard from "../Components/Customer/ProfileDashboard";
 
 const Routing = () => {
+  const user = localStorage.getItem("appMode");
   return (
     <Routes>
       <Route path="/" element={<Home />} />
@@ -52,6 +54,18 @@ const Routing = () => {
         path="/merchant/shops/:shopId/dashboard"
         element={<ShopDashboard />}
       />
+
+      <Route
+        path={`${
+          user === "merchant" ? "/merchant/profile" : "/customer/profile"
+        }`}
+        element={
+          <ProtectedRoute>
+            <ProfileDashboard />
+          </ProtectedRoute>
+        }
+      />
+
       <Route path="/merchant/dashboard" element={<ShopDashboard />} />
 
       <Route path="/reset-password" element={<ResetPassword />} />

@@ -1,7 +1,6 @@
 import React from "react";
 import { Route, Routes } from "react-router-dom";
 import ProtectedRoute from "../Components/Routes/ProtectedRoute";
-import ProfileDashboard from "../Components/Customer/ProfileDashboard";
 import Products from "../Components/Customer/Products";
 import Product from "../Components/Customer/Product";
 import Blog from "../Components/Customer/Blog";
@@ -69,15 +68,6 @@ const CustomerRoutes = () => {
 
   return (
     <Routes>
-      <Route
-        path="/profile"
-        element={
-          <ProtectedRoute>
-            <ProfileDashboard />
-          </ProtectedRoute>
-        }
-      />
-
       <Route
         path="/addresses"
         element={
