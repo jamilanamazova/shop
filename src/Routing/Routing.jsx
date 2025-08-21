@@ -19,6 +19,8 @@ import ProfileDashboard from "../Components/Customer/ProfileDashboard";
 
 const Routing = () => {
   const user = localStorage.getItem("appMode");
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  console.log(currentUser);
   return (
     <Routes>
       <Route path="/" element={<Home />} />
@@ -57,7 +59,9 @@ const Routing = () => {
 
       <Route
         path={`${
-          user === "merchant" ? "/merchant/profile" : "/customer/profile"
+          currentUser || user === "customer"
+            ? "/customer/profile"
+            : "/merchant/profile"
         }`}
         element={
           <ProtectedRoute>
