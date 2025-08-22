@@ -28,10 +28,6 @@ SearchLoadingSpinner.displayName = "SearchLoadingSpinner";
 
 const ShopCard = memo(
   ({ shop, index, onVisit, currentUserShop = false, products }) => {
-    const handleVisit = useCallback(() => {
-      onVisit(shop.id, currentUserShop);
-    }, [shop.id, onVisit, currentUserShop]);
-
     return (
       <div
         className={`bg-white rounded-xl lg:rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden group border transform hover:-translate-y-2 cursor-pointer ${
@@ -73,6 +69,11 @@ const ShopCard = memo(
               <div className="text-gray-500 text-xs">Products</div>
               <div className="text-gray-800 font-bold">
                 {products.length || "0"}
+                {currentUserShop && (
+                  <span className="text-xs text-emerald-600 block">
+                    (Your Shop)
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -429,8 +430,9 @@ const Shops = memo(() => {
 
   const [notification, setNotification] = useState(null);
   const [error, setError] = useState("");
-  const [products, setProducts] = useState([]);
-  const [productsLoading, setProductsLoading] = useState(true);
+
+  const [shopProducts, setShopProducts] = useState({});
+  const [userProducts, setUserProducts] = useState([]);
 
   const pageSize = 12;
   const navigate = useNavigate();
@@ -455,20 +457,15 @@ const Shops = memo(() => {
   }, [shops, userOwnedShop]);
 
   const fetchUserShop = useCallback(async () => {
-    if (!hasMerchantAccess) return;
+    if (!hasMerchantAccess) {
+      console.log("🚫 No merchant access, skipping user shop fetch");
+      return;
+    }
 
     try {
       setUserShopData((prev) => ({ ...prev, loadingUserShop: true }));
 
       const token = localStorage.getItem("merchantAccessToken");
-
-      console.log("🔍 Token Debug:");
-      console.log("Token exists:", !!token);
-      console.log("Token length:", token?.length || 0);
-      console.log(
-        "Token preview:",
-        token ? token.substring(0, 30) + "..." : "No token"
-      );
 
       if (!token) {
         console.error("❌ No merchant token found");
@@ -476,43 +473,77 @@ const Shops = memo(() => {
         return;
       }
 
-      const response = await axios.get(`${apiURL}/merchant/shops/dashboard`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const dashboardResponse = await axios.get(
+        `${apiURL}/merchant/shops/dashboard`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
-      if (response.data.status === "OK" && response.data.data) {
-        setUserShopData((prev) => ({
-          ...prev,
-          userOwnedShop: response.data.data,
-        }));
+      if (
+        dashboardResponse.data.status === "OK" &&
+        dashboardResponse.data.data?.shopName
+      ) {
+        const shopName = dashboardResponse.data.data.shopName;
+
+        const shopResponse = await axios.get(
+          `${apiURL}/shops/name/${encodeURIComponent(shopName)}`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (shopResponse.data.status === "OK" && shopResponse.data.data) {
+          const mergedShopData = {
+            ...shopResponse.data.data,
+            ...dashboardResponse.data.data,
+            id: shopResponse.data.data.id,
+          };
+
+          setUserShopData((prev) => ({
+            ...prev,
+            userOwnedShop: mergedShopData,
+          }));
+        } else {
+          setUserShopData((prev) => ({ ...prev, userOwnedShop: null }));
+        }
+      } else {
+        setUserShopData((prev) => ({ ...prev, userOwnedShop: null }));
       }
     } catch (error) {
-      console.error("Error fetching user shop:", error);
       if (error.response?.status === 403) {
-        console.error("Access denied - check authentication/authorization");
+        console.error("🔒 Access denied - check authentication/authorization");
+      } else if (error.response?.status === 401) {
+        console.error("🔑 Unauthorized - token may be invalid");
       }
+
       setUserShopData((prev) => ({ ...prev, userOwnedShop: null }));
     } finally {
       setUserShopData((prev) => ({ ...prev, loadingUserShop: false }));
     }
   }, [hasMerchantAccess]);
 
-  const fetchProducts = useCallback(async () => {
-    setProductsLoading(true);
+  const fetchUserProducts = useCallback(async () => {
+    if (!hasMerchantAccess || !userOwnedShop?.id) {
+      return;
+    }
+
     const token = localStorage.getItem("merchantAccessToken");
+
     try {
       const response = await axios.get(`${apiURL}/merchant/products`, {
         params: {
           pageable: JSON.stringify({
             page: 0,
-            size: 12,
+            size: 100,
             sort: "createdAt,desc",
           }),
         },
-
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -520,19 +551,47 @@ const Shops = memo(() => {
       });
 
       if (response.data.status === "OK" && response.data.data) {
-        setProducts(response.data.data.content);
+        const products = response.data.data.content || [];
+
+        setUserProducts(products);
+
+        setShopProducts((prev) => {
+          const newShopProducts = {
+            ...prev,
+            [userOwnedShop.id]: products,
+          };
+          return newShopProducts;
+        });
       } else {
-        setProducts([]);
+        setUserProducts([]);
+        setShopProducts((prev) => ({
+          ...prev,
+          [userOwnedShop.id]: [],
+        }));
+      }
+    } catch (err) {
+      console.error("Error fetching user products:", err);
+      setUserProducts([]);
+      if (userOwnedShop?.id) {
+        setShopProducts((prev) => ({
+          ...prev,
+          [userOwnedShop.id]: [],
+        }));
+      }
+    }
+  }, [hasMerchantAccess, userOwnedShop]);
+
+  const getShopProducts = useCallback(
+    (shopId) => {
+      if (shopId === userOwnedShop?.id) {
+        const result = shopProducts[shopId] || userProducts;
+        return result;
       }
 
-      console.log(response.data.data.content);
-    } catch (err) {
-      console.error("Error fetching products:", err);
-      setProducts([]);
-    } finally {
-      setProductsLoading(false);
-    }
-  }, []);
+      return [];
+    },
+    [shopProducts, userProducts, userOwnedShop?.id]
+  );
 
   const fetchShops = useCallback(
     async (searchQuery = "", showLoader = true) => {
@@ -757,16 +816,15 @@ const Shops = memo(() => {
   useEffect(() => {
     if (hasMerchantAccess) {
       fetchUserShop();
-      fetchProducts();
     }
     fetchShops(lastSearchTerm, true);
-  }, [
-    fetchShops,
-    fetchUserShop,
-    lastSearchTerm,
-    hasMerchantAccess,
-    fetchProducts,
-  ]);
+  }, [fetchShops, fetchUserShop, lastSearchTerm, hasMerchantAccess]);
+
+  useEffect(() => {
+    if (hasMerchantAccess && userOwnedShop?.id) {
+      fetchUserProducts();
+    }
+  }, [hasMerchantAccess, userOwnedShop?.id, fetchUserProducts]);
 
   useEffect(() => {
     if (searchTimeoutRef.current) {
@@ -1006,7 +1064,7 @@ const Shops = memo(() => {
                           index={index}
                           onVisit={handleShopVisit}
                           currentUserShop={shop.isUserShop}
-                          products={products}
+                          products={getShopProducts(shop.id)}
                         />
                       ))}
                     </div>

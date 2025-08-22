@@ -78,7 +78,6 @@ const Addresses = () => {
   const [showErrorMessage, setShowErrorMessage] = useState(false);
 
   const navigate = useNavigate();
-  const authenticated = isAuthenticated();
 
   const showError = (message) => {
     setErrorMessage(message);

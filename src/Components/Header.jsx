@@ -396,7 +396,11 @@ const Header = memo(() => {
                     Hi, {currentUser?.firstName || user?.fullName}!
                   </span>
                   <Link
-                    to={`/${userMode}/profile`}
+                    to={`${
+                      currentUser || userMode === "customer"
+                        ? "/customer/profile"
+                        : "/merchant/profile"
+                    }`}
                     className="text-gray-700 hover:text-green-600 transition-colors"
                     title="Profile"
                   >
@@ -412,7 +416,11 @@ const Header = memo(() => {
 
                 <div className="flex md:hidden items-center space-x-2">
                   <Link
-                    to="/customer/profile"
+                    to={`${
+                      currentUser || userMode === "customer"
+                        ? "/customer/profile"
+                        : "/merchant/profile"
+                    }`}
                     className="text-gray-700 hover:text-green-600 transition-colors"
                     title="Profile"
                   >
@@ -570,7 +578,11 @@ const Header = memo(() => {
                 </div>
               </div>
               <Link
-                to="/customer/profile"
+                to={`${
+                  currentUser || userMode === "customer"
+                    ? "/customer/profile"
+                    : "/merchant/profile"
+                }`}
                 className="flex items-center space-x-3 py-2 hover:bg-gray-100 rounded px-2 transition-colors"
                 onClick={closeSideBarAndNavigate}
               >

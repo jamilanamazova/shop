@@ -20,7 +20,6 @@ import ProfileDashboard from "../Components/Customer/ProfileDashboard";
 const Routing = () => {
   const user = localStorage.getItem("appMode");
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-  console.log(currentUser);
   return (
     <Routes>
       <Route path="/" element={<Home />} />
