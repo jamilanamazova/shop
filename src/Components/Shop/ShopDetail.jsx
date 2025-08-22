@@ -189,7 +189,7 @@ const ShopDetail = memo(() => {
     setProductsLoading(true);
     const token = localStorage.getItem("merchantAccessToken");
     try {
-      const response = await axios.get(`${apiURL}/merchant/products`, {
+      const response = await axios.get(`${apiURL}/products`, {
         params: {
           pageable: JSON.stringify({
             page: 0,

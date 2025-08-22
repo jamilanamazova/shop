@@ -1,69 +1,272 @@
-import React from "react";
+import React, { memo, useCallback, useEffect, useState } from "react";
 import Header from "./Header";
 import Hero from "./Pages/Hero";
 import Categories from "./Pages/Categories";
-import ProductShowCase from "./Pages/ProductShowCase";
 import Footer from "./Footer";
 import "../CSS/Home.css";
-import noise from "../Images/noise.jpg";
 import { motion } from "framer-motion";
 
+import { useProducts } from "../hooks/useProducts";
+import { useCart } from "../hooks/useCart";
+
+const ProductShowCase = memo(() => {
+  const {
+    featuredProducts,
+    featuredLoading,
+    featuredError,
+    loadFeaturedProducts,
+  } = useProducts();
+  const { addToCart, isItemInCart, getItemQuantity } = useCart();
+
+  useEffect(() => {
+    if (featuredProducts.length === 0 && !featuredLoading) {
+      loadFeaturedProducts();
+    }
+  }, [featuredProducts, featuredLoading, loadFeaturedProducts]);
+
+  const handleAddToCart = useCallback(
+    (product, quantity = 1) => {
+      console.log("adding to cart from showcase: ", product.productName);
+
+      addToCart(product.id, quantity, {
+        id: product.id,
+        productName: product.productName,
+        description: product.description,
+        currentPrice: product.currentPrice,
+        originalPrice: product.originalPrice,
+        imageUrl: product.imageUrl,
+        condition: product.condition,
+        category: product.category,
+      });
+    },
+    [addToCart]
+  );
+
+  if (featuredLoading) {
+    return (
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
+              Featured Products
+            </h2>
+            <div className="w-24 h-1 bg-emerald-600 mx-auto rounded-full"></div>
+          </div>
+
+          <div className="flex justify-center items-center py-20">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-emerald-600"></div>
+            <span className="ml-3 text-gray-600 text-lg">
+              Loading featured products...
+            </span>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (featuredError) {
+    return (
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
+              Featured Products
+            </h2>
+            <div className="w-24 h-1 bg-emerald-600 mx-auto rounded-full"></div>
+          </div>
+
+          <div className="text-center py-20">
+            <i className="fa-solid fa-exclamation-triangle text-5xl text-red-400 mb-4"></i>
+            <p className="text-gray-600 text-lg mb-4">
+              Failed to load featured products
+            </p>
+            <button
+              onClick={loadFeaturedProducts}
+              className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-emerald-700 transition"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (!featuredProducts || featuredProducts.length === 0) {
+    return (
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
+              Featured Products
+            </h2>
+            <div className="w-24 h-1 bg-emerald-600 mx-auto rounded-full"></div>
+          </div>
+
+          <div className="text-center py-20">
+            <i className="fa-solid fa-box text-5xl text-gray-300 mb-4"></i>
+            <p className="text-gray-600 text-lg">
+              No featured products available at the moment
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="py-16 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
+            Featured Products
+          </h2>
+          <p className="text-gray-600 text-lg mb-6">
+            Discover our top discounted products with amazing deals
+          </p>
+          <div className="w-24 h-1 bg-emerald-600 mx-auto rounded-full"></div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {featuredProducts.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              onAddToCart={handleAddToCart}
+              isInCart={isItemInCart(product.id)}
+              cartQuantity={getItemQuantity(product.id)}
+            />
+          ))}
+        </div>
+
+        {featuredProducts.length > 0 && (
+          <div className="text-center mt-12">
+            <button
+              onClick={() => (window.location.href = "/products")}
+              className="bg-emerald-600 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-emerald-700 transition-all duration-300 transform hover:scale-105 shadow-lg"
+            >
+              View All Products
+              <i className="fa-solid fa-arrow-right ml-2"></i>
+            </button>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+});
+ProductShowCase.displayName = "ProductShowCase";
+
+const ProductCard = memo(({ product, onAddToCart, isInCart, cartQuantity }) => {
+  const [imageError, setImageError] = useState(false);
+
+  const handleImageError = useCallback(() => {
+    setImageError(true);
+  }, []);
+
+  const handleAddClick = useCallback(
+    (e) => {
+      e.preventDefault();
+      onAddToCart(product);
+    },
+    [onAddToCart, product]
+  );
+
+  const discountPercentage =
+    product.originalPrice && product.currentPrice
+      ? Math.round(
+          ((product.originalPrice - product.currentPrice) /
+            product.originalPrice) *
+            100
+        )
+      : 0;
+
+  return (
+    <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group border border-gray-100 transform hover:-translate-y-1">
+      {/* Product Image */}
+      <div className="relative overflow-hidden bg-gray-100 h-64">
+        {!imageError && product.imageUrl ? (
+          <img
+            src={product.imageUrl}
+            alt={product.productName}
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+            onError={handleImageError}
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gray-100">
+            <i className="fa-solid fa-image text-4xl text-gray-300"></i>
+          </div>
+        )}
+
+        {/* Discount Badge */}
+        {discountPercentage > 0 && (
+          <div className="absolute top-3 left-3 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+            -{discountPercentage}%
+          </div>
+        )}
+
+        {/* Condition Badge */}
+        {product.condition && (
+          <div className="absolute top-3 right-3 bg-emerald-500 text-white px-3 py-1 rounded-full text-xs font-semibold uppercase">
+            {product.condition}
+          </div>
+        )}
+      </div>
+
+      {/* Product Info */}
+      <div className="p-5">
+        <h3 className="font-bold text-lg text-gray-800 mb-2 line-clamp-2 group-hover:text-emerald-600 transition-colors">
+          {product.productName}
+        </h3>
+
+        <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+          {product.description}
+        </p>
+
+        {/* Price */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl font-bold text-emerald-600">
+              ${product.currentPrice?.toFixed(2)}
+            </span>
+            {product.originalPrice &&
+              product.originalPrice > product.currentPrice && (
+                <span className="text-lg text-gray-400 line-through">
+                  ${product.originalPrice.toFixed(2)}
+                </span>
+              )}
+          </div>
+        </div>
+
+        {/* Add to Cart Button */}
+        <button
+          onClick={handleAddClick}
+          disabled={isInCart}
+          className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
+            isInCart
+              ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+              : "bg-emerald-600 text-white hover:bg-emerald-700 transform hover:scale-105 shadow-lg"
+          }`}
+        >
+          {isInCart ? (
+            <>
+              <i className="fa-solid fa-check"></i>
+              In Cart ({cartQuantity})
+            </>
+          ) : (
+            <>
+              <i className="fa-solid fa-cart-plus"></i>
+              Add to Cart
+            </>
+          )}
+        </button>
+      </div>
+    </div>
+  );
+});
+ProductCard.displayName = "ProductCard";
+
 const Home = () => {
-  const topPicksProducts = [
-    {
-      id: 1,
-      name: "Noise-cancelling",
-      price: "9.99",
-      originalPrice: "12.99",
-      image: noise,
-      category: "electronics",
-    },
-    {
-      id: 2,
-      name: "Stylish Jacket",
-      price: "45.99",
-      originalPrice: "65.99",
-      image:
-        "https://cdn.shopify.com/s/files/1/0867/4417/0787/files/winter-jacket-for-men.jpg?v=1725260898",
-      category: "fashion",
-    },
-    {
-      id: 3,
-      name: "Comfortable Sofa",
-      price: "299.99",
-      originalPrice: "399.99",
-      image:
-        "https://cdn.thewirecutter.com/wp-content/media/2024/12/BEST-ONLINE-SOFAS-SUB-2048px-sixpenny-aria-grande.jpg?auto=webp&quality=75&width=1024",
-      category: "furniture",
-    },
-    {
-      id: 4,
-      name: "Gourmet dog cookies",
-      price: "9.99",
-      originalPrice: "14.99",
-      image:
-        "https://i.etsystatic.com/13595738/r/il/2f46cf/3711835356/il_570xN.3711835356_e5c9.jpg",
-      category: "pets",
-    },
-    {
-      id: 5,
-      name: "Natural bird feed",
-      price: "7.99",
-      originalPrice: "11.99",
-      image:
-        "https://peckishbirdfood.com/cdn/shop/products/60051338_1_v2.jpg?v=1675160670",
-      category: "pets",
-    },
-    {
-      id: 6,
-      name: "Durable chew toy",
-      price: "12.99",
-      originalPrice: "18.99",
-      image:
-        "https://m.media-amazon.com/images/I/71KHlJw+8TL._UF1000,1000_QL80_.jpg",
-      category: "pets",
-    },
-  ];
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -146,7 +349,7 @@ const Home = () => {
       </motion.div>
 
       <motion.div variants={itemVariants}>
-        <ProductShowCase products={topPicksProducts} />
+        <ProductShowCase />
       </motion.div>
 
       <motion.section className="our-blog py-16" variants={itemVariants}>
