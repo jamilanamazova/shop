@@ -1,202 +1,143 @@
-import { useSelector, useDispatch } from "react-redux";
 import { useCallback, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import {
   fetchProducts,
   fetchFeaturedProducts,
+  ensureDetailsForProducts,
   fetchProductDetails,
   setFilters,
   clearFilters,
   clearErrors,
+  selectAllProducts,
+  selectFilteredProducts,
 } from "../store/reducers/productReducer";
 
 export const useProducts = () => {
   const dispatch = useDispatch();
 
-  const products = useSelector((state) => state.products.products);
-  const featuredProducts = useSelector(
-    (state) => state.products.featuredProducts
-  );
-  const productDetails = useSelector((state) => state.products.productDetails);
-  const totalElements = useSelector((state) => state.products.totalElements);
-  const totalPages = useSelector((state) => state.products.totalPages);
-  const currentPage = useSelector((state) => state.products.currentPage);
-  const loading = useSelector((state) => state.products.loading);
-  const featuredLoading = useSelector(
-    (state) => state.products.featuredLoading
-  );
-  const error = useSelector((state) => state.products.error);
-  const featuredError = useSelector((state) => state.products.featuredError);
-  const filters = useSelector((state) => state.products.filters);
-  const lastFetch = useSelector((state) => state.products.lastFetch);
-  const featuredLastFetch = useSelector(
-    (state) => state.products.featuredLastFetch
-  );
+  const products = useSelector(selectAllProducts);
+  const filteredProducts = useSelector(selectFilteredProducts);
+  const featuredProducts = useSelector((s) => s.products.featuredProducts);
+  const productDetails = useSelector((s) => s.products.productDetails);
+
+  const totalElements = useSelector((s) => s.products.totalElements);
+  const totalPages = useSelector((s) => s.products.totalPages);
+  const currentPage = useSelector((s) => s.products.currentPage);
+  const pageSize = useSelector((s) => s.products.pageSize);
+
+  const loading = useSelector((s) => s.products.loading);
+  const featuredLoading = useSelector((s) => s.products.featuredLoading);
+  const error = useSelector((s) => s.products.error);
+  const featuredError = useSelector((s) => s.products.featuredError);
+  const filters = useSelector((s) => s.products.filters);
 
   const loadProducts = useCallback(
-    (options = {}) => {
-      const {
-        page = 0,
-        size = 20,
-        sort = "createdAt,desc",
-        reset = false,
-      } = options;
-
-      if (reset || page === 0) {
-        dispatch(fetchProducts({ page: 0, size, sort }));
-      } else {
-        dispatch(fetchProducts({ page, size, sort }));
-      }
+    ({ page = 0, size = pageSize || 20, sort = "createdAt,desc" } = {}) => {
+      dispatch(fetchProducts({ page, size, sort }));
     },
-    [dispatch]
+    [dispatch, pageSize]
   );
 
+  const loadMoreProducts = useCallback(() => {
+    if (!loading && currentPage + 1 < totalPages) {
+      dispatch(
+        fetchProducts({
+          page: currentPage + 1,
+          size: pageSize || 20,
+          sort: "createdAt,desc",
+        })
+      );
+    }
+  }, [dispatch, loading, currentPage, totalPages, pageSize]);
+
+  const refreshProducts = useCallback(() => {
+    dispatch(
+      fetchProducts({ page: 0, size: pageSize || 20, sort: "createdAt,desc" })
+    );
+  }, [dispatch, pageSize]);
+
   const loadFeaturedProducts = useCallback(() => {
-    console.log("⭐ Loading featured products...");
     dispatch(fetchFeaturedProducts());
   }, [dispatch]);
 
   const loadProductDetails = useCallback(
-    (productId) => {
-      const cached = productDetails[productId];
-      const now = Date.now();
-      const cacheExpiry = 5 * 60 * 1000;
-
-      if (cached && cached.cachedAt) {
-        const cacheAge = now - new Date(cached.cachedAt);
-        if (cacheAge < cacheExpiry) {
-          console.log("using cached product details", productId);
-          return Promise.resolve(cached);
-        }
-      }
-
-      console.log("loading product details: ", productId);
-      return dispatch(fetchProductDetails(productId));
-    },
-    [dispatch, productDetails]
+    (productId) => dispatch(fetchProductDetails(productId)),
+    [dispatch]
   );
 
   const filterProducts = useCallback(
     (newFilters) => {
       console.log("🎯 Filtering products:", newFilters);
       dispatch(setFilters(newFilters));
-
-      // Filter API çağırışı
-      // dispatch(fetchProducts({ page: 0, filters: newFilters }));
     },
     [dispatch]
   );
 
   const resetFilters = useCallback(() => {
-    console.log("🔄 Resetting filters");
     dispatch(clearFilters());
-    dispatch(fetchProducts({ page: 0 }));
   }, [dispatch]);
-
-  const refreshProducts = useCallback(() => {
-    console.log("🔄 Refreshing products");
-    dispatch(fetchProducts({ page: 0 }));
-  }, [dispatch]);
-
-  const loadMoreProducts = useCallback(() => {
-    if (currentPage + 1 < totalPages && !loading) {
-      console.log("📄 Loading more products, page:", currentPage + 1);
-      dispatch(fetchProducts({ page: currentPage + 1 }));
-    }
-  }, [dispatch, currentPage, totalPages, loading]);
 
   const clearProductErrors = useCallback(() => {
     dispatch(clearErrors());
   }, [dispatch]);
 
-  const hasMoreProducts = currentPage + 1 < totalPages;
-  const isFirstLoad = products.length === 0 && !loading && !error;
-
-  const shouldRefreshFeatured = useCallback(() => {
-    if (!featuredLastFetch) return true;
-
-    const now = new Date();
-    const lastFetchTime = new Date(featuredLastFetch);
-    const cacheExpiry = 10 * 60 * 1000;
-
-    return now - lastFetchTime > cacheExpiry;
-  }, [featuredLastFetch]);
-
   useEffect(() => {
-    if (shouldRefreshFeatured() && !featuredLoading) {
+    if (products.length === 0 && !loading) {
+      loadProducts({ page: 0 });
       loadFeaturedProducts();
     }
-  }, [shouldRefreshFeatured, featuredLoading, loadFeaturedProducts]);
+  }, []);
 
-  const getProductById = useCallback(
-    (productId) => {
-      if (productDetails[productId]) {
-        return productDetails[productId];
-      }
+  useEffect(() => {
+    const needDetails = Boolean(filters.category) || Boolean(filters.condition);
+    if (!needDetails || products.length === 0) return;
 
-      return products.find((product) => product.id === productId);
-    },
-    [products, productDetails]
-  );
-
-  const getFilteredProducts = useCallback(() => {
-    let filtered = [...products];
-
-    if (filters.category) {
-      filtered = filtered.filter(
-        (product) => product.category === filters.category
-      );
+    const idsMissing = products
+      .filter((p) => !productDetails[p.id])
+      .map((p) => p.id);
+    if (idsMissing.length > 0) {
+      console.log("📥 Fetching details for filters:", idsMissing.length);
+      dispatch(ensureDetailsForProducts(idsMissing));
     }
+  }, [dispatch, products, productDetails, filters.category, filters.condition]);
 
-    if (filters.priceRange) {
-      const [min, max] = filters.priceRange;
-      filtered = filtered.filter(
-        (product) => product.currentPrice >= min && product.currentPrice <= max
-      );
+  useEffect(() => {
+    const needDetails = Boolean(filters.category) || Boolean(filters.condition);
+    if (!needDetails || products.length === 0) return;
+
+    const newMissing = products
+      .filter((p) => !productDetails[p.id])
+      .map((p) => p.id);
+    if (newMissing.length > 0) {
+      dispatch(ensureDetailsForProducts(newMissing));
     }
-
-    if (filters.condition) {
-      filtered = filtered.filter(
-        (product) => product.condition === filters.condition
-      );
-    }
-
-    return filtered;
-  }, [products, filters]);
+  }, [dispatch, products]);
 
   return {
-    // Data
     products,
+    filteredProducts,
     featuredProducts,
     productDetails,
-    filteredProducts: getFilteredProducts(),
 
-    // Pagination
     totalElements,
     totalPages,
     currentPage,
-    hasMoreProducts,
+    pageSize,
 
-    // States
     loading,
     featuredLoading,
     error,
     featuredError,
-    isFirstLoad,
-
     filters,
 
-    // Actions
     loadProducts,
+    loadMoreProducts,
+    refreshProducts,
     loadFeaturedProducts,
     loadProductDetails,
     filterProducts,
     resetFilters,
-    refreshProducts,
-    loadMoreProducts,
     clearProductErrors,
-
-    // Helpers
-    getProductById,
   };
 };
 

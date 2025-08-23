@@ -362,6 +362,14 @@ const AddProductModal = memo(
           <h2 className="text-2xl font-bold mb-6 text-emerald-700 text-center">
             Add New Product
           </h2>
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+              <div className="flex items-center gap-2">
+                <i className="fa-solid fa-exclamation-triangle"></i>
+                <span>{error}</span>
+              </div>
+            </div>
+          )}
           <form onSubmit={handleSubmitWithImage} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -863,6 +871,7 @@ const ShopDashboard = memo(() => {
   const [deleteProduct, setDeleteProduct] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isAddingProduct, setIsAddingProduct] = useState(false);
 
   const hasMerchantAccess = hasMerchantAccount();
 
@@ -1131,6 +1140,9 @@ const ShopDashboard = memo(() => {
         return;
       }
 
+      setIsAddingProduct(true);
+      setError("");
+
       try {
         console.log("🔍 Finding shop ID by name:", shopData.shopName);
 
@@ -1189,10 +1201,17 @@ const ShopDashboard = memo(() => {
             return { productId: response.data.data.id };
           } else {
             setShowSuccess(true);
-            setSuccessMessage("Product added successfully!");
+            setSuccessMessage(
+              `Product "${createdProduct.productName}" added successfully!`
+            );
             await fetchProducts();
             setShowAddProduct(false);
             dispatch({ type: "RESET_FORM" });
+
+            setTimeout(() => {
+              setShowSuccess(false);
+              setSuccessMessage("");
+            }, 3000);
           }
         }
       } catch (err) {
@@ -1207,9 +1226,11 @@ const ShopDashboard = memo(() => {
           setError("Error adding product. Please try again.");
         }
         throw err;
+      } finally {
+        setIsAddingProduct(false);
       }
     },
-    [formState, navigate, fetchProducts, shopData]
+    [formState, navigate, fetchProducts, shopData, dispatch]
   );
 
   const updateProduct = useCallback(

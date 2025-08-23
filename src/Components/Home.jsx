@@ -28,16 +28,7 @@ const ProductShowCase = memo(() => {
     (product, quantity = 1) => {
       console.log("adding to cart from showcase: ", product.productName);
 
-      addToCart(product.id, quantity, {
-        id: product.id,
-        productName: product.productName,
-        description: product.description,
-        currentPrice: product.currentPrice,
-        originalPrice: product.originalPrice,
-        imageUrl: product.imageUrl,
-        condition: product.condition,
-        category: product.category,
-      });
+      addToCart(product.id, quantity, product);
     },
     [addToCart]
   );
@@ -127,7 +118,7 @@ const ProductShowCase = memo(() => {
           <div className="w-24 h-1 bg-emerald-600 mx-auto rounded-full"></div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 cursor-pointer">
           {featuredProducts.map((product) => (
             <ProductCard
               key={product.id}
@@ -166,6 +157,12 @@ const ProductCard = memo(({ product, onAddToCart, isInCart, cartQuantity }) => {
   const handleAddClick = useCallback(
     (e) => {
       e.preventDefault();
+      e.stopPropagation();
+
+      if (product.stockQuantity !== undefined && product.stockQuantity <= 0) {
+        return;
+      }
+
       onAddToCart(product);
     },
     [onAddToCart, product]
@@ -180,9 +177,11 @@ const ProductCard = memo(({ product, onAddToCart, isInCart, cartQuantity }) => {
         )
       : 0;
 
+  const isOutOfStock =
+    product.stockQuantity !== undefined && product.stockQuantity <= 0;
+
   return (
     <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group border border-gray-100 transform hover:-translate-y-1">
-      {/* Product Image */}
       <div className="relative overflow-hidden bg-gray-100 h-64">
         {!imageError && product.imageUrl ? (
           <img
@@ -198,22 +197,27 @@ const ProductCard = memo(({ product, onAddToCart, isInCart, cartQuantity }) => {
           </div>
         )}
 
-        {/* Discount Badge */}
         {discountPercentage > 0 && (
           <div className="absolute top-3 left-3 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
             -{discountPercentage}%
           </div>
         )}
 
-        {/* Condition Badge */}
         {product.condition && (
           <div className="absolute top-3 right-3 bg-emerald-500 text-white px-3 py-1 rounded-full text-xs font-semibold uppercase">
             {product.condition}
           </div>
         )}
+
+        {isOutOfStock && (
+          <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+            <span className="bg-red-500 text-white px-4 py-2 rounded-lg font-bold text-sm">
+              OUT OF STOCK
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* Product Info */}
       <div className="p-5">
         <h3 className="font-bold text-lg text-gray-800 mb-2 line-clamp-2 group-hover:text-emerald-600 transition-colors">
           {product.productName}
@@ -223,7 +227,6 @@ const ProductCard = memo(({ product, onAddToCart, isInCart, cartQuantity }) => {
           {product.description}
         </p>
 
-        {/* Price */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <span className="text-2xl font-bold text-emerald-600">
@@ -236,19 +239,47 @@ const ProductCard = memo(({ product, onAddToCart, isInCart, cartQuantity }) => {
                 </span>
               )}
           </div>
+
+          {product.category && (
+            <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full font-medium">
+              {product.category}
+            </span>
+          )}
         </div>
 
-        {/* Add to Cart Button */}
+        {product.stockQuantity !== undefined && (
+          <div className="text-xs mb-3">
+            {product.stockQuantity > 0 ? (
+              <span className="text-green-600 font-medium">
+                <i className="fa-solid fa-check-circle mr-1"></i>
+                {product.stockQuantity} in stock
+              </span>
+            ) : (
+              <span className="text-red-600 font-medium">
+                <i className="fa-solid fa-times-circle mr-1"></i>
+                Out of stock
+              </span>
+            )}
+          </div>
+        )}
+
         <button
           onClick={handleAddClick}
-          disabled={isInCart}
+          disabled={isOutOfStock}
           className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
-            isInCart
-              ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+            isOutOfStock
+              ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+              : isInCart
+              ? "bg-emerald-600 text-white hover:bg-emerald-700 transform hover:scale-105 shadow-lg"
               : "bg-emerald-600 text-white hover:bg-emerald-700 transform hover:scale-105 shadow-lg"
           }`}
         >
-          {isInCart ? (
+          {isOutOfStock ? (
+            <>
+              <i className="fa-solid fa-times-circle"></i>
+              Out of Stock
+            </>
+          ) : isInCart ? (
             <>
               <i className="fa-solid fa-check"></i>
               In Cart ({cartQuantity})

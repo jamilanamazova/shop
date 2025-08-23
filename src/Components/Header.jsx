@@ -12,6 +12,7 @@ import { isAuthenticated, getCurrentUser, logout } from "../utils/auth";
 import axios from "axios";
 import { apiURL } from "../Backend/Api/api";
 import { hasMerchantAccount, setAppMode } from "../utils/roleMode";
+import useCart from "../hooks/useCart";
 
 const Header = memo(() => {
   const [currentUser, setCurrentUser] = useState();
@@ -22,6 +23,8 @@ const Header = memo(() => {
   const [errorMessage, setErrorMessage] = useState("");
   const [showErrorMessage, setShowErrorMessage] = useState(false);
   const [openSideBar, setOpenSideBar] = useState(false);
+
+  const { itemCount, toggleCart } = useCart();
 
   const userMode = localStorage.getItem("appMode");
 
@@ -227,7 +230,7 @@ const Header = memo(() => {
       </Link>
       <Link
         className="font-bold text-sm xl:text-base hover:text-gray-600 transition-colors"
-        to={"/customer/products"}
+        to={"/products"}
       >
         PRODUCTS
       </Link>
@@ -259,7 +262,7 @@ const Header = memo(() => {
       </li>
       <li>
         <Link
-          to="/customer/products"
+          to="/products"
           className="font-bold text-lg hover:text-gray-600 transition-colors block py-2"
           onClick={closeSideBarAndNavigate}
         >
@@ -351,101 +354,121 @@ const Header = memo(() => {
         />
       )}
 
-      <header className="p-4 lg:p-7 flex justify-between items-center max-w-[93%] m-auto relative">
-        <div className="leftHeader flex gap-3 md:gap-12 items-center">
-          <div className="bagIcon">
-            <span className="text-xl">
-              <i className="fa-solid fa-bag-shopping"></i>
-            </span>
-          </div>
+      <header className="sticky top-0 bg-white/95 backdrop-blur-md shadow-lg z-40 border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 lg:px-6">
+          <div className="flex items-center justify-between h-20">
+            <div className="flex items-center gap-4 lg:gap-8">
+              <Link to="/" className="flex items-center space-x-3 group">
+                <div className="w-12 h-12 bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow duration-300">
+                  <i className="fa-solid fa-leaf text-white text-xl group-hover:scale-110 transition-transform duration-300"></i>
+                </div>
+                <span className="text-2xl font-bold text-gray-800 group-hover:text-emerald-600 transition-colors duration-300">
+                  Shopery
+                </span>
+              </Link>
 
-          <div
-            className="hamburger-menu lg:hidden cursor-pointer"
-            onClick={toggleSideBar}
-          >
-            <span className="text-xl">
-              <i className="fa-solid fa-bars"></i>
-            </span>
-          </div>
+              <button
+                className="lg:hidden p-3 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all duration-300"
+                onClick={toggleSideBar}
+              >
+                <i className="fa-solid fa-bars text-xl"></i>
+              </button>
 
-          <div className="headerLinks hidden lg:block">
-            <NavigationLinks />
-          </div>
-        </div>
+              <nav className="hidden lg:block">
+                <NavigationLinks />
+              </nav>
+            </div>
 
-        <div className="rightHeader">
-          <div className="flex items-center gap-2 md:gap-4">
-            <div className="flex items-center gap-2 md:gap-3">
+            <div className="flex items-center gap-4">
               {authenticated && (
                 <div className="hidden lg:block">
                   <MerchantButton />
                 </div>
               )}
-              <div className="search-icon cursor-pointer hover:text-gray-600 transition-colors">
-                <i className="fa-solid fa-magnifying-glass text-lg"></i>
-              </div>
-              <div className="cart-icon cursor-pointer hover:text-gray-600 transition-colors">
-                <i className="fa-solid fa-cart-shopping text-lg"></i>
-              </div>
-            </div>
 
-            {authenticated ? (
-              <>
-                <div className="hidden md:flex items-center space-x-3 lg:space-x-4">
-                  <span className="text-gray-700 text-sm lg:text-base max-w-[100px] lg:max-w-none truncate">
-                    Hi, {currentUser?.firstName || user?.fullName}!
-                  </span>
-                  <Link
-                    to={`${
-                      currentUser || userMode === "customer"
-                        ? "/customer/profile"
-                        : "/merchant/profile"
-                    }`}
-                    className="text-gray-700 hover:text-green-600 transition-colors"
-                    title="Profile"
-                  >
-                    <i className="fa-solid fa-user-circle text-xl"></i>
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="bg-red-600 text-white px-3 py-1.5 lg:px-4 lg:py-2 rounded text-sm hover:bg-red-700 transition-colors"
-                  >
-                    Logout
-                  </button>
-                </div>
+              <div className="flex items-center gap-2">
+                <button className="p-3 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all duration-300">
+                  <i className="fa-solid fa-magnifying-glass text-xl"></i>
+                </button>
 
-                <div className="flex md:hidden items-center space-x-2">
-                  <Link
-                    to={`${
-                      currentUser || userMode === "customer"
-                        ? "/customer/profile"
-                        : "/merchant/profile"
-                    }`}
-                    className="text-gray-700 hover:text-green-600 transition-colors"
-                    title="Profile"
-                  >
-                    <i className="fa-solid fa-user-circle text-xl"></i>
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="text-red-600 hover:text-red-700 transition-colors"
-                    title="Logout"
-                  >
-                    <i className="fa-solid fa-sign-out-alt text-lg"></i>
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div className="flex items-center">
-                <Link
-                  to="/register"
-                  className="hover:text-gray-700 transition-colors"
-                  title="Sign Up"
+                <button
+                  onClick={toggleCart}
+                  className="relative p-3 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all duration-300"
+                  aria-label="Shopping Cart"
                 >
-                  <i className="fa-solid fa-user text-lg"></i>
-                </Link>
+                  <i className="fa-solid fa-shopping-cart text-xl"></i>
+
+                  {itemCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg animate-bounce">
+                      {itemCount > 99 ? "99+" : itemCount}
+                    </span>
+                  )}
+                </button>
               </div>
-            )}
+
+              {authenticated ? (
+                <div className="flex items-center gap-3">
+                  <div className="hidden md:flex items-center gap-3">
+                    <span className="text-gray-700 font-medium max-w-[120px] truncate">
+                      Hi, {currentUser?.firstName || user?.fullName}!
+                    </span>
+                    <Link
+                      to={`${
+                        currentUser || userMode === "customer"
+                          ? "/customer/profile"
+                          : "/merchant/profile"
+                      }`}
+                      className="p-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all duration-300"
+                      title="Profile"
+                    >
+                      <i className="fa-solid fa-user-circle text-xl"></i>
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="bg-red-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-600 transition-all duration-300 shadow-md hover:shadow-lg"
+                    >
+                      Logout
+                    </button>
+                  </div>
+
+                  <div className="flex md:hidden items-center gap-2">
+                    <Link
+                      to={`${
+                        currentUser || userMode === "customer"
+                          ? "/customer/profile"
+                          : "/merchant/profile"
+                      }`}
+                      className="p-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all duration-300"
+                      title="Profile"
+                    >
+                      <i className="fa-solid fa-user-circle text-xl"></i>
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl transition-all duration-300"
+                      title="Logout"
+                    >
+                      <i className="fa-solid fa-sign-out-alt text-xl"></i>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Link
+                    to="/signin"
+                    className="hidden sm:block bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-200 transition-all duration-300"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-all duration-300 shadow-md hover:shadow-lg"
+                  >
+                    Sign Up
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>

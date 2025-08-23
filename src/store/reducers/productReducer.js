@@ -1,5 +1,9 @@
 // src/store/reducers/productReducer.js
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import {
+  createSlice,
+  createAsyncThunk,
+  createSelector,
+} from "@reduxjs/toolkit";
 import axios from "axios";
 
 const apiURL = "https://shopery-api-staging-61f06384c4d8.herokuapp.com/api/v1";
@@ -48,7 +52,7 @@ export const fetchProducts = createAsyncThunk(
   }
 );
 
-// Async thunk - Featured products al (top discounts)
+// Async thunk - Featured productlari al (top discounts)
 export const fetchFeaturedProducts = createAsyncThunk(
   "products/fetchFeaturedProducts",
   async (_, { rejectWithValue }) => {
@@ -106,37 +110,65 @@ export const fetchProductDetails = createAsyncThunk(
   }
 );
 
+export const ensureDetailsForProducts = createAsyncThunk(
+  "products/ensureDetailsForProducts",
+  async (ids = [], { getState, rejectWithValue }) => {
+    try {
+      const state = getState();
+      const cached = state.products.productDetails || {};
+      const missing = ids.filter((id) => !cached[id]);
+      if (missing.length === 0) return [];
+
+      // 6 paralel batch
+      const chunk = (arr, size) =>
+        Array.from({ length: Math.ceil(arr.length / size) }, (_, i) =>
+          arr.slice(i * size, i * size + size)
+        );
+
+      const chunks = chunk(missing, 6);
+      const results = [];
+
+      for (const group of chunks) {
+        const reqs = group.map((id) =>
+          axios
+            .get(`${apiURL}/products/${id}`, {
+              headers: { "Content-Type": "application/json" },
+            })
+            .then((res) => ({ id, ok: true, data: res.data?.data }))
+            .catch((err) => ({ id, ok: false, error: err }))
+        );
+        const settled = await Promise.all(reqs);
+        results.push(...settled.filter((r) => r.ok));
+      }
+
+      return results; // [{id, ok:true, data}]
+    } catch (error) {
+      console.error("❌ Error ensuring product details:", error);
+      return rejectWithValue("Failed to fetch product details batch");
+    }
+  }
+);
+
 const initialState = {
-  // All products list
   products: [],
   totalElements: 0,
   totalPages: 0,
   currentPage: 0,
   pageSize: 20,
 
-  // Featured products
   featuredProducts: [],
-
-  // Product details cache
   productDetails: {},
 
-  // Loading states
   loading: false,
   featuredLoading: false,
   detailsLoading: {},
 
-  // Error states
   error: null,
   featuredError: null,
   detailsErrors: {},
 
-  filters: {
-    category: null,
-    priceRange: null,
-    condition: null,
-  },
+  filters: { category: null, priceRange: null, condition: null },
 
-  // Last fetch timestamp
   lastFetch: null,
   featuredLastFetch: null,
 };
@@ -148,15 +180,9 @@ const productSlice = createSlice({
     setFilters: (state, action) => {
       state.filters = { ...state.filters, ...action.payload };
     },
-
     clearFilters: (state) => {
-      state.filters = {
-        category: null,
-        priceRange: null,
-        condition: null,
-      };
+      state.filters = { category: null, priceRange: null, condition: null };
     },
-
     cacheProductDetails: (state, action) => {
       const { productId, productData } = action.payload;
       state.productDetails[productId] = {
@@ -164,11 +190,9 @@ const productSlice = createSlice({
         cachedAt: new Date().toISOString(),
       };
     },
-
     clearProductCache: (state) => {
       state.productDetails = {};
     },
-
     clearErrors: (state) => {
       state.error = null;
       state.featuredError = null;
@@ -177,7 +201,6 @@ const productSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Fetch all products
       .addCase(fetchProducts.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -186,15 +209,8 @@ const productSlice = createSlice({
         state.loading = false;
         const { content, totalElements, totalPages, currentPage, pageSize } =
           action.payload;
-
-        if (currentPage === 0) {
-          // İlk page - products-ı əvəz et
-          state.products = content;
-        } else {
-          // Növbəti page - products-a əlavə et
-          state.products = [...state.products, ...content];
-        }
-
+        state.products =
+          currentPage === 0 ? content : [...state.products, ...content];
         state.totalElements = totalElements;
         state.totalPages = totalPages;
         state.currentPage = currentPage;
@@ -205,8 +221,6 @@ const productSlice = createSlice({
         state.loading = false;
         state.error = action.payload || "Failed to fetch products";
       })
-
-      // Fetch featured products
       .addCase(fetchFeaturedProducts.pending, (state) => {
         state.featuredLoading = true;
         state.featuredError = null;
@@ -221,8 +235,6 @@ const productSlice = createSlice({
         state.featuredError =
           action.payload || "Failed to fetch featured products";
       })
-
-      // Fetch product details
       .addCase(fetchProductDetails.pending, (state, action) => {
         const productId = action.meta.arg;
         state.detailsLoading[productId] = true;
@@ -231,7 +243,6 @@ const productSlice = createSlice({
       .addCase(fetchProductDetails.fulfilled, (state, action) => {
         const productId = action.meta.arg;
         const productData = action.payload;
-
         state.detailsLoading[productId] = false;
         state.productDetails[productId] = {
           ...productData,
@@ -243,6 +254,15 @@ const productSlice = createSlice({
         state.detailsLoading[productId] = false;
         state.detailsErrors[productId] =
           action.payload || "Failed to fetch product details";
+      })
+      .addCase(ensureDetailsForProducts.fulfilled, (state, action) => {
+        for (const item of action.payload) {
+          const { id, data } = item;
+          state.productDetails[id] = {
+            ...data,
+            cachedAt: new Date().toISOString(),
+          };
+        }
       });
   },
 });
@@ -267,6 +287,7 @@ export const selectProductsLoading = (state) => state.products.loading;
 export const selectFeaturedLoading = (state) => state.products.featuredLoading;
 export const selectProductsError = (state) => state.products.error;
 export const selectFilters = (state) => state.products.filters;
+export const selectProductDetails = (state) => state.products.productDetails;
 export const selectPagination = (state) => ({
   totalElements: state.products.totalElements,
   totalPages: state.products.totalPages,
@@ -274,26 +295,65 @@ export const selectPagination = (state) => ({
   pageSize: state.products.pageSize,
 });
 
-// Filtered products selector
-export const selectFilteredProducts = (state) => {
-  const products = selectAllProducts(state);
-  const filters = selectFilters(state);
+const getCategoryOf = (productDetails, p) =>
+  p.category ?? productDetails[p.id]?.category ?? null;
 
-  return products.filter((product) => {
-    if (filters.category && product.category !== filters.category) {
-      return false;
-    }
+const getConditionOf = (productDetails, p) =>
+  p.condition ?? productDetails[p.id]?.condition ?? null;
 
-    if (filters.priceRange) {
-      const price = product.currentPrice || 0;
-      const [min, max] = filters.priceRange;
-      if (price < min || price > max) return false;
-    }
-
-    if (filters.condition && product.condition !== filters.condition) {
-      return false;
-    }
-
-    return true;
-  });
+const getPriceOf = (p) => {
+  const raw = p.currentPrice ?? p.price ?? 0;
+  if (typeof raw === "number") return raw;
+  const cleaned = String(raw)
+    .replace(/[^\d.,-]/g, "")
+    .replace(",", ".");
+  const n = Number(cleaned);
+  return Number.isFinite(n) ? n : 0;
 };
+
+export const selectFilteredProducts = createSelector(
+  [selectAllProducts, selectFilters, selectProductDetails],
+  (products, filters, productDetails) => {
+    console.log("🎯 Filtering products with:", filters);
+    console.log("📦 Total products:", products.length);
+
+    return products.filter((product) => {
+      // Category filter
+      if (filters.category && String(filters.category).trim() !== "") {
+        const cat = getCategoryOf(productDetails, product);
+        if (
+          !cat ||
+          String(cat).toLowerCase() !== String(filters.category).toLowerCase()
+        ) {
+          return false;
+        }
+      }
+
+      // Price filter
+      if (
+        filters.priceRange &&
+        Array.isArray(filters.priceRange) &&
+        filters.priceRange.length === 2
+      ) {
+        const [min, max] = filters.priceRange;
+        const price = getPriceOf(product);
+        if (price < Number(min) || price > Number(max)) {
+          return false;
+        }
+      }
+
+      // Condition filter
+      if (filters.condition && String(filters.condition).trim() !== "") {
+        const cond = getConditionOf(productDetails, product);
+        if (
+          !cond ||
+          String(cond).toLowerCase() !== String(filters.condition).toLowerCase()
+        ) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }
+);

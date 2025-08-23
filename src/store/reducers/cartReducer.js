@@ -5,7 +5,7 @@ const apiUrl = "https://shopery-api-staging-61f06384c4d8.herokuapp.com/api/v1";
 
 export const addProductToCart = createAsyncThunk(
   "cart/addProductToCart",
-  async ({ productId, quantity = 1 }, { rejectWithValue, getState }) => {
+  async ({ productId, quantity = 1 }, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("accessToken");
       if (!token) {
@@ -99,6 +99,10 @@ const initialState = {
   error: null,
   isLocal: true,
 
+  showSuccessMessage: false,
+  lastAddedItem: null,
+  isCartOpen: false,
+
   productDetails: {},
 };
 
@@ -132,6 +136,8 @@ const cartSlice = createSlice({
       }
 
       cartSlice.caseReducers.recalculateLocalTotal(state);
+      state.showSuccessMessage = true;
+      state.lastAddedItem = action.payload.productData;
     },
 
     removeFromLocalCart: (state, action) => {
@@ -194,6 +200,24 @@ const cartSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+
+    showCartSuccess: (state, action) => {
+      state.showSuccessMessage = true;
+      state.lastAddedItem = action.payload;
+    },
+
+    hideCartSuccess: (state) => {
+      state.showSuccessMessage = false;
+      state.lastAddedItem = null;
+    },
+
+    toggleCartSidebar: (state) => {
+      state.isCartOpen = !state.isCartOpen;
+    },
+
+    setCartOpen: (state, action) => {
+      state.isCartOpen = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -215,6 +239,7 @@ const cartSlice = createSlice({
           state.backendTotalPrice = cartData?.totalPrice || 0;
           state.isLocal = false;
         }
+        state.showSuccessMessage = true;
       })
       .addCase(addProductToCart.rejected, (state, action) => {
         state.loading = false;
@@ -254,6 +279,10 @@ export const {
   cacheProductDetails,
   clearError,
   recalculateLocalTotal,
+  showCartSuccess,
+  hideCartSuccess,
+  toggleCartSidebar,
+  setCartOpen,
 } = cartSlice.actions;
 
 export default cartSlice.reducer;
@@ -271,3 +300,7 @@ export const selectCartItemCount = (state) =>
 export const selectCartLoading = (state) => state.cart.loading;
 export const selectCartError = (state) => state.cart.error;
 export const selectIsLocalCart = (state) => state.cart.isLocal;
+export const selectShowSuccessMessage = (state) =>
+  state.cart.showSuccessMessage;
+export const selectLastAddedItem = (state) => state.cart.lastAddedItem;
+export const selectIsCartOpen = (state) => state.cart.isCartOpen;

@@ -17,6 +17,7 @@ import PublicShopDetail from "../Components/Shop/ShopDetail";
 import ShopDashboard from "../Components/Merchant/Dashboard/ShopDashboard";
 import ProfileDashboard from "../Components/Customer/ProfileDashboard";
 import Products from "../Components/Products/Products";
+import CategoryProducts from "../Components/Products/CategoryProducts";
 
 const Routing = () => {
   const user = localStorage.getItem("appMode");
@@ -56,6 +57,8 @@ const Routing = () => {
         path="/merchant/shops/:shopId/dashboard"
         element={<ShopDashboard />}
       />
+
+      <Route path="/category/:categorySlug" element={<CategoryProducts />} />
 
       <Route
         path={`${

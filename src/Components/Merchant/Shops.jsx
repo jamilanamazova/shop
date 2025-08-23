@@ -581,6 +581,8 @@ const Shops = memo(() => {
     }
   }, [hasMerchantAccess, userOwnedShop]);
 
+  console.log(userProducts);
+
   const getShopProducts = useCallback(
     (shopId) => {
       if (shopId === userOwnedShop?.id) {

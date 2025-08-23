@@ -5,6 +5,7 @@ import ShopsProvider from "./Context/ShopsProvider";
 import { Provider } from "react-redux";
 import { persistor, store } from "./store";
 import { PersistGate } from "redux-persist/integration/react";
+import CartSuccessToast from "./Components/Cart/CartSuccessToast";
 
 const App = () => {
   return (
@@ -12,6 +13,8 @@ const App = () => {
       <PersistGate loading={<div>Loading...</div>} persistor={persistor}>
         <ShopsProvider>
           <Routing />
+
+          <CartSuccessToast />
         </ShopsProvider>
       </PersistGate>
     </Provider>

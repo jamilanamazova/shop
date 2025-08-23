@@ -15,6 +15,13 @@ import {
   selectCartLoading,
   selectCartError,
   selectIsLocalCart,
+  showCartSuccess,
+  hideCartSuccess,
+  toggleCartSidebar,
+  setCartOpen,
+  selectShowSuccessMessage,
+  selectLastAddedItem,
+  selectIsCartOpen,
 } from "../store/reducers/cartReducer";
 
 export const useCart = () => {
@@ -26,6 +33,9 @@ export const useCart = () => {
   const loading = useSelector(selectCartLoading);
   const error = useSelector(selectCartError);
   const isLocal = useSelector(selectIsLocalCart);
+  const showSuccessMessage = useSelector(selectShowSuccessMessage);
+  const lastAddedItem = useSelector(selectLastAddedItem);
+  const isCartOpen = useSelector(selectIsCartOpen);
 
   const addToCart = useCallback(
     (productId, quantity = 1, productData = null) => {
@@ -39,10 +49,28 @@ export const useCart = () => {
 
       if (productData) {
         dispatch(cacheProductDetails({ productId, productData }));
+
+        dispatch(showCartSuccess(productData));
       }
     },
     [dispatch]
   );
+
+  const hideSuccessMessage = useCallback(() => {
+    dispatch(hideCartSuccess());
+  }, [dispatch]);
+
+  const toggleCart = useCallback(() => {
+    dispatch(toggleCartSidebar());
+  }, [dispatch]);
+
+  const openCart = useCallback(() => {
+    dispatch(setCartOpen(true));
+  }, [dispatch]);
+
+  const closeCart = useCallback(() => {
+    dispatch(setCartOpen(false));
+  }, [dispatch]);
 
   const removeFromCart = useCallback(
     (productId) => {
@@ -120,6 +148,15 @@ export const useCart = () => {
     clearCart,
     refreshCart,
     clearCartError,
+
+    showSuccessMessage,
+    lastAddedItem,
+    isCartOpen,
+
+    hideSuccessMessage,
+    toggleCart,
+    openCart,
+    closeCart,
 
     getItemQuantity,
     isItemInCart,

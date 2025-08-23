@@ -32,15 +32,6 @@ const ProductCard = memo(({ product, onAddToCart, isInCart, cartQuantity }) => {
     [onAddToCart, product]
   );
 
-  const discountPercentage =
-    product.originalPrice && product.currentPrice
-      ? Math.round(
-          ((product.originalPrice - product.currentPrice) /
-            product.originalPrice) *
-            100
-        )
-      : 0;
-
   return (
     <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group border border-gray-100 transform hover:-translate-y-1">
       <div className="relative overflow-hidden bg-gray-100 h-64">
@@ -57,11 +48,7 @@ const ProductCard = memo(({ product, onAddToCart, isInCart, cartQuantity }) => {
             <i className="fa-solid fa-image text-4xl text-gray-300"></i>
           </div>
         )}
-        {discountPercentage > 0 && (
-          <div className="absolute top-3 left-3 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
-            -{discountPercentage}%
-          </div>
-        )}
+
         <div className="absolute top-3 right-3 bg-emerald-500 text-white px-3 py-1 rounded-full text-xs font-semibold uppercase">
           {product.condition}
         </div>
@@ -79,12 +66,12 @@ const ProductCard = memo(({ product, onAddToCart, isInCart, cartQuantity }) => {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <span className="text-2xl font-bold text-emerald-600">
-              ${product.currentPrice?.toFixed(2)}
+              ${product.currentPrice?.toFixed(0)}
             </span>
             {product.originalPrice &&
               product.originalPrice > product.currentPrice && (
                 <span className="text-lg text-gray-400 line-through">
-                  ${product.originalPrice.toFixed(2)}
+                  ${product.originalPrice.toFixed(0)}
                 </span>
               )}
           </div>
@@ -345,7 +332,6 @@ const Products = memo(() => {
       <Header />
 
       <div className="min-h-screen bg-gray-50">
-        {/* Hero Section */}
         <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white py-16">
           <div className="max-w-7xl mx-auto px-4">
             <div className="text-center">
@@ -356,7 +342,6 @@ const Products = memo(() => {
                 Discover amazing products with great deals
               </p>
 
-              {/* Search Bar */}
               <form onSubmit={handleSearch} className="max-w-2xl mx-auto">
                 <div className="flex bg-white rounded-2xl overflow-hidden shadow-lg">
                   <input
@@ -381,7 +366,6 @@ const Products = memo(() => {
 
         <div className="max-w-7xl mx-auto px-4 py-10">
           <div className="flex flex-col lg:flex-row gap-8">
-            {/* Filter Sidebar */}
             <div className="lg:w-1/4">
               <FilterSidebar
                 filters={filters}
@@ -390,9 +374,7 @@ const Products = memo(() => {
               />
             </div>
 
-            {/* Products Grid */}
             <div className="lg:w-3/4">
-              {/* Toolbar */}
               <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                   <div className="flex items-center gap-4">
@@ -414,7 +396,6 @@ const Products = memo(() => {
                   </div>
 
                   <div className="flex items-center gap-4">
-                    {/* Sort Dropdown */}
                     <select
                       value={sortBy}
                       onChange={(e) => handleSortChange(e.target.value)}
@@ -435,7 +416,6 @@ const Products = memo(() => {
                 </div>
               </div>
 
-              {/* Products Loading */}
               {loading && products.length === 0 && (
                 <div className="text-center py-20">
                   <LoadingSpinner />
@@ -443,7 +423,6 @@ const Products = memo(() => {
                 </div>
               )}
 
-              {/* No Products Found */}
               {!loading && displayProducts.length === 0 && (
                 <div className="text-center py-20">
                   <i className="fa-solid fa-box-open text-5xl text-gray-300 mb-4"></i>
@@ -472,11 +451,10 @@ const Products = memo(() => {
                 </div>
               )}
 
-              {/* Products Grid */}
               {displayProducts.length > 0 && (
                 <>
-                  <div className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-                    {displayProducts.map((product) => (
+                  <div className="cursor-pointer grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+                    {filteredProducts.map((product) => (
                       <ProductCard
                         key={product.id}
                         product={product}
@@ -487,7 +465,6 @@ const Products = memo(() => {
                     ))}
                   </div>
 
-                  {/* Load More Button */}
                   {hasMoreProducts && (
                     <div className="text-center mt-12">
                       <button
@@ -514,7 +491,6 @@ const Products = memo(() => {
                     </div>
                   )}
 
-                  {/* Pagination Info */}
                   <div className="text-center mt-8 text-gray-600">
                     Showing {displayProducts.length} of products
                     {hasMoreProducts && (
