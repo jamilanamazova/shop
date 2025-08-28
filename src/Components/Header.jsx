@@ -391,19 +391,21 @@ const Header = memo(() => {
                   <i className="fa-solid fa-magnifying-glass text-xl"></i>
                 </button>
 
-                <button
-                  onClick={toggleCart}
-                  className="relative p-3 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all duration-300"
-                  aria-label="Shopping Cart"
-                >
-                  <i className="fa-solid fa-shopping-cart text-xl"></i>
+                <Link to={"/cart"}>
+                  <button
+                    onClick={toggleCart}
+                    className="relative p-3 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all duration-300"
+                    aria-label="Shopping Cart"
+                  >
+                    <i className="fa-solid fa-shopping-cart text-xl"></i>
 
-                  {itemCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg animate-bounce">
-                      {itemCount > 99 ? "99+" : itemCount}
-                    </span>
-                  )}
-                </button>
+                    {itemCount > 0 && (
+                      <span className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg animate-bounce">
+                        {itemCount > 99 ? "99+" : itemCount}
+                      </span>
+                    )}
+                  </button>
+                </Link>
               </div>
 
               {authenticated ? (

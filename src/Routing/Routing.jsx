@@ -18,6 +18,7 @@ import ShopDashboard from "../Components/Merchant/Dashboard/ShopDashboard";
 import ProfileDashboard from "../Components/Customer/ProfileDashboard";
 import Products from "../Components/Products/Products";
 import CategoryProducts from "../Components/Products/CategoryProducts";
+import CartDisplay from "../Components/Cart/CartDisplay";
 
 const Routing = () => {
   const user = localStorage.getItem("appMode");
@@ -72,6 +73,8 @@ const Routing = () => {
           </ProtectedRoute>
         }
       />
+
+      <Route path="/cart" element={<CartDisplay />} />
 
       <Route path="/products" element={<Products />} />
       <Route path="/merchant/dashboard" element={<ShopDashboard />} />

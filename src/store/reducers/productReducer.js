@@ -53,27 +53,37 @@ export const fetchProducts = createAsyncThunk(
 );
 
 // Async thunk - Featured productlari al (top discounts)
+// productReducer.js - Console log-ları azalt
 export const fetchFeaturedProducts = createAsyncThunk(
   "products/fetchFeaturedProducts",
   async (_, { rejectWithValue }) => {
     try {
-      console.log("🌟 Fetching featured products...");
-
-      const response = await axios.get(`${apiURL}/products/top-discounts`, {
-        headers: {
-          "Content-Type": "application/json",
+      // Müxtəlif parametrlər sınayın
+      const { data } = await axios.get(`${apiURL}/products`, {
+        params: {
+          page: 0,
+          size: 20, // ✅ 8 əvəzinə 20
+          sort: "createdAt,desc",
+          // isFeatured: true kənarlaşdırın - backend dəstəkləməyə bilər
         },
       });
 
-      console.log("⭐ Featured products response:", response.data);
+      // Müxtəlif yollarla data çıxarın
+      const products =
+        data?.data?.content ||
+        data?.content ||
+        data?.data ||
+        data?.products ||
+        data ||
+        [];
 
-      if (response.data.status === "OK" && response.data.data) {
-        return response.data.data.content;
-      }
+      console.log("🔍 Full API Response:", data);
+      console.log("🔍 Extracted products:", products);
+      console.log("🔍 Products count:", products.length);
 
-      throw new Error("Invalid response format");
+      return Array.isArray(products) ? products : [];
     } catch (error) {
-      console.error("❌ Error fetching featured products:", error);
+      console.error("❌ Featured products fetch error:", error);
       return rejectWithValue(
         error.response?.data?.message || "Failed to fetch featured products"
       );

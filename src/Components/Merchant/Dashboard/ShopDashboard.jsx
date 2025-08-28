@@ -255,6 +255,7 @@ const AddProductModal = memo(
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
+    const [error, setError] = useState(false);
 
     const handleImageChange = useCallback((e) => {
       const file = e.target.files[0];
@@ -303,7 +304,7 @@ const AddProductModal = memo(
         return response.data;
       } catch (error) {
         console.error("Error uploading image:", error);
-        alert("Failed to upload image. Please try again.");
+        setError("Failed to upload image. Please try again.");
         throw error;
       } finally {
         setIsUploading(false);
@@ -330,7 +331,7 @@ const AddProductModal = memo(
         onClose();
       } catch (error) {
         console.error("Error submitting form with image:", error);
-        alert("Failed to add product. Please try again.");
+        setError("Failed to add product. Please try again.");
       }
     };
 

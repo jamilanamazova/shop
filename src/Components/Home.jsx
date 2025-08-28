@@ -14,9 +14,17 @@ const ProductShowCase = memo(() => {
     featuredProducts,
     featuredLoading,
     featuredError,
+    shouldShowNotFound,
     loadFeaturedProducts,
   } = useProducts();
   const { addToCart, isItemInCart, getItemQuantity } = useCart();
+
+  console.log("🏠 ProductShowCase render:", {
+    featuredProducts: featuredProducts?.length,
+    featuredLoading,
+    featuredError,
+    shouldShowNotFound,
+  });
 
   useEffect(() => {
     if (featuredProducts.length === 0 && !featuredLoading) {
@@ -83,7 +91,12 @@ const ProductShowCase = memo(() => {
     );
   }
 
-  if (!featuredProducts || featuredProducts.length === 0) {
+  if (
+    shouldShowNotFound ||
+    !featuredProducts ||
+    featuredProducts.length === 0
+  ) {
+    console.log("📭 Showing not found state");
     return (
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4">
@@ -93,17 +106,24 @@ const ProductShowCase = memo(() => {
             </h2>
             <div className="w-24 h-1 bg-emerald-600 mx-auto rounded-full"></div>
           </div>
-
           <div className="text-center py-20">
             <i className="fa-solid fa-box text-5xl text-gray-300 mb-4"></i>
-            <p className="text-gray-600 text-lg">
+            <p className="text-gray-600 text-lg mb-4">
               No featured products available at the moment
             </p>
+            <button
+              onClick={() => (window.location.href = "/products")}
+              className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-emerald-700 transition"
+            >
+              Browse All Products
+            </button>
           </div>
         </div>
       </section>
     );
   }
+
+  console.log("✅ Showing featured products:", featuredProducts?.length);
 
   return (
     <section className="py-16 bg-gray-50">

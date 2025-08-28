@@ -6,7 +6,7 @@ import {
   removeFromLocalCart,
   updateLocalCartQuantity,
   clearLocalCart,
-  fetchCart,
+  fetchCart, // varsa saxlayın, yoxdursa silin
   cacheProductDetails,
   clearError,
   selectCartItems,
@@ -38,18 +38,27 @@ export const useCart = () => {
   const isCartOpen = useSelector(selectIsCartOpen);
 
   const addToCart = useCallback(
-    (productId, quantity = 1, productData = null) => {
+    async (productId, quantity = 1, productData = null) => {
       const token = localStorage.getItem("accessToken");
 
       if (token) {
-        dispatch(addProductToCart({ productId, quantity }));
+        const action = await dispatch(
+          addProductToCart({ productId, quantity, productData })
+        );
+
+        // Thunk fallback verdiyində və ya reject olduqda local-a əlavə et
+        if (
+          addProductToCart.rejected.match(action) ||
+          action?.payload?.fallbackToLocal
+        ) {
+          dispatch(addToLocalCart({ productId, quantity, productData }));
+        }
       } else {
         dispatch(addToLocalCart({ productId, quantity, productData }));
       }
 
       if (productData) {
         dispatch(cacheProductDetails({ productId, productData }));
-
         dispatch(showCartSuccess(productData));
       }
     },
@@ -74,38 +83,49 @@ export const useCart = () => {
 
   const removeFromCart = useCallback(
     (productId) => {
-      if (isLocal) {
-        dispatch(removeFromLocalCart({ productId }));
-      } else {
-        console.log("Backend remove api call needed");
-      }
+      dispatch(removeFromLocalCart({ productId }));
     },
-    [dispatch, isLocal]
+    [dispatch]
+  );
+
+  const removeProductFromCart = useCallback(
+    (productId) => {
+      removeFromCart(productId);
+    },
+    [removeFromCart]
   );
 
   const updateQuantity = useCallback(
     (productId, quantity) => {
-      if (isLocal) {
-        dispatch(updateLocalCartQuantity({ productId, quantity }));
-      } else {
-        // Backend update API çağırışı (henüz implement edilməyib)
-        console.log("Backend update API call needed");
-      }
+      dispatch(updateLocalCartQuantity({ productId, quantity }));
     },
-    [dispatch, isLocal]
+    [dispatch]
+  );
+
+  const increaseProductQuantity = useCallback(
+    (productId) => {
+      const item = cartItems.find((i) => i.productId === productId);
+      if (item) updateQuantity(productId, item.quantity + 1);
+    },
+    [cartItems, updateQuantity]
+  );
+
+  const decreaseProductQuantity = useCallback(
+    (productId) => {
+      const item = cartItems.find((i) => i.productId === productId);
+      if (item && item.quantity > 1)
+        updateQuantity(productId, item.quantity - 1);
+      else if (item) removeFromCart(productId);
+    },
+    [cartItems, updateQuantity, removeFromCart]
   );
 
   const clearCart = useCallback(() => {
-    if (isLocal) {
-      dispatch(clearLocalCart());
-    } else {
-      // Backend clear API çağırışı (henüz implement edilməyib)
-      console.log("Backend clear API call needed");
-    }
-  }, [dispatch, isLocal]);
+    dispatch(clearLocalCart());
+  }, [dispatch]);
 
   const refreshCart = useCallback(() => {
-    dispatch(fetchCart());
+    if (typeof fetchCart === "function") dispatch(fetchCart());
   }, [dispatch]);
 
   const clearCartError = useCallback(() => {
@@ -113,24 +133,18 @@ export const useCart = () => {
   }, [dispatch]);
 
   const getItemQuantity = useCallback(
-    (productId) => {
-      const item = cartItems.find((item) => item.productId === productId);
-      return item ? item.quantity : 0;
-    },
+    (productId) =>
+      cartItems.find((i) => i.productId === productId)?.quantity || 0,
     [cartItems]
   );
 
   const isItemInCart = useCallback(
-    (productId) => {
-      return cartItems.some((item) => item.productId === productId);
-    },
+    (productId) => cartItems.some((i) => i.productId === productId),
     [cartItems]
   );
 
   const getCartItemById = useCallback(
-    (productId) => {
-      return cartItems.find((item) => item.productId === productId);
-    },
+    (productId) => cartItems.find((i) => i.productId === productId),
     [cartItems]
   );
 
@@ -145,6 +159,8 @@ export const useCart = () => {
     addToCart,
     removeFromCart,
     updateQuantity,
+    increaseProductQuantity,
+    decreaseProductQuantity,
     clearCart,
     refreshCart,
     clearCartError,
@@ -154,6 +170,7 @@ export const useCart = () => {
     isCartOpen,
 
     hideSuccessMessage,
+    removeProductFromCart,
     toggleCart,
     openCart,
     closeCart,

@@ -5,50 +5,30 @@ const apiUrl = "https://shopery-api-staging-61f06384c4d8.herokuapp.com/api/v1";
 
 export const addProductToCart = createAsyncThunk(
   "cart/addProductToCart",
-  async ({ productId, quantity = 1 }, { rejectWithValue }) => {
+  async (
+    { productId, quantity = 1, productData = null },
+    { dispatch, rejectWithValue }
+  ) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      if (!token) {
-        return { productId, quantity, isLocal: true };
+      const url = `${apiUrl}/users/me/cart/${productId}`; // əgər API başqa cürdürsə burada düzəlt
+      const { data } = await axios.post(url, { quantity });
+      // Backend uğurlu olarsa UI-da local-a ehtiyac yoxdur
+      return { ok: true, data };
+    } catch (err) {
+      const status = err?.response?.status;
+      // Auth və ya conflict → local-a fallback
+      if (status === 401 || status === 403 || status === 409) {
+        dispatch(
+        addToLocalCart({
+            productId,
+            quantity,
+            productData: productData || null,
+          })
+        );
+        // UI-ya uğurlu kimi bildirmək üçün xüsusi bayraq
+        return { ok: false, fallbackToLocal: true };
       }
-
-      console.log("🛒 Adding product to backend cart:", {
-        productId,
-        quantity,
-      });
-
-      const response = await axios.post(
-        `${apiUrl}/users/me/cart/${productId}`,
-        { quantity },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      console.log("product added to backend cart: ", response.data);
-
-      if (response.data.status === "OK") {
-        return {
-          productId,
-          quantity,
-          cartData: response.data.data,
-          isLocal: false,
-        };
-      }
-
-      throw new Error("Failed to add to cart");
-    } catch (error) {
-      console.error("❌ Error adding to cart:", error);
-
-      if (error.response?.status === 401 || error.response?.status === 403) {
-        return { productId, quantity, isLocal: true };
-      }
-
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to add to cart"
-      );
+      return rejectWithValue(err?.response?.data || "Cart add failed");
     }
   }
 );
@@ -88,22 +68,43 @@ export const fetchCart = createAsyncThunk(
   }
 );
 
+const EMPTY_OBJ = Object.freeze({});
+
 const initialState = {
+  isLocal: true,
   localItems: [],
   localTotalPrice: 0,
+  productDetailsCache: {},
+
+  isCartOpen: false,
+  showSuccess: false,
+  lastAddedItem: null,
 
   backendItems: [],
   backendTotalPrice: 0,
 
   loading: false,
   error: null,
-  isLocal: true,
+};
 
-  showSuccessMessage: false,
-  lastAddedItem: null,
-  isCartOpen: false,
+const priceFrom = (item, details) => {
+  return Number(
+    item?.price ??
+      item?.currentPrice ??
+      item?.productData?.currentPrice ??
+      item?.productData?.price ??
+      details?.currentPrice ??
+      details?.price ??
+      0
+  );
+};
 
-  productDetails: {},
+const recalcLocal = (state) => {
+  state.localTotalPrice = state.localItems.reduce((sum, it) => {
+    const d = state.productDetailsCache[it.productId] || EMPTY_OBJ;
+    const p = priceFrom(it, d);
+    return sum + p * Number(it.quantity || 0);
+  }, 0);
 };
 
 const cartSlice = createSlice({
@@ -111,160 +112,77 @@ const cartSlice = createSlice({
   initialState,
   reducers: {
     addToLocalCart: (state, action) => {
-      const { productId, quantity = 1, productData } = action.payload;
-
-      console.log("Adding to local cart: ", { productId, quantity });
-
-      const existingItem = state.localItems.find(
-        (item) => item.productId === productId
-      );
-      if (existingItem) {
-        existingItem.quantity += quantity;
-        console.log("updated quantity: ", existingItem.quantity);
+      const { productId, quantity = 1, productData = null } = action.payload;
+      const idx = state.localItems.findIndex((x) => x.productId === productId);
+      if (idx > -1) {
+        state.localItems[idx].quantity += quantity;
       } else {
         state.localItems.push({
           productId,
           quantity,
-          addedAt: new Date().toISOString(),
           productData: productData || null,
         });
-        console.log("added new item to local cart");
       }
-
       if (productData) {
-        state.productDetails[productId] = productData;
+        state.productDetailsCache[productId] = productData;
       }
-
-      cartSlice.caseReducers.recalculateLocalTotal(state);
-      state.showSuccessMessage = true;
-      state.lastAddedItem = action.payload.productData;
+      state.lastAddedItem = productData || null;
+      state.showSuccess = Boolean(productData);
+      recalcLocal(state);
     },
-
     removeFromLocalCart: (state, action) => {
       const { productId } = action.payload;
-      console.log("removing from local cart", productId);
-
       state.localItems = state.localItems.filter(
-        (item) => item.productId !== productId
+        (x) => x.productId !== productId
       );
-      cartSlice.caseReducers.recalculateLocalTotal(state);
+      recalcLocal(state);
     },
-
     updateLocalCartQuantity: (state, action) => {
       const { productId, quantity } = action.payload;
-
-      const item = state.localItems.find(
-        (item) => item.productId === productId
-      );
-
-      if (item) {
-        if (quantity <= 0) {
-          state.localItems = state.localItems.filter(
-            (item) => item.productId !== productId
-          );
-        } else {
-          item.quantity = quantity;
-        }
-      }
-      cartSlice.caseReducers.recalculateLocalTotal(state);
+      const it = state.localItems.find((x) => x.productId === productId);
+      if (it) it.quantity = Math.max(1, Number(quantity || 1));
+      recalcLocal(state);
     },
-
     clearLocalCart: (state) => {
       state.localItems = [];
       state.localTotalPrice = 0;
     },
-
-    recalculateLocalTotal: (state) => {
-      state.localTotalPrice = state.localItems.reduce((total, item) => {
-        const productPrice =
-          state.productDetails[item.productId]?.currentPrice || 0;
-        return total + productPrice * item.quantity;
-      }, 0);
-    },
-
-    setCartMode: (state, action) => {
-      state.isLocal = action.payload;
-    },
-
-    mergeLocalCartToBackend: (state) => {
-      // Login olduqda local cart-ı backend-ə merge et
-      // Bu action async thunk-da işlənəcək
-      console.log("🔄 Merging local cart to backend...");
-    },
-
     cacheProductDetails: (state, action) => {
       const { productId, productData } = action.payload;
-      state.productDetails[productId] = productData;
+      state.productDetailsCache[productId] = productData;
+      recalcLocal(state);
     },
-
-    clearError: (state) => {
-      state.error = null;
-    },
-
     showCartSuccess: (state, action) => {
-      state.showSuccessMessage = true;
-      state.lastAddedItem = action.payload;
+      state.showSuccess = true;
+      state.lastAddedItem = action.payload || null;
     },
-
     hideCartSuccess: (state) => {
-      state.showSuccessMessage = false;
+      state.showSuccess = false;
       state.lastAddedItem = null;
     },
-
     toggleCartSidebar: (state) => {
       state.isCartOpen = !state.isCartOpen;
     },
-
     setCartOpen: (state, action) => {
-      state.isCartOpen = action.payload;
+      state.isCartOpen = Boolean(action.payload);
     },
+    clearError: (state) => {
+      state.error = null;
+    },
+    // ...other reducers if needed...
   },
   extraReducers: (builder) => {
     builder
       .addCase(addProductToCart.pending, (state) => {
         state.loading = true;
-        state.error = null;
       })
       .addCase(addProductToCart.fulfilled, (state, action) => {
         state.loading = false;
-
-        const { productId, quantity, cartData, isLocal } = action.payload;
-
-        if (isLocal) {
-          cartSlice.caseReducers.addToLocalCart(state, {
-            payload: { productId, quantity },
-          });
-        } else {
-          state.backendItems = cartData?.items || [];
-          state.backendTotalPrice = cartData?.totalPrice || 0;
-          state.isLocal = false;
-        }
-        state.showSuccessMessage = true;
+        // Backend cart update (opsional)
       })
       .addCase(addProductToCart.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Failed to add product to cart";
-      })
-      .addCase(fetchCart.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(fetchCart.fulfilled, (state, action) => {
-        state.loading = false;
-
-        const { cartData, isLocal } = action.payload;
-
-        if (isLocal) {
-          state.isLocal = true;
-        } else {
-          state.backendItems = cartData?.items || [];
-          state.backendTotalPrice = cartData?.totalPrice || 0;
-          state.isLocal = false;
-        }
-      })
-      .addCase(fetchCart.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload || "Failed to fetch cart";
-        state.isLocal = true;
+        state.error = action.payload || "Cart error";
       });
   },
 });
@@ -285,22 +203,34 @@ export const {
   setCartOpen,
 } = cartSlice.actions;
 
-export default cartSlice.reducer;
+export const selectProductDetailsCache = (state) =>
+  state.cart?.productDetailsCache || EMPTY_OBJ;
+
+export const selectIsLocalCart = (state) => Boolean(state.cart?.isLocal);
 
 export const selectCartItems = (state) =>
-  state.cart.isLocal ? state.cart.localItems : state.cart.backendItems;
+  state.cart?.isLocal
+    ? state.cart?.localItems || []
+    : state.cart?.backendItems || [];
 
 export const selectCartTotal = (state) =>
-  state.cart.isLocal
-    ? state.cart.localTotalPrice
-    : state.cart.backendTotalPrice;
-export const selectCartItemCount = (state) =>
-  selectCartItems(state).reduce((total, item) => total + item.quantity, 0);
+  Number(
+    state.cart?.isLocal
+      ? state.cart?.localTotalPrice || 0
+      : state.cart?.backendTotalPrice || 0
+  );
 
-export const selectCartLoading = (state) => state.cart.loading;
-export const selectCartError = (state) => state.cart.error;
-export const selectIsLocalCart = (state) => state.cart.isLocal;
+export const selectCartItemCount = (state) =>
+  (selectCartItems(state) || []).reduce(
+    (t, it) => t + Number(it?.quantity || 0),
+    0
+  );
+
+export const selectCartLoading = (state) => Boolean(state.cart?.loading);
+export const selectCartError = (state) => state.cart?.error || null;
+export const selectIsCartOpen = (state) => Boolean(state.cart?.isCartOpen);
 export const selectShowSuccessMessage = (state) =>
-  state.cart.showSuccessMessage;
-export const selectLastAddedItem = (state) => state.cart.lastAddedItem;
-export const selectIsCartOpen = (state) => state.cart.isCartOpen;
+  Boolean(state.cart?.showSuccess);
+export const selectLastAddedItem = (state) => state.cart?.lastAddedItem || null;
+
+export default cartSlice.reducer;
