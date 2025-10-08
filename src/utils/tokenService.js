@@ -9,6 +9,9 @@ export const getRefreshToken = () => localStorage.getItem("refreshToken");
 export const setTokens = (accessToken, refreshToken) => {
   localStorage.setItem("accessToken", accessToken);
   localStorage.setItem("refreshToken", refreshToken);
+
+  // Custom event dispatch for same-tab auth state changes
+  window.dispatchEvent(new CustomEvent("authStateChanged"));
 };
 
 export const clearTokens = () => {
@@ -17,6 +20,9 @@ export const clearTokens = () => {
   localStorage.removeItem("currentUser");
   localStorage.removeItem("merchantAccessToken");
   localStorage.removeItem("merchantRefreshToken");
+
+  // Custom event dispatch for same-tab auth state changes
+  window.dispatchEvent(new CustomEvent("authStateChanged"));
 };
 
 // Token-in expire olub-olmadığını yoxla
@@ -102,7 +108,11 @@ export const refreshAccessToken = async () => {
 
     // Refresh fail olsa logout et
     clearTokens();
-    window.location.href = "/signin";
+
+    // Browser history-də həlqə yaratmamaq üçün replace istifadə et
+    if (window.location.pathname !== "/signin") {
+      window.location.replace("/signin");
+    }
 
     throw error;
   }

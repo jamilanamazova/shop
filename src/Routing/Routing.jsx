@@ -21,8 +21,7 @@ import CategoryProducts from "../Components/Products/CategoryProducts";
 import CartDisplay from "../Components/Cart/CartDisplay";
 
 const Routing = () => {
-  const user = localStorage.getItem("appMode");
-  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const userMode = localStorage.getItem("appMode");
   return (
     <Routes>
       <Route path="/" element={<Home />} />
@@ -62,11 +61,7 @@ const Routing = () => {
       <Route path="/category/:categorySlug" element={<CategoryProducts />} />
 
       <Route
-        path={`${
-          currentUser || user === "customer"
-            ? "/customer/profile"
-            : "/merchant/profile"
-        }`}
+        path="/profile"
         element={
           <ProtectedRoute>
             <ProfileDashboard />

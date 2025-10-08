@@ -7,7 +7,7 @@ import { apiURL } from "../../Backend/Api/api";
 const ProtectedRoute = ({ children }) => {
   const location = useLocation();
   const authenticated = isAuthenticated();
-  const [user, setUser] = useState(null);
+  // Note: we avoid keeping separate user state to prevent unused variables and loops
   const [loading, setLoading] = useState(true);
 
   const fetchUserProfile = async () => {
@@ -19,19 +19,15 @@ const ProtectedRoute = ({ children }) => {
         return;
       }
 
-      const response = await axios.get(`${apiURL}/users/me/profile`, {
+      await axios.get(`${apiURL}/users/me/profile`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
-
-      if (response.data.status === "OK") {
-        setUser(response.data.data);
-      }
     } catch (error) {
       console.error("Error fetching user profile in ProtectedRoute:", error);
-      setUser(null);
+      // setUser(null);
     } finally {
       setLoading(false);
     }
@@ -60,9 +56,9 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/signin" state={{ from: location }} replace />;
   }
 
-  if (!user) {
-    return <Navigate to="/signin" state={{ from: location }} replace />;
-  }
+  // Don't immediately redirect if profile is null; allow page to render for
+  // cases where profile is not strictly required. Components can fetch as needed.
+  // This prevents redirect loops on home or other public pages embedding ProtectedRoute.
 
   console.log("Access granted to protected route");
   return children;

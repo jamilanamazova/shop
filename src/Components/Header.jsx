@@ -11,7 +11,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { isAuthenticated, getCurrentUser, logout } from "../utils/auth";
 import axios from "axios";
 import { apiURL } from "../Backend/Api/api";
-import { hasMerchantAccount, setAppMode } from "../utils/roleMode";
+import { hasMerchantAccount, setAppMode, getAppMode } from "../utils/roleMode";
 import useCart from "../hooks/useCart";
 
 const Header = memo(() => {
@@ -25,8 +25,6 @@ const Header = memo(() => {
   const [openSideBar, setOpenSideBar] = useState(false);
 
   const { itemCount, toggleCart } = useCart();
-
-  const userMode = localStorage.getItem("appMode");
 
   const hamburgerMenuRef = useRef(null);
   const navigate = useNavigate();
@@ -123,10 +121,18 @@ const Header = memo(() => {
   const handleGetUserProfile = useCallback(async () => {
     if (currentUser) return;
     try {
-      const token = localStorage.getItem("accessToken");
+      const mode = getAppMode();
+      const customerAT = localStorage.getItem("accessToken");
+      const merchantAT = localStorage.getItem("merchantAccessToken");
+      const token = mode === "merchant" ? merchantAT : customerAT;
 
+      // On public pages, don't redirect if token is missing; just skip fetch
       if (!token) {
-        navigate("/signin");
+        console.log(
+          "[Header] No token available for profile fetch (mode:",
+          mode,
+          ")"
+        );
         return;
       }
 
@@ -143,7 +149,7 @@ const Header = memo(() => {
     } catch (error) {
       console.error("Error fetching user profile:", error);
     }
-  }, [currentUser, navigate]);
+  }, [currentUser]);
 
   const handleLogout = useCallback(() => {
     logout();
@@ -415,11 +421,7 @@ const Header = memo(() => {
                       Hi, {currentUser?.firstName || user?.fullName}!
                     </span>
                     <Link
-                      to={`${
-                        currentUser || userMode === "customer"
-                          ? "/customer/profile"
-                          : "/merchant/profile"
-                      }`}
+                      to={"/profile"}
                       className="p-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all duration-300"
                       title="Profile"
                     >
@@ -435,11 +437,7 @@ const Header = memo(() => {
 
                   <div className="flex md:hidden items-center gap-2">
                     <Link
-                      to={`${
-                        currentUser || userMode === "customer"
-                          ? "/customer/profile"
-                          : "/merchant/profile"
-                      }`}
+                      to={"/profile"}
                       className="p-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all duration-300"
                       title="Profile"
                     >
@@ -603,11 +601,7 @@ const Header = memo(() => {
                 </div>
               </div>
               <Link
-                to={`${
-                  currentUser || userMode === "customer"
-                    ? "/customer/profile"
-                    : "/merchant/profile"
-                }`}
+                to={"/profile"}
                 className="flex items-center space-x-3 py-2 hover:bg-gray-100 rounded px-2 transition-colors"
                 onClick={closeSideBarAndNavigate}
               >

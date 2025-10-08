@@ -59,16 +59,47 @@ const Login = () => {
       console.log("data.refreshToken:", data.refreshToken);
       console.log("data.user:", data.user);
       console.log("data.data:", data.data);
+
+      if (data.data) {
+        console.log("=== NESTED DATA STRUCTURE ===");
+        console.log("data.data keys:", Object.keys(data.data));
+        console.log("data.data.accessToken:", data.data.accessToken);
+        console.log("data.data.refreshToken:", data.data.refreshToken);
+        console.log("data.data.user:", data.data.user);
+        console.log("Full data.data:", JSON.stringify(data.data, null, 2));
+      }
       console.log("========================");
 
       let accessToken, refreshToken, userData;
 
+      // Try different response structures
       if (data.data && data.data.accessToken) {
+        // Structure: { data: { accessToken, refreshToken, user } }
         accessToken = data.data.accessToken;
         refreshToken = data.data.refreshToken;
         userData = data.data.user;
+        console.log("📋 Using nested data structure");
+      } else if (data.accessToken) {
+        // Structure: { accessToken, refreshToken, user }
+        accessToken = data.accessToken;
+        refreshToken = data.refreshToken;
+        userData = data.user;
+        console.log("📋 Using flat structure");
+      } else if (data.data) {
+        // Check if tokens are deeper in the structure
+        console.log("🔍 Checking data.data structure:", data.data);
+        const innerData = data.data;
+
+        // Look for different possible field names
+        accessToken =
+          innerData.accessToken || innerData.access_token || innerData.token;
+        refreshToken = innerData.refreshToken || innerData.refresh_token;
+        userData = innerData.user || innerData.userData || innerData.userInfo;
+
+        console.log("📋 Using deep structure extraction");
       } else {
         console.log("❌ Unknown response structure");
+        console.log("Available keys in data:", Object.keys(data));
         setError("Login response format error. Please try again.");
         return;
       }
@@ -85,26 +116,57 @@ const Login = () => {
         return;
       }
 
+      console.log("💾 Setting tokens...");
       setTokens(accessToken, refreshToken);
+      console.log("✅ Tokens set successfully");
 
+      // Handle user data - create default if not provided
+      let userToSave;
       if (userData) {
-        const userWithEmailVerified = {
+        userToSave = {
           ...userData,
           isEmailVerified: userData.isEmailVerified ?? true,
         };
-
-        localStorage.setItem(
-          "currentUser",
-          JSON.stringify(userWithEmailVerified)
+        console.log("💾 Using provided user data");
+      } else {
+        // Create minimal user data if not provided by API
+        userToSave = {
+          email: email,
+          isEmailVerified: true,
+          // Add any other minimal required fields
+        };
+        console.log(
+          "💾 Created default user data (API didn't provide user info)"
         );
-        console.log("User data saved: ", userWithEmailVerified);
       }
 
+      console.log("💾 Saving user data to localStorage...");
+      localStorage.setItem("currentUser", JSON.stringify(userToSave));
+      console.log("✅ User data saved: ", userToSave);
+
+      // Verify tokens are actually saved
+      const savedAccessToken = localStorage.getItem("accessToken");
+      const savedUser = localStorage.getItem("currentUser");
+      console.log(
+        "🔍 Verification - Access Token saved:",
+        savedAccessToken ? "✅" : "❌"
+      );
+      console.log(
+        "🔍 Verification - User data saved:",
+        savedUser ? "✅" : "❌"
+      );
+
+      // LocalStorage-ə məlumatların tam yazılmasını təmin et
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      console.log("✅ Login completed, setting success modal");
       setShowSuccessModal(true);
 
       setTimeout(() => {
+        console.log("⏭️ Redirecting to home page...");
+        // Use window.location to ensure complete page refresh and avoid loops
         window.location.href = "/";
-      }, 2000);
+      }, 1500);
     } catch (error) {
       console.error("❌ LOGIN ERROR:", error);
 
