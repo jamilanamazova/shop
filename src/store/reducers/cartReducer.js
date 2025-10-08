@@ -19,12 +19,13 @@ export const addProductToCart = createAsyncThunk(
       // Auth və ya conflict → local-a fallback
       if (status === 401 || status === 403 || status === 409) {
         dispatch(
-        addToLocalCart({
+          addToLocalCart({
             productId,
             quantity,
             productData: productData || null,
           })
         );
+        console.log("backend'e elave olunmadi lokala elave edirik");
         // UI-ya uğurlu kimi bildirmək üçün xüsusi bayraq
         return { ok: false, fallbackToLocal: true };
       }

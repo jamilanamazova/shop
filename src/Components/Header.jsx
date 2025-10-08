@@ -26,8 +26,6 @@ const Header = memo(() => {
 
   const { itemCount, toggleCart } = useCart();
 
-  const userMode = localStorage.getItem("appMode");
-
   const hamburgerMenuRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -123,7 +121,7 @@ const Header = memo(() => {
   const handleGetUserProfile = useCallback(async () => {
     if (currentUser) return;
     try {
-      const token = localStorage.getItem("accessToken");
+      const token = localStorage.getItem("merchantAccessToken");
 
       if (!token) {
         navigate("/signin");
@@ -415,11 +413,7 @@ const Header = memo(() => {
                       Hi, {currentUser?.firstName || user?.fullName}!
                     </span>
                     <Link
-                      to={`${
-                        currentUser || userMode === "customer"
-                          ? "/customer/profile"
-                          : "/merchant/profile"
-                      }`}
+                      to={"/profile"}
                       className="p-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all duration-300"
                       title="Profile"
                     >
@@ -435,11 +429,7 @@ const Header = memo(() => {
 
                   <div className="flex md:hidden items-center gap-2">
                     <Link
-                      to={`${
-                        currentUser || userMode === "customer"
-                          ? "/customer/profile"
-                          : "/merchant/profile"
-                      }`}
+                      to={"/profile"}
                       className="p-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all duration-300"
                       title="Profile"
                     >
@@ -603,11 +593,7 @@ const Header = memo(() => {
                 </div>
               </div>
               <Link
-                to={`${
-                  currentUser || userMode === "customer"
-                    ? "/customer/profile"
-                    : "/merchant/profile"
-                }`}
+                to={"/profile"}
                 className="flex items-center space-x-3 py-2 hover:bg-gray-100 rounded px-2 transition-colors"
                 onClick={closeSideBarAndNavigate}
               >

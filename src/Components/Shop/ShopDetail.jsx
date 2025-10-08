@@ -9,6 +9,8 @@ import React, {
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { apiURL } from "../../Backend/Api/api";
+import useCart from "../../hooks/useCart";
+import useProducts from "../../hooks/useProducts";
 
 const Header = lazy(() => import("../Header"));
 const Footer = lazy(() => import("../Footer"));
@@ -18,40 +20,74 @@ const LoadingSpinner = memo(() => (
 ));
 LoadingSpinner.displayName = "LoadingSpinner";
 
-const ProductCard = memo(({ product }) => (
-  <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-    <div className="flex items-center justify-center bg-gray-200 w-full aspect-[4/3] rounded-lg overflow-hidden">
-      {product.imageUrl ? (
-        <img
-          src={product.imageUrl}
-          alt={product.productName}
-          className="w-full h-full object-cover object-center"
-          loading="lazy"
-        />
-      ) : (
-        <div className="flex items-center justify-center w-full h-full">
-          <i className="fa-solid fa-image text-3xl text-gray-400"></i>
+const ProductCard = memo(({ product, onAddToCart, isInCart, cartQuantity }) => {
+  const [imageError, setImageError] = useState(false);
+
+  const handleImageError = useCallback(() => {
+    setImageError(true);
+  }, []);
+
+  const handleAddClick = useCallback(
+    (e) => {
+      e.preventDefault();
+      onAddToCart(product);
+    },
+    [onAddToCart, product]
+  );
+  return (
+    <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+      <div className="flex items-center justify-center bg-gray-200 w-full aspect-[4/3] rounded-lg overflow-hidden">
+        {!imageError && product.imageUrl ? (
+          <img
+            src={product.imageUrl}
+            alt={product.productName}
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+            onError={handleImageError}
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gray-100">
+            <i className="fa-solid fa-image text-4xl text-gray-300"></i>
+          </div>
+        )}
+      </div>
+      <div className="p-4">
+        <h3 className="font-bold text-lg text-gray-800 mb-2 truncate">
+          {product.productName}
+        </h3>
+        <p className="text-gray-600 text-sm mb-3 h-12 overflow-hidden">
+          {product.description}
+        </p>
+        <div className="flex items-center justify-between">
+          <div className="text-xl font-bold text-emerald-600">
+            ${product.currentPrice}
+          </div>
+          <button
+            onClick={handleAddClick}
+            disabled={isInCart}
+            className={`py-3 px-4 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
+              isInCart
+                ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+                : "bg-emerald-600 text-white hover:bg-emerald-700 transform hover:scale-105 shadow-lg"
+            }`}
+          >
+            {isInCart ? (
+              <>
+                <i className="fa-solid fa-check"></i>
+                In Cart ({cartQuantity})
+              </>
+            ) : (
+              <>
+                <i className="fa-solid fa-cart-plus"></i>
+                Add to Cart
+              </>
+            )}
+          </button>
         </div>
-      )}
-    </div>
-    <div className="p-4">
-      <h3 className="font-bold text-lg text-gray-800 mb-2 truncate">
-        {product.productName}
-      </h3>
-      <p className="text-gray-600 text-sm mb-3 h-12 overflow-hidden">
-        {product.description}
-      </p>
-      <div className="flex items-center justify-between">
-        <div className="text-xl font-bold text-emerald-600">
-          ${product.currentPrice}
-        </div>
-        <button className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium">
-          Add to Cart
-        </button>
       </div>
     </div>
-  </div>
-));
+  );
+});
 ProductCard.displayName = "ProductCard";
 
 const ShopActions = memo(({ onAction }) => (
@@ -126,6 +162,8 @@ const ShopDetail = memo(() => {
   const [search, setSearch] = useState("");
   const [filteredProducts, setFilteredProducts] = useState([]);
 
+  const { addToCart, isItemInCart, getItemQuantity } = useCart();
+
   const fetchShopData = useCallback(async () => {
     if (!shopId) {
       navigate("/shops");
@@ -157,6 +195,24 @@ const ShopDetail = memo(() => {
       setLoading(false);
     }
   }, [shopId, navigate]);
+
+  const handleAddToCart = useCallback(
+    (product, quantity = 1) => {
+      console.log("adding to cart from products page", product.productName);
+
+      addToCart(product.id, quantity, {
+        id: product.id,
+        productName: product.productName,
+        description: product.description,
+        currentPrice: product.currentPrice,
+        originalPrice: product.originalPrice,
+        imageUrl: product.imageUrl,
+        condition: product.condition,
+        category: product.category,
+      });
+    },
+    [addToCart]
+  );
 
   const handleShopAction = useCallback((action) => {
     console.log(`Shop action clicked: ${action}`);
@@ -386,7 +442,13 @@ const ShopDetail = memo(() => {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {filteredProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} />
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      onAddToCart={handleAddToCart}
+                      isInCart={isItemInCart(product.id)}
+                      cartQuantity={getItemQuantity(product.id)}
+                    />
                   ))}
                 </div>
               )}
