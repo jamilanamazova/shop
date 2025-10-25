@@ -121,10 +121,14 @@ const Header = memo(() => {
   const handleGetUserProfile = useCallback(async () => {
     if (currentUser) return;
     try {
+<<<<<<< HEAD
       const mode = getAppMode();
       const customerAT = localStorage.getItem("accessToken");
       const merchantAT = localStorage.getItem("merchantAccessToken");
       const token = mode === "merchant" ? merchantAT : customerAT;
+=======
+      const token = localStorage.getItem("merchantAccessToken");
+>>>>>>> 6223ec092713826922404f4b617ebb6d99daad5a
 
       // On public pages, don't redirect if token is missing; just skip fetch
       if (!token) {
