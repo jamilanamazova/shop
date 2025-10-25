@@ -240,12 +240,7 @@ const Header = memo(() => {
       >
         PRODUCTS
       </Link>
-      <Link
-        className="font-bold text-sm xl:text-base hover:text-gray-600 transition-colors"
-        to={"/customer/blog"}
-      >
-        BLOG
-      </Link>
+
       <Link
         className="font-bold text-sm xl:text-base hover:text-gray-600 transition-colors"
         to="/shops"
@@ -275,15 +270,7 @@ const Header = memo(() => {
           PRODUCTS
         </Link>
       </li>
-      <li>
-        <Link
-          to="/customer/blog"
-          className="font-bold text-lg hover:text-gray-600 transition-colors block py-2"
-          onClick={closeSideBarAndNavigate}
-        >
-          BLOG
-        </Link>
-      </li>
+
       <li>
         <Link
           to="/shops"
