@@ -6,7 +6,7 @@ import {
   removeFromLocalCart,
   updateLocalCartQuantity,
   clearLocalCart,
-  fetchCart, // varsa saxlayın, yoxdursa silin
+  fetchCart,
   cacheProductDetails,
   clearError,
   selectCartItems,

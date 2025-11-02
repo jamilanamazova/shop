@@ -16,11 +16,6 @@ import { isJwtExpired } from "../../../utils/jwt";
 const Header = lazy(() => import("../../Header"));
 const Footer = lazy(() => import("../../Footer"));
 
-const token = localStorage.getItem("merchantAccessToken");
-
-const expired = isJwtExpired(token);
-console.log("Token expired?", expired);
-
 // Performance optimizasiyası üçün product details cache
 const productDetailsCache = new Map();
 

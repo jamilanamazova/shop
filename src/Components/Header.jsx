@@ -11,7 +11,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { isAuthenticated, getCurrentUser, logout } from "../utils/auth";
 import axios from "axios";
 import { apiURL } from "../Backend/Api/api";
-import { hasMerchantAccount, setAppMode, getAppMode } from "../utils/roleMode";
+import { hasMerchantAccount, setAppMode } from "../utils/roleMode";
 import useCart from "../hooks/useCart";
 
 const Header = memo(() => {
@@ -31,6 +31,7 @@ const Header = memo(() => {
   const location = useLocation();
 
   const authenticated = useMemo(() => isAuthenticated(), []);
+
   const user = useMemo(() => getCurrentUser(), []);
   const hasMerchantAccess = useMemo(() => hasMerchantAccount(), []);
 
@@ -72,9 +73,17 @@ const Header = memo(() => {
       const token = localStorage.getItem("accessToken");
 
       if (!token) {
+        handleShowErrorMessage("Please sign in to become a merchant.");
         navigate("/signin");
         return;
       }
+
+      console.log("🏪 Attempting to become merchant...");
+      console.log("Token:", token ? "✅ Present" : "❌ Missing");
+      console.log(
+        "Token preview:",
+        token ? token.substring(0, 20) + "..." : "N/A"
+      );
 
       const response = await axios.post(
         `${apiURL}/users/me/be-merchant`,
@@ -84,9 +93,10 @@ const Header = memo(() => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
+          skipInterceptor: true,
         }
       );
-      console.log("Merchant response", response.data);
+      console.log("✅ Merchant response:", response.data);
 
       if (response.data.status === "OK" && response.data.data) {
         localStorage.setItem(
@@ -109,10 +119,27 @@ const Header = memo(() => {
         }, 1000);
       }
     } catch (error) {
-      console.error("Error becoming merchant:", error);
-      handleShowErrorMessage(
-        "Failed to activate merchant account. Please try again."
-      );
+      console.error("❌ Error becoming merchant:", error);
+      console.error("Error response:", error.response?.data);
+      console.error("Error status:", error.response?.status);
+
+      let errorMsg = "Failed to activate merchant account. Please try again.";
+
+      if (error.response?.status === 403) {
+        errorMsg =
+          error.response?.data?.message ||
+          "Access denied. Please verify your email or contact support.";
+      } else if (error.response?.status === 401) {
+        errorMsg = "Authentication failed. Please sign in again.";
+        setTimeout(() => {
+          logout();
+          navigate("/signin");
+        }, 2000);
+      } else if (error.response?.data?.message) {
+        errorMsg = error.response.data.message;
+      }
+
+      handleShowErrorMessage(errorMsg);
     } finally {
       setIsBecomingMerchant(false);
     }
@@ -121,9 +148,8 @@ const Header = memo(() => {
   const handleGetUserProfile = useCallback(async () => {
     if (currentUser) return;
     try {
-      const token = localStorage.getItem("merchantAccessToken");
+      const token = localStorage.getItem("accessToken");
 
-      // On public pages, don't redirect if token is missing; just skip fetch
       if (!token) {
         return;
       }
@@ -135,8 +161,10 @@ const Header = memo(() => {
         },
       });
 
-      if (response.data.status === "OK") {
+      if (response.data.status === "OK" && response.data.data) {
         setCurrentUser(response.data.data);
+      } else {
+        console.log(response.data);
       }
     } catch (error) {
       console.error("Error fetching user profile:", error);
@@ -146,6 +174,10 @@ const Header = memo(() => {
   const handleLogout = useCallback(() => {
     logout();
     window.location.href = "/";
+  }, []);
+
+  useEffect(() => {
+    console.log(JSON.parse(localStorage.getItem("currentUser")));
   }, []);
 
   const toggleSideBar = useCallback(() => {
@@ -217,6 +249,8 @@ const Header = memo(() => {
         document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [openSideBar]);
+
+  const appMode = localStorage.getItem("appMode");
 
   const NavigationLinks = memo(() => (
     <ul className="flex gap-8 xl:gap-12 items-center list-none">
@@ -365,11 +399,13 @@ const Header = memo(() => {
             </div>
 
             <div className="flex items-center gap-4">
-              {authenticated && (
-                <div className="hidden lg:block">
-                  <MerchantButton />
-                </div>
-              )}
+              {authenticated &&
+                appMode !==
+                  "merchant" && (
+                    <div className="hidden lg:block">
+                      <MerchantButton />
+                    </div>
+                  )}
 
               <div className="flex items-center gap-2">
                 <button className="p-3 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all duration-300">

@@ -58,6 +58,8 @@ const ProfileDashboard = () => {
   const navigate = useNavigate();
   const authenticated = isAuthenticated();
 
+  console.log(currentUser);
+
   const countries = [
     {
       value: "AZ",
@@ -116,7 +118,7 @@ const ProfileDashboard = () => {
   const validatePhone = (phone) => {
     if (!phone) return true;
 
-    const cleanPhone = phone.replace(/[\s\-\(\)]/g, "");
+    const cleanPhone = phone.replace(/[\s\-()]/g, "");
 
     const country = countries.find((c) => c.value === selectedCountry);
 
@@ -513,7 +515,7 @@ const ProfileDashboard = () => {
     const formatPhoneForAPI = (phone, countryCode) => {
       if (!phone) return phone;
 
-      const cleanPhone = phone.replace(/[\s\-\(\)]/g, "");
+      const cleanPhone = phone.replace(/[\s\-()]/g, "");
       const country = countries.find((c) => c.value === countryCode);
 
       if (cleanPhone.startsWith(country.code)) {
