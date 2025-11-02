@@ -399,13 +399,11 @@ const Header = memo(() => {
             </div>
 
             <div className="flex items-center gap-4">
-              {authenticated &&
-                appMode !==
-                  "merchant" && (
-                    <div className="hidden lg:block">
-                      <MerchantButton />
-                    </div>
-                  )}
+              {authenticated && appMode !== "merchant" && (
+                <div className="hidden lg:block">
+                  <MerchantButton />
+                </div>
+              )}
 
               <div className="flex items-center gap-2">
                 <button className="p-3 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all duration-300">
