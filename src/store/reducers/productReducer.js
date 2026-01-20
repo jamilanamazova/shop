@@ -6,14 +6,14 @@ import {
 } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const apiURL = "https://shopery-api-staging-61f06384c4d8.herokuapp.com/api/v1";
+import { apiURL } from "../../Backend/Api/api";
 
 // Async thunk - Bütün product-ları al
 export const fetchProducts = createAsyncThunk(
   "products/fetchProducts",
   async (
     { page = 0, size = 20, sort = "createdAt,desc" } = {},
-    { rejectWithValue }
+    { rejectWithValue },
   ) => {
     try {
       console.log("🔍 Fetching products:", { page, size, sort });
@@ -46,19 +46,16 @@ export const fetchProducts = createAsyncThunk(
     } catch (error) {
       console.error("❌ Error fetching products:", error);
       return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch products"
+        error.response?.data?.message || "Failed to fetch products",
       );
     }
-  }
+  },
 );
 
-// Async thunk - Featured productlari al (top discounts)
-// productReducer.js - Console log-ları azalt
 export const fetchFeaturedProducts = createAsyncThunk(
   "products/fetchFeaturedProducts",
   async (_, { rejectWithValue }) => {
     try {
-      // Müxtəlif parametrlər sınayın
       const { data } = await axios.get(`${apiURL}/products`, {
         params: {
           page: 0,
@@ -85,10 +82,10 @@ export const fetchFeaturedProducts = createAsyncThunk(
     } catch (error) {
       console.error("❌ Featured products fetch error:", error);
       return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch featured products"
+        error.response?.data?.message || "Failed to fetch featured products",
       );
     }
-  }
+  },
 );
 
 // Async thunk - Product details al
@@ -114,10 +111,10 @@ export const fetchProductDetails = createAsyncThunk(
     } catch (error) {
       console.error("❌ Error fetching product details:", error);
       return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch product details"
+        error.response?.data?.message || "Failed to fetch product details",
       );
     }
-  }
+  },
 );
 
 export const ensureDetailsForProducts = createAsyncThunk(
@@ -132,7 +129,7 @@ export const ensureDetailsForProducts = createAsyncThunk(
       // 6 paralel batch
       const chunk = (arr, size) =>
         Array.from({ length: Math.ceil(arr.length / size) }, (_, i) =>
-          arr.slice(i * size, i * size + size)
+          arr.slice(i * size, i * size + size),
         );
 
       const chunks = chunk(missing, 6);
@@ -145,7 +142,7 @@ export const ensureDetailsForProducts = createAsyncThunk(
               headers: { "Content-Type": "application/json" },
             })
             .then((res) => ({ id, ok: true, data: res.data?.data }))
-            .catch((err) => ({ id, ok: false, error: err }))
+            .catch((err) => ({ id, ok: false, error: err })),
         );
         const settled = await Promise.all(reqs);
         results.push(...settled.filter((r) => r.ok));
@@ -156,7 +153,7 @@ export const ensureDetailsForProducts = createAsyncThunk(
       console.error("❌ Error ensuring product details:", error);
       return rejectWithValue("Failed to fetch product details batch");
     }
-  }
+  },
 );
 
 const initialState = {
@@ -365,5 +362,5 @@ export const selectFilteredProducts = createSelector(
 
       return true;
     });
-  }
+  },
 );

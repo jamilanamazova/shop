@@ -1,16 +1,16 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const apiUrl = "https://shopery-api-staging-61f06384c4d8.herokuapp.com/api/v1";
+import { apiURL } from "../../Backend/Api/api";
 
 export const addProductToCart = createAsyncThunk(
   "cart/addProductToCart",
   async (
     { productId, quantity = 1, productData = null },
-    { dispatch, rejectWithValue }
+    { dispatch, rejectWithValue },
   ) => {
     try {
-      const url = `${apiUrl}/users/me/cart/${productId}`; // əgər API başqa cürdürsə burada düzəlt
+      const url = `${apiURL}/users/me/cart/${productId}`; // əgər API başqa cürdürsə burada düzəlt
       const { data } = await axios.post(url, { quantity });
       // Backend uğurlu olarsa UI-da local-a ehtiyac yoxdur
       return { ok: true, data };
@@ -23,7 +23,7 @@ export const addProductToCart = createAsyncThunk(
             productId,
             quantity,
             productData: productData || null,
-          })
+          }),
         );
         console.log("backend'e elave olunmadi lokala elave edirik");
         // UI-ya uğurlu kimi bildirmək üçün xüsusi bayraq
@@ -31,7 +31,7 @@ export const addProductToCart = createAsyncThunk(
       }
       return rejectWithValue(err?.response?.data || "Cart add failed");
     }
-  }
+  },
 );
 
 export const fetchCart = createAsyncThunk(
@@ -66,7 +66,7 @@ export const fetchCart = createAsyncThunk(
       // Backend error-sa, local cart istifadə et
       return { items: [], totalPrice: 0, isLocal: true };
     }
-  }
+  },
 );
 
 const EMPTY_OBJ = Object.freeze({});
@@ -96,7 +96,7 @@ const priceFrom = (item, details) => {
       item?.productData?.price ??
       details?.currentPrice ??
       details?.price ??
-      0
+      0,
   );
 };
 
@@ -134,7 +134,7 @@ const cartSlice = createSlice({
     removeFromLocalCart: (state, action) => {
       const { productId } = action.payload;
       state.localItems = state.localItems.filter(
-        (x) => x.productId !== productId
+        (x) => x.productId !== productId,
       );
       recalcLocal(state);
     },
@@ -218,13 +218,13 @@ export const selectCartTotal = (state) =>
   Number(
     state.cart?.isLocal
       ? state.cart?.localTotalPrice || 0
-      : state.cart?.backendTotalPrice || 0
+      : state.cart?.backendTotalPrice || 0,
   );
 
 export const selectCartItemCount = (state) =>
   (selectCartItems(state) || []).reduce(
     (t, it) => t + Number(it?.quantity || 0),
-    0
+    0,
   );
 
 export const selectCartLoading = (state) => Boolean(state.cart?.loading);

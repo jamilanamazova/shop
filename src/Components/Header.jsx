@@ -82,7 +82,7 @@ const Header = memo(() => {
       console.log("Token:", token ? "✅ Present" : "❌ Missing");
       console.log(
         "Token preview:",
-        token ? token.substring(0, 20) + "..." : "N/A"
+        token ? token.substring(0, 20) + "..." : "N/A",
       );
 
       const response = await axios.post(
@@ -94,18 +94,18 @@ const Header = memo(() => {
             "Content-Type": "application/json",
           },
           skipInterceptor: true,
-        }
+        },
       );
       console.log("✅ Merchant response:", response.data);
 
       if (response.data.status === "OK" && response.data.data) {
         localStorage.setItem(
           "merchantAccessToken",
-          response.data.data.accessToken
+          response.data.data.accessToken,
         );
         localStorage.setItem(
           "merchantRefreshToken",
-          response.data.data.refreshToken
+          response.data.data.refreshToken,
         );
 
         setAppMode("merchant");
