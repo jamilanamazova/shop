@@ -33,13 +33,6 @@ const Settings = () => {
 
   const navigate = useNavigate();
 
-  import("/src/utils/jwt.js").then(({ msUntilExpiry, formatTimeLeft }) => {
-    const at = localStorage.getItem("accessToken");
-    const rt = localStorage.getItem("refreshToken");
-    console.log("AT left:", formatTimeLeft(msUntilExpiry(at)));
-    console.log("RT left:", formatTimeLeft(msUntilExpiry(rt)));
-  });
-
   const authHeaders = () => ({
     Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
     "Content-Type": "application/json",

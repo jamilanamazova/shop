@@ -97,7 +97,7 @@ const ShopCard = memo(
         )}
       </div>
     );
-  }
+  },
 );
 ShopCard.displayName = "ShopCard";
 
@@ -149,7 +149,7 @@ const FilterSidebar = memo(
         const [field, direction] = e.target.value.split(",");
         onSortChange(field, direction);
       },
-      [onSortChange]
+      [onSortChange],
     );
 
     return (
@@ -230,7 +230,7 @@ const FilterSidebar = memo(
         </div>
       </div>
     );
-  }
+  },
 );
 FilterSidebar.displayName = "FilterSidebar";
 
@@ -298,7 +298,7 @@ const PaginationControls = memo(
         </div>
       </div>
     );
-  }
+  },
 );
 PaginationControls.displayName = "PaginationControls";
 
@@ -392,7 +392,7 @@ const CreateShopModal = memo(
         </div>
       </div>
     );
-  }
+  },
 );
 CreateShopModal.displayName = "CreateShopModal";
 
@@ -458,7 +458,6 @@ const Shops = memo(() => {
 
   const fetchUserShop = useCallback(async () => {
     if (!hasMerchantAccess) {
-      console.log("🚫 No merchant access, skipping user shop fetch");
       return;
     }
 
@@ -480,7 +479,7 @@ const Shops = memo(() => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (
@@ -495,7 +494,7 @@ const Shops = memo(() => {
             headers: {
               "Content-Type": "application/json",
             },
-          }
+          },
         );
 
         if (shopResponse.data.status === "OK" && shopResponse.data.data) {
@@ -581,8 +580,6 @@ const Shops = memo(() => {
     }
   }, [hasMerchantAccess, userOwnedShop]);
 
-  console.log(userProducts);
-
   const getShopProducts = useCallback(
     (shopId) => {
       if (shopId === userOwnedShop?.id) {
@@ -592,7 +589,7 @@ const Shops = memo(() => {
 
       return [];
     },
-    [shopProducts, userProducts, userOwnedShop?.id]
+    [shopProducts, userProducts, userOwnedShop?.id],
   );
 
   const fetchShops = useCallback(
@@ -642,7 +639,7 @@ const Shops = memo(() => {
             allShops = allShops.filter(
               (shop) =>
                 shop.shopName &&
-                shop.shopName.toLowerCase().includes(searchLower)
+                shop.shopName.toLowerCase().includes(searchLower),
             );
           }
 
@@ -679,7 +676,7 @@ const Shops = memo(() => {
         }));
       }
     },
-    [currentPage, sortBy, sortDirection]
+    [currentPage, sortBy, sortDirection],
   );
 
   const handleSortChange = useCallback((field, direction) => {
@@ -698,7 +695,7 @@ const Shops = memo(() => {
         setShopsData((prev) => ({ ...prev, currentPage: newPage }));
       }
     },
-    [totalPages]
+    [totalPages],
   );
 
   const handleSearchChange = useCallback((e) => {
@@ -715,7 +712,7 @@ const Shops = memo(() => {
       setShopsData((prev) => ({ ...prev, currentPage: 0 }));
       fetchShops(searchTerm, false);
     },
-    [searchTerm, fetchShops]
+    [searchTerm, fetchShops],
   );
 
   const handleClearSearch = useCallback(() => {
@@ -732,7 +729,7 @@ const Shops = memo(() => {
         navigate(`/shop/${shopId}`);
       }
     },
-    [navigate]
+    [navigate],
   );
 
   const handleGoToDashboard = useCallback(() => {
@@ -808,7 +805,7 @@ const Shops = memo(() => {
         setLoadingStates((prev) => ({ ...prev, createLoading: false }));
       }
     },
-    [formData, handleCloseModal, fetchShops, fetchUserShop]
+    [formData, handleCloseModal, fetchShops, fetchUserShop],
   );
 
   const hideNotification = useCallback(() => {

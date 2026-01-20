@@ -48,9 +48,6 @@ const PublicRoute = ({ children }) => {
     path === "/signin" || path === "/register" || path === "/login";
 
   if (isAuthPage && authed && user?.isEmailVerified) {
-    console.log(
-      "🚀 PublicRoute: redirecting authenticated user away from auth page"
-    );
     return <Navigate to="/" replace />;
   }
 

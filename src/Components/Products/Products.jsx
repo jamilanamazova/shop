@@ -1,11 +1,4 @@
-import React, {
-  Suspense,
-  lazy,
-  memo,
-  useState,
-  useCallback,
-  useEffect,
-} from "react";
+import React, { Suspense, lazy, memo, useState, useCallback } from "react";
 import { useProducts } from "../../hooks/useProducts";
 import { useCart } from "../../hooks/useCart";
 
@@ -29,7 +22,7 @@ const ProductCard = memo(({ product, onAddToCart, isInCart, cartQuantity }) => {
       e.preventDefault();
       onAddToCart(product);
     },
-    [onAddToCart, product]
+    [onAddToCart, product],
   );
 
   return (
@@ -228,17 +221,10 @@ const Products = memo(() => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("createdAt,desc");
 
-  useEffect(() => {
-    if (products.length === 0 && !loading && !error) {
-      console.log("Auto-loading products on Products page mount");
-      loadProducts({ page: 0 });
-    }
-  }, [products.length, loading, error, loadProducts]);
+  // Bu useEffect artıq lazım deyil - useProducts hook'u özü yükləyir
 
   const handleAddToCart = useCallback(
     (product, quantity = 1) => {
-      console.log("adding to cart from products page", product.productName);
-
       addToCart(product.id, quantity, {
         id: product.id,
         productName: product.productName,
@@ -250,14 +236,14 @@ const Products = memo(() => {
         category: product.category,
       });
     },
-    [addToCart]
+    [addToCart],
   );
 
   const handleFilterChange = useCallback(
     (newFilters) => {
       filterProducts(newFilters);
     },
-    [filterProducts]
+    [filterProducts],
   );
 
   const handleClearFilters = useCallback(() => {
@@ -265,21 +251,17 @@ const Products = memo(() => {
     setSearchTerm("");
   }, [resetFilters]);
 
-  const handleSearch = useCallback(
-    (e) => {
-      e.preventDefault();
-      // Search funksiyası əlavə ediləcək
-      console.log("🔍 Searching for:", searchTerm);
-    },
-    [searchTerm]
-  );
+  const handleSearch = useCallback((e) => {
+    e.preventDefault();
+    // Search funksiyası əlavə ediləcək
+  }, []);
 
   const handleSortChange = useCallback(
     (newSort) => {
       setSortBy(newSort);
       loadProducts({ page: 0, sort: newSort });
     },
-    [loadProducts]
+    [loadProducts],
   );
 
   const handleLoadMore = useCallback(() => {
@@ -295,7 +277,7 @@ const Products = memo(() => {
       displayProducts = displayProducts.filter(
         (product) =>
           product.productName?.toLowerCase().includes(term) ||
-          product.description?.toLowerCase().includes(term)
+          product.description?.toLowerCase().includes(term),
       );
     }
 

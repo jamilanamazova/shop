@@ -32,7 +32,7 @@ const ProductCard = memo(({ product, onAddToCart, isInCart, cartQuantity }) => {
       e.preventDefault();
       onAddToCart(product);
     },
-    [onAddToCart, product]
+    [onAddToCart, product],
   );
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
@@ -180,7 +180,6 @@ const ShopDetail = memo(() => {
 
       if (response.data.status === "OK" && response.data.data) {
         setShopData(response.data.data);
-        console.log("Shop Data:", response.data.data);
       } else {
         setError("Shop not found.");
       }
@@ -198,8 +197,6 @@ const ShopDetail = memo(() => {
 
   const handleAddToCart = useCallback(
     (product, quantity = 1) => {
-      console.log("adding to cart from products page", product.productName);
-
       addToCart(product.id, quantity, {
         id: product.id,
         productName: product.productName,
@@ -211,20 +208,16 @@ const ShopDetail = memo(() => {
         category: product.category,
       });
     },
-    [addToCart]
+    [addToCart],
   );
 
-  const handleShopAction = useCallback((action) => {
-    console.log(`Shop action clicked: ${action}`);
-  }, []);
+  const handleShopAction = useCallback((action) => {}, []);
 
   const handleBackToShops = useCallback(() => {
     navigate("/shops");
   }, [navigate]);
 
-  const handleContactShop = useCallback(() => {
-    console.log("Contact shop clicked");
-  }, []);
+  const handleContactShop = useCallback(() => {}, []);
 
   const handleShareShop = useCallback(() => {
     if (navigator.share && shopData) {
@@ -237,7 +230,6 @@ const ShopDetail = memo(() => {
         .catch(console.error);
     } else {
       navigator.clipboard.writeText(window.location.href);
-      console.log("Shop link copied to clipboard");
     }
   }, [shopData]);
 
@@ -265,8 +257,6 @@ const ShopDetail = memo(() => {
       } else {
         setProducts([]);
       }
-
-      console.log(response.data.data.content);
     } catch (err) {
       console.error("Error fetching products:", err);
       setProducts([]);
@@ -288,8 +278,8 @@ const ShopDetail = memo(() => {
         products.filter(
           (p) =>
             p.productName.toLowerCase().includes(search.toLowerCase()) ||
-            p.description.toLowerCase().includes(search.toLowerCase())
-        )
+            p.description.toLowerCase().includes(search.toLowerCase()),
+        ),
       );
     }
   }, [search, products]);

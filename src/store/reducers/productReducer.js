@@ -8,16 +8,40 @@ import axios from "axios";
 
 import { apiURL } from "../../Backend/Api/api";
 
-// Async thunk - Bütün product-ları al
+const CACHE_TIMEOUT = 300000;
+
 export const fetchProducts = createAsyncThunk(
   "products/fetchProducts",
   async (
-    { page = 0, size = 20, sort = "createdAt,desc" } = {},
-    { rejectWithValue },
+    { page = 0, size = 20, sort = "createdAt,desc", force = false } = {},
+    { rejectWithValue, getState },
   ) => {
     try {
-      console.log("🔍 Fetching products:", { page, size, sort });
+      if (page === 0 && !force) {
+        const state = getState();
+        const { lastFetch, products } = state.products;
 
+        if (lastFetch && products.length > 0) {
+          const timeSinceLastFetch = Date.now() - new Date(lastFetch).getTime();
+          if (timeSinceLastFetch < CACHE_TIMEOUT) {
+            console.log(
+              "✅ Using cached products, skipping fetch. Cache age:",
+              Math.floor(timeSinceLastFetch / 1000),
+              "seconds",
+            );
+            return {
+              content: products,
+              totalElements: state.products.totalElements,
+              totalPages: state.products.totalPages,
+              currentPage: state.products.currentPage,
+              pageSize: state.products.pageSize,
+              fromCache: true,
+            };
+          }
+        }
+      }
+
+      console.log("🔄 Fetching products from API - page:", page);
       const response = await axios.get(`${apiURL}/products`, {
         params: {
           page,
@@ -28,8 +52,6 @@ export const fetchProducts = createAsyncThunk(
           "Content-Type": "application/json",
         },
       });
-
-      console.log("📦 Products API response:", response.data);
 
       if (response.data.status === "OK" && response.data.data) {
         const productData = response.data.data;
@@ -54,14 +76,27 @@ export const fetchProducts = createAsyncThunk(
 
 export const fetchFeaturedProducts = createAsyncThunk(
   "products/fetchFeaturedProducts",
-  async (_, { rejectWithValue }) => {
+  async (_, { rejectWithValue, getState }) => {
     try {
+      // Cache kontrolü
+      const state = getState();
+      const { featuredLastFetch, featuredProducts } = state.products;
+
+      // Eğer 5 dakika içinde fetch yapılmışsa ve data varsa, cache'den dön
+      if (featuredLastFetch && featuredProducts.length > 0) {
+        const timeSinceLastFetch =
+          Date.now() - new Date(featuredLastFetch).getTime();
+        if (timeSinceLastFetch < CACHE_TIMEOUT) {
+          console.log("✅ Using cached featured products, skipping fetch");
+          return featuredProducts;
+        }
+      }
+
       const { data } = await axios.get(`${apiURL}/products`, {
         params: {
           page: 0,
-          size: 20, // ✅ 8 əvəzinə 20
+          size: 20,
           sort: "createdAt,desc",
-          // isFeatured: true kənarlaşdırın - backend dəstəkləməyə bilər
         },
       });
 
@@ -73,10 +108,6 @@ export const fetchFeaturedProducts = createAsyncThunk(
         data?.products ||
         data ||
         [];
-
-      console.log("🔍 Full API Response:", data);
-      console.log("🔍 Extracted products:", products);
-      console.log("🔍 Products count:", products.length);
 
       return Array.isArray(products) ? products : [];
     } catch (error) {
@@ -93,15 +124,11 @@ export const fetchProductDetails = createAsyncThunk(
   "products/fetchProductDetails",
   async (productId, { rejectWithValue }) => {
     try {
-      console.log("🔍 Fetching product details for:", productId);
-
       const response = await axios.get(`${apiURL}/products/${productId}`, {
         headers: {
           "Content-Type": "application/json",
         },
       });
-
-      console.log("📦 Product details response:", response.data);
 
       if (response.data.status === "OK" && response.data.data) {
         return response.data.data;
@@ -214,8 +241,20 @@ const productSlice = createSlice({
       })
       .addCase(fetchProducts.fulfilled, (state, action) => {
         state.loading = false;
-        const { content, totalElements, totalPages, currentPage, pageSize } =
-          action.payload;
+        const {
+          content,
+          totalElements,
+          totalPages,
+          currentPage,
+          pageSize,
+          fromCache,
+        } = action.payload;
+
+        // Cache'den geldiyse state'i güncelleme
+        if (fromCache) {
+          return;
+        }
+
         state.products =
           currentPage === 0 ? content : [...state.products, ...content];
         state.totalElements = totalElements;
@@ -321,9 +360,6 @@ const getPriceOf = (p) => {
 export const selectFilteredProducts = createSelector(
   [selectAllProducts, selectFilters, selectProductDetails],
   (products, filters, productDetails) => {
-    console.log("🎯 Filtering products with:", filters);
-    console.log("📦 Total products:", products.length);
-
     return products.filter((product) => {
       // Category filter
       if (filters.category && String(filters.category).trim() !== "") {

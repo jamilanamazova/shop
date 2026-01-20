@@ -5,6 +5,7 @@ import React, {
   lazy,
   memo,
   Suspense,
+  useRef,
 } from "react";
 import { useParams, Link } from "react-router-dom";
 import useProducts from "../../hooks/useProducts";
@@ -31,7 +32,7 @@ const ProductCard = memo(({ product }) => {
       ? Math.round(
           ((product.originalPrice - product.currentPrice) /
             product.originalPrice) *
-            100
+            100,
         )
       : 0;
 
@@ -146,23 +147,21 @@ const CategoryProducts = memo(() => {
 
   const filteredProducts = useSelector(selectFilteredProducts);
 
+  // Ref istifadə edərək filter callback'lərinin dəyişməsini əngəlləyirik
+  const filterAppliedRef = useRef(false);
+
   useEffect(() => {
-    if (categoryName) {
-      console.log("🎯 Setting category filter:", categoryName);
+    if (categoryName && !filterAppliedRef.current) {
+      filterAppliedRef.current = true;
       filterProducts({ category: categoryName.toUpperCase() });
     }
 
     return () => {
-      resetFilters(); // Component unmount-da filter-i təmizlə
+      filterAppliedRef.current = false;
+      resetFilters();
     };
-  }, [categoryName, filterProducts, resetFilters]);
-
-  // Products yüklə
-  useEffect(() => {
-    if (products.length === 0) {
-      loadProducts();
-    }
-  }, [products.length, loadProducts]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categoryName]);
 
   // Category mapping for icons and gradients
   const getCategoryInfo = useCallback((category) => {

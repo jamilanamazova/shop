@@ -50,7 +50,6 @@ export const refreshAccessToken = async () => {
       throw new Error("No refresh token available");
     }
 
-    console.log("🔄 Refreshing access token...");
 
     // Try primary endpoint
     const tryRefresh = async (url) => {
@@ -59,7 +58,6 @@ export const refreshAccessToken = async () => {
         { refreshToken },
         { headers: { "X-Skip-Auth": "1" }, meta: { skipAuth: true } }
       );
-      console.log("✅ Token refresh response:", resp.data);
 
       // Accept several shapes: {status:'OK', data:{accessToken, refreshToken}} or {accessToken, refreshToken}
       let at, rt;
@@ -89,7 +87,6 @@ export const refreshAccessToken = async () => {
       // Save and update defaults
       setTokens(at, rt);
       applyAuthHeaderForMode();
-      console.log("✅ New tokens saved successfully");
       return at;
     };
 

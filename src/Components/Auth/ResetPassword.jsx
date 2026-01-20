@@ -140,10 +140,10 @@ const ResetPassword = () => {
               passwordStrength.score === 1
                 ? "bg-red-500 w-1/3"
                 : passwordStrength.score === 2
-                ? "bg-orange-500 w-2/3"
-                : passwordStrength.score === 3
-                ? "bg-green-500 w-full"
-                : "bg-gray-300 w-0"
+                  ? "bg-orange-500 w-2/3"
+                  : passwordStrength.score === 3
+                    ? "bg-green-500 w-full"
+                    : "bg-gray-300 w-0"
             }`}
           ></div>
         </div>
@@ -204,20 +204,10 @@ const ResetPassword = () => {
     }
 
     try {
-      console.log("=== RESET PASSWORD REQUEST ===");
-      console.log("Token:", token);
-      console.log("New password length:", password.length);
-      console.log("===============================");
-
       const response = await axios.post(`${apiURL}/auth/reset-password`, {
         token: token,
         password: password,
       });
-
-      console.log("=== RESET RESPONSE ===");
-      console.log("Status:", response.status);
-      console.log("Data:", response.data);
-      console.log("====================");
 
       if (response.status === 200) {
         setShowSuccessModal(true);
@@ -239,12 +229,12 @@ const ResetPassword = () => {
             break;
           case 401:
             setError(
-              "Reset link has expired. Please request a new password reset."
+              "Reset link has expired. Please request a new password reset.",
             );
             break;
           case 404:
             setError(
-              "Invalid reset link. Please request a new password reset."
+              "Invalid reset link. Please request a new password reset.",
             );
             break;
           case 422:

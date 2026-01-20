@@ -78,13 +78,6 @@ const Header = memo(() => {
         return;
       }
 
-      console.log("🏪 Attempting to become merchant...");
-      console.log("Token:", token ? "✅ Present" : "❌ Missing");
-      console.log(
-        "Token preview:",
-        token ? token.substring(0, 20) + "..." : "N/A",
-      );
-
       const response = await axios.post(
         `${apiURL}/users/me/be-merchant`,
         {},
@@ -96,7 +89,6 @@ const Header = memo(() => {
           skipInterceptor: true,
         },
       );
-      console.log("✅ Merchant response:", response.data);
 
       if (response.data.status === "OK" && response.data.data) {
         localStorage.setItem(
@@ -163,8 +155,6 @@ const Header = memo(() => {
 
       if (response.data.status === "OK" && response.data.data) {
         setCurrentUser(response.data.data);
-      } else {
-        console.log(response.data);
       }
     } catch (error) {
       console.error("Error fetching user profile:", error);

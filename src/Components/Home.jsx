@@ -1,13 +1,13 @@
-import React, { memo, useCallback, useEffect, useState } from "react";
+import React, { memo, useCallback, useState } from "react";
 import Header from "./Header";
 import Hero from "./Pages/Hero";
 import Categories from "./Pages/Categories";
 import Footer from "./Footer";
 import "../CSS/Home.css";
-import { motion } from "framer-motion";
 
 import { useProducts } from "../hooks/useProducts";
 import { useCart } from "../hooks/useCart";
+import { motion } from "framer-motion";
 
 const ProductShowCase = memo(() => {
   const {
@@ -19,26 +19,14 @@ const ProductShowCase = memo(() => {
   } = useProducts();
   const { addToCart, isItemInCart, getItemQuantity } = useCart();
 
-  console.log("🏠 ProductShowCase render:", {
-    featuredProducts: featuredProducts?.length,
-    featuredLoading,
-    featuredError,
-    shouldShowNotFound,
-  });
-
-  useEffect(() => {
-    if (featuredProducts.length === 0 && !featuredLoading) {
-      loadFeaturedProducts();
-    }
-  }, [featuredProducts, featuredLoading, loadFeaturedProducts]);
+  // useProducts hook'u artıq featured products'ı yükləyir
+  // Bu əlavə useEffect lazım deyil
 
   const handleAddToCart = useCallback(
     (product, quantity = 1) => {
-      console.log("adding to cart from showcase: ", product.productName);
-
       addToCart(product.id, quantity, product);
     },
-    [addToCart]
+    [addToCart],
   );
 
   if (featuredLoading) {
@@ -96,7 +84,6 @@ const ProductShowCase = memo(() => {
     !featuredProducts ||
     featuredProducts.length === 0
   ) {
-    console.log("📭 Showing not found state");
     return (
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4">
@@ -122,8 +109,6 @@ const ProductShowCase = memo(() => {
       </section>
     );
   }
-
-  console.log("✅ Showing featured products:", featuredProducts?.length);
 
   return (
     <section className="py-16 bg-gray-50">
@@ -185,7 +170,7 @@ const ProductCard = memo(({ product, onAddToCart, isInCart, cartQuantity }) => {
 
       onAddToCart(product);
     },
-    [onAddToCart, product]
+    [onAddToCart, product],
   );
 
   const discountPercentage =
@@ -193,7 +178,7 @@ const ProductCard = memo(({ product, onAddToCart, isInCart, cartQuantity }) => {
       ? Math.round(
           ((product.originalPrice - product.currentPrice) /
             product.originalPrice) *
-            100
+            100,
         )
       : 0;
 
@@ -290,8 +275,8 @@ const ProductCard = memo(({ product, onAddToCart, isInCart, cartQuantity }) => {
             isOutOfStock
               ? "bg-gray-200 text-gray-500 cursor-not-allowed"
               : isInCart
-              ? "bg-emerald-600 text-white hover:bg-emerald-700 transform hover:scale-105 shadow-lg"
-              : "bg-emerald-600 text-white hover:bg-emerald-700 transform hover:scale-105 shadow-lg"
+                ? "bg-emerald-600 text-white hover:bg-emerald-700 transform hover:scale-105 shadow-lg"
+                : "bg-emerald-600 text-white hover:bg-emerald-700 transform hover:scale-105 shadow-lg"
           }`}
         >
           {isOutOfStock ? (

@@ -60,7 +60,6 @@ const ProtectedRoute = ({ children }) => {
   // cases where profile is not strictly required. Components can fetch as needed.
   // This prevents redirect loops on home or other public pages embedding ProtectedRoute.
 
-  console.log("Access granted to protected route");
   return children;
 };
 

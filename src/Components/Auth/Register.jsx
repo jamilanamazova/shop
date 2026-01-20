@@ -219,13 +219,6 @@ const Register = () => {
         password: formData.password,
       });
 
-      console.log("=== FULL RESPONSE DEBUG ===");
-      console.log("Response status:", response.status);
-      console.log("Response data:", JSON.stringify(response.data, null, 2));
-      console.log("Data.token exists:", !!response.data.token);
-      console.log("Data.user exists:", !!response.data.user);
-      console.log("=========================");
-
       const data = response.data;
 
       let accessToken, refreshToken, userData;
@@ -239,11 +232,6 @@ const Register = () => {
         refreshToken = data.refreshToken;
         userData = data.user || data;
       }
-
-      console.log("Extracted data:");
-      console.log("Access Token:", accessToken ? "✅ Found" : "❌ Missing");
-      console.log("Refresh Token:", refreshToken ? "✅ Found" : "❌ Missing");
-      console.log("User Data:", userData);
 
       if (accessToken && refreshToken) {
         setTokens(accessToken, refreshToken);
@@ -284,7 +272,7 @@ const Register = () => {
         }
       } else if (error.request) {
         showError(
-          "Cannot connect to server. Please check your connection and try again."
+          "Cannot connect to server. Please check your connection and try again.",
         );
       } else {
         showError("An unexpected error occurred. Please try again.");
@@ -316,10 +304,10 @@ const Register = () => {
               passwordStrength.score === 1
                 ? "bg-red-500 w-1/3"
                 : passwordStrength.score === 2
-                ? "bg-orange-500 w-2/3"
-                : passwordStrength.score === 3
-                ? "bg-green-500 w-full"
-                : "bg-gray-300 w-0"
+                  ? "bg-orange-500 w-2/3"
+                  : passwordStrength.score === 3
+                    ? "bg-green-500 w-full"
+                    : "bg-gray-300 w-0"
             }`}
           ></div>
         </div>

@@ -25,7 +25,6 @@ export const addProductToCart = createAsyncThunk(
             productData: productData || null,
           }),
         );
-        console.log("backend'e elave olunmadi lokala elave edirik");
         // UI-ya uğurlu kimi bildirmək üçün xüsusi bayraq
         return { ok: false, fallbackToLocal: true };
       }
@@ -49,8 +48,6 @@ export const fetchCart = createAsyncThunk(
           "Content-Type": "application/json",
         },
       });
-
-      console.log("🛒 Fetched backend cart:", response.data);
 
       if (response.data.status === "OK") {
         return {

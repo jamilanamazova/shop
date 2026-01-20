@@ -58,8 +58,6 @@ const ProfileDashboard = () => {
   const navigate = useNavigate();
   const authenticated = isAuthenticated();
 
-  console.log(currentUser);
-
   const countries = [
     {
       value: "AZ",
@@ -189,7 +187,7 @@ const ProfileDashboard = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (response.data.status === "OK") {
@@ -236,9 +234,6 @@ const ProfileDashboard = () => {
         },
       });
 
-      console.log("response ", response);
-      console.log("response data", response.data);
-
       if (response.data.status === "OK") {
         await handleGetPhotoURL(true);
         await fetchUserProfile();
@@ -284,7 +279,6 @@ const ProfileDashboard = () => {
           profilePhotoUrl: photoUrl,
         }));
       } else {
-        console.log("No photo url in response or status is not OK");
         setImageLoadError(true);
       }
     } catch (error) {
@@ -309,9 +303,6 @@ const ProfileDashboard = () => {
           "Content-Type": "application/json",
         },
       });
-
-      console.log("Delete response:", response);
-      console.log("Delete response data:", response.data);
 
       if (response.data.status === "OK") {
         setProfilePhotoUrl(null);
@@ -356,7 +347,7 @@ const ProfileDashboard = () => {
         setCurrentAddress(response.data.data);
 
         const defaultAddress = response.data.data.find(
-          (addr) => addr.default === true
+          (addr) => addr.default === true,
         );
         setDefaultAddress(defaultAddress || null);
       }
@@ -557,15 +548,6 @@ const ProfileDashboard = () => {
         showError("File size must be less than 5MB.");
         return;
       }
-      console.log(
-        "Uploading file:",
-        file.name,
-        "Size:",
-        file.size,
-        "Type:",
-        file.type
-      );
-
       if (file && file.type.startsWith("image/")) {
         await uploadProfileImage(file);
       }
@@ -992,7 +974,7 @@ const ProfileDashboard = () => {
                     onChange={(e) => {
                       const filteredValue = e.target.value.replace(
                         /[0-9]/g,
-                        ""
+                        "",
                       );
                       handleInputChange("firstName", filteredValue);
                       validateField("firstName", filteredValue);
@@ -1023,7 +1005,7 @@ const ProfileDashboard = () => {
                     onChange={(e) => {
                       const filteredValue = e.target.value.replace(
                         /[0-9]/g,
-                        ""
+                        "",
                       );
                       handleInputChange("lastName", filteredValue);
                       validateField("lastName", filteredValue);
@@ -1074,7 +1056,7 @@ const ProfileDashboard = () => {
                       onChange={(e) => {
                         const value = e.target.value.replace(
                           /[^0-9+\-\s()]/g,
-                          ""
+                          "",
                         );
                         handleInputChange("phone", value);
                         validateField("phone", value);
