@@ -11,14 +11,15 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { apiURL } from "../../Backend/Api/api";
 
+
 const Header = lazy(() => import("../Header"));
 const Footer = lazy(() => import("../Footer"));
-
 
 
 const LoadingSpinner = memo(() => (
   <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-emerald-500 mx-auto" />
 ));
+
 
 const SearchLoadingSpinner = memo(() => (
   <i className="fa-solid fa-spinner animate-spin text-xl"></i>
@@ -150,15 +151,14 @@ const Blogs = () => {
   return (
     <Suspense fallback={<LoadingSpinner />}>
       <Header />
-
-      <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white py-20 relative">
+      <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white py-30 relative">
         <div className="absolute inset-0 bg-black opacity-30"></div>
         <div className="relative z-10 max-w-4xl mx-auto text-center px-4">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            Discover Our Blog
+            Discover Our Blog...
           </h1>
           <p className="text-xl text-gray-300">
-            Insights, tips and articles for modern creators
+            Insights, tips and articles for modern creators...
           </p>
         </div>
       </div>
@@ -176,9 +176,11 @@ const Blogs = () => {
                     placeholder="Search for blogs by title..."
                     value={searchTerm}
                     onChange={handleSearchChange}
-                    className="w-full px-6 py-4 pl-14 text-lg border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all duration-300 bg-gray-50 focus:bg-white"
+                    className="w-full px-6 py-4 pl-14 text-lg border-2 border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all duration-300 bg-gray-50 focus:bg-white"
                   />
-                  <div className="absolute left-5 top-1/2 transform-translate-y-1/2 text-gray-400 group-focus-within:text-emerald-500 transition-colors">
+
+                  <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-500 transition-colors">
+
                     {searchLoading ? (
                       <SearchLoadingSpinner />
                     ) : (
