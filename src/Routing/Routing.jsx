@@ -12,6 +12,8 @@ import MerchantRoutes from "./MerchantRoutes";
 import CustomerRoutes from "./CustomerRoutes";
 import Shops from "../Components/Merchant/Shops";
 import ProtectedRoute from "../Components/Routes/ProtectedRoute";
+import Blogs from "../Components/Merchant/Blogs";
+import BlogDetail from "../Components/Blog/BlogDetail";
 
 import PublicShopDetail from "../Components/Shop/ShopDetail";
 import ShopDashboard from "../Components/Merchant/Dashboard/ShopDashboard";
@@ -52,6 +54,9 @@ const Routing = () => {
 
       <Route path="/shops" element={<Shops />} />
       <Route path="/shop/:shopId" element={<PublicShopDetail />} />
+
+      <Route path="/blogs" element={<Blogs />} />
+      <Route path="/blogs/:id" element={<BlogDetail />} />
 
       <Route
         path="/merchant/shops/:shopId/dashboard"

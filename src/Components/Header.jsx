@@ -78,6 +78,13 @@ const Header = memo(() => {
         return;
       }
 
+      console.log("🏪 Attempting to become merchant...");
+      console.log("Token:", token ? "✅ Present" : "❌ Missing");
+      console.log(
+        "Token preview:",
+        token ? token.substring(0, 20) + "..." : "N/A"
+      );
+
       const response = await axios.post(
         `${apiURL}/users/me/be-merchant`,
         {},
@@ -87,17 +94,18 @@ const Header = memo(() => {
             "Content-Type": "application/json",
           },
           skipInterceptor: true,
-        },
+        }
       );
+      console.log("✅ Merchant response:", response.data);
 
       if (response.data.status === "OK" && response.data.data) {
         localStorage.setItem(
           "merchantAccessToken",
-          response.data.data.accessToken,
+          response.data.data.accessToken
         );
         localStorage.setItem(
           "merchantRefreshToken",
-          response.data.data.refreshToken,
+          response.data.data.refreshToken
         );
 
         setAppMode("merchant");
@@ -155,6 +163,8 @@ const Header = memo(() => {
 
       if (response.data.status === "OK" && response.data.data) {
         setCurrentUser(response.data.data);
+      } else {
+        console.log(response.data);
       }
     } catch (error) {
       console.error("Error fetching user profile:", error);
@@ -263,6 +273,13 @@ const Header = memo(() => {
       >
         SHOPS
       </Link>
+
+      <Link
+        className="font-bold text-sm xl:text-base hover:text-gray-600 transition-colors"
+        to="/blogs"
+      >
+        BLOGS
+      </Link>
     </ul>
   ));
 
@@ -294,6 +311,16 @@ const Header = memo(() => {
           onClick={closeSideBarAndNavigate}
         >
           SHOPS
+        </Link>
+      </li>
+
+      <li>
+        <Link
+          to="/blogs"
+          className="font-bold text-lg hover:text-gray-600 transition-colors block py-2"
+          onClick={closeSideBarAndNavigate}
+        >
+          BLOGS
         </Link>
       </li>
     </ul>
@@ -363,7 +390,8 @@ const Header = memo(() => {
         />
       )}
 
-      <header className="sticky top-0 bg-white/95 backdrop-blur-md shadow-lg z-40 border-b border-gray-100">
+      <header className="fixed top-0 left-0 w-full bg-white/95 backdrop-blur-md shadow-lg z-40 border-b border-gray-100">
+
         <div className="max-w-7xl mx-auto px-4 lg:px-6">
           <div className="flex items-center justify-between h-20">
             <div className="flex items-center gap-4 lg:gap-8">
