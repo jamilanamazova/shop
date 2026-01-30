@@ -110,7 +110,6 @@ axios.interceptors.response.use(
       (error.response?.status === 401 || error.response?.status === 403) &&
       !original._retry
     ) {
-      console.log("[AUTH] Merchant token expired, refreshing...");
       original._retry = true;
       try {
         if (!merchantRefreshToken) throw new Error("No merchantRefreshToken");
@@ -129,12 +128,10 @@ axios.interceptors.response.use(
         if (data.refreshToken)
           localStorage.setItem("merchantRefreshToken", data.refreshToken);
 
-        console.log("[AUTH] Merchant refresh OK, retrying original");
         original.headers = original.headers || {};
         original.headers.Authorization = `Bearer ${data.accessToken}`;
         return axios(original);
       } catch (e) {
-        console.log("[AUTH] Merchant refresh FAILED", e);
         return Promise.reject(e);
       }
     }
@@ -146,7 +143,6 @@ axios.interceptors.response.use(
       (error.response?.status === 401 || error.response?.status === 403) &&
       !original._retry
     ) {
-      console.log("[AUTH] Customer token expired, refreshing...");
       original._retry = true;
       try {
         if (!customerRefreshToken) throw new Error("No refreshToken");
@@ -164,12 +160,10 @@ axios.interceptors.response.use(
         if (data.refreshToken)
           localStorage.setItem("refreshToken", data.refreshToken);
 
-        console.log("[AUTH] Customer refresh OK, retrying original");
         original.headers = original.headers || {};
         original.headers.Authorization = `Bearer ${data.accessToken}`;
         return axios(original);
       } catch (e) {
-        console.log("[AUTH] Customer refresh FAILED", e);
         return Promise.reject(e);
       }
     }
@@ -178,4 +172,3 @@ axios.interceptors.response.use(
   }
 );
 
-console.log("✅ Axios interceptors with auto-refresh initialized");

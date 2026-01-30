@@ -18,7 +18,7 @@ const TimerDisplay = memo(({ timeLeft }) => {
       minutes: timeLeft.minutes.toString().padStart(2, "0"),
       seconds: timeLeft.seconds.toString().padStart(2, "0"),
     }),
-    [timeLeft.days, timeLeft.hours, timeLeft.minutes, timeLeft.seconds]
+    [timeLeft.days, timeLeft.hours, timeLeft.minutes, timeLeft.seconds],
   );
 
   return (
@@ -50,7 +50,7 @@ const ProductCard = memo(({ product, onAddToCart, onToggleWishlist }) => {
       e.stopPropagation();
       onAddToCart(product);
     },
-    [product, onAddToCart]
+    [product, onAddToCart],
   );
 
   const handleToggleWishlist = useCallback(
@@ -60,7 +60,7 @@ const ProductCard = memo(({ product, onAddToCart, onToggleWishlist }) => {
       setIsWishlisted((prev) => !prev);
       onToggleWishlist(product);
     },
-    [product, onToggleWishlist]
+    [product, onToggleWishlist],
   );
 
   const formattedPrice = useMemo(() => {
@@ -296,29 +296,17 @@ const ProductShowCase = memo(({ products = [] }) => {
     };
   }, [updateTimer]);
 
-  const handleAddToCart = useCallback((product) => {
-    console.log("Adding to cart:", product);
-  }, []);
+  const handleAddToCart = useCallback((product) => {}, []);
 
-  const handleToggleWishlist = useCallback((product) => {
-    console.log("Toggle wishlist:", product);
-  }, []);
+  const handleToggleWishlist = useCallback((product) => {}, []);
 
-  const handleExploreClick = useCallback(() => {
-    console.log("Explore featured deals clicked");
-  }, []);
+  const handleExploreClick = useCallback(() => {}, []);
 
-  const handleCategoryClick = useCallback((category) => {
-    console.log("Category clicked:", category);
-  }, []);
+  const handleCategoryClick = useCallback((category) => {}, []);
 
-  const handleCarouselPrev = useCallback(() => {
-    console.log("Previous products");
-  }, []);
+  const handleCarouselPrev = useCallback(() => {}, []);
 
-  const handleCarouselNext = useCallback(() => {
-    console.log("Next products");
-  }, []);
+  const handleCarouselNext = useCallback(() => {}, []);
 
   if (!memoizedProducts.length) {
     return (

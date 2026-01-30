@@ -52,7 +52,7 @@ const ConfirmEmail = () => {
       const endTime = Date.now() + 300 * 1000;
       localStorage.setItem(
         `verificationTimer_${email}`,
-        JSON.stringify({ endTime })
+        JSON.stringify({ endTime }),
       );
       setTimer(300);
     }
@@ -65,7 +65,7 @@ const ConfirmEmail = () => {
     const endTime = Date.now() + 300 * 1000;
     localStorage.setItem(
       `verificationTimer_${email}`,
-      JSON.stringify({ endTime })
+      JSON.stringify({ endTime }),
     );
     setTimer(300);
   };
@@ -116,7 +116,7 @@ const ConfirmEmail = () => {
             const endTime = Date.now() + newTime * 1000;
             localStorage.setItem(
               `verificationTimer_${email}`,
-              JSON.stringify({ endTime })
+              JSON.stringify({ endTime }),
             );
           }
 
@@ -143,9 +143,6 @@ const ConfirmEmail = () => {
       const response = await axios.post(`${apiURL}/auth/resend-code`, {
         email: userEmail,
       });
-      console.log("RESPONSE: ", response);
-      console.log("RESPONSE DATA: ", response.data);
-      console.log("RESPONSE DATA SUCCESS", response.data.status);
       if (response.data.status === "OK") {
         setResendMessage("Verification code resent successfully.");
         startNewTimer();
@@ -188,20 +185,9 @@ const ConfirmEmail = () => {
         code: verificationCode,
       });
 
-      console.log("=== VERIFICATION DEBUG ===");
-      console.log("Full response:", response);
-      console.log("Response data:", response.data);
-      console.log("AccessToken:", response.data.accessToken);
-      console.log("User data:", response.data.data);
-      console.log("========================");
-
       const data = response.data;
 
       const { accessToken, refreshToken } = data.data;
-
-      console.log("Access Token:", accessToken ? "✅ Found" : "❌ Missing");
-      console.log("Refresh Token:", refreshToken ? "✅ Found" : "❌ Missing");
-      console.log("User data:", data.data);
 
       if (accessToken && refreshToken) {
         const email = localStorage.getItem("pendingMail");
@@ -212,8 +198,6 @@ const ConfirmEmail = () => {
         localStorage.setItem("accessToken", accessToken);
         localStorage.setItem("refreshToken", refreshToken);
 
-        console.log("Tokens saved successfully!");
-
         const userData = {
           fullName: userName || "User",
           email: userEmail,
@@ -223,7 +207,6 @@ const ConfirmEmail = () => {
         };
 
         localStorage.setItem("currentUser", JSON.stringify(userData));
-        console.log("user data saved: ", userData);
 
         localStorage.removeItem("pendingMail");
         localStorage.removeItem("pendingUserName");
@@ -232,7 +215,6 @@ const ConfirmEmail = () => {
           window.location.href = "/";
         }, 2000);
       } else {
-        console.log("❌ Tokens not found in response");
         showError("Verification failed. No tokens received.");
         return;
       }

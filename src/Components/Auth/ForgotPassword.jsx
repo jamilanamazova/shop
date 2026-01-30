@@ -53,8 +53,6 @@ const ForgotPassword = () => {
       const response = await axios.post(`${apiURL}/auth/forgot-password`, {
         email: email,
       });
-      console.log("RESPONSE", response);
-      console.log("RESPONSE DATA", response.data);
 
       if (response.status === 200) {
         setResendMessage("New reset link sent successfully!");
@@ -106,12 +104,6 @@ const ForgotPassword = () => {
       const response = await axios.post(`${apiURL}/auth/forgot-password`, {
         email: email,
       });
-
-      console.log("=== FULL RESPONSE DEBUG ===");
-
-      console.log("Response:", response.data);
-      console.log("Response status:", response.status);
-      console.log("=========================");
 
       if (response.status === 200) {
         setShowSuccessModal(true);

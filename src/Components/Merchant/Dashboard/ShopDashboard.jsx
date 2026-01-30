@@ -209,10 +209,10 @@ const ProductCard = memo(({ product, showEditModal, onDelete }) => {
             detailedProduct.condition === "NEW"
               ? "bg-green-100 text-green-800"
               : detailedProduct.condition === "USED"
-              ? "bg-yellow-100 text-yellow-800"
-              : detailedProduct.condition === "REFURBISHED"
-              ? "bg-blue-100 text-blue-800"
-              : "bg-gray-100 text-gray-800"
+                ? "bg-yellow-100 text-yellow-800"
+                : detailedProduct.condition === "REFURBISHED"
+                  ? "bg-blue-100 text-blue-800"
+                  : "bg-gray-100 text-gray-800"
           }`}
         >
           {loadingDetails ? (
@@ -278,8 +278,6 @@ const AddProductModal = memo(
         const formData = new FormData();
         formData.append("image", file);
 
-        console.log("Uploading image for product ID:", productId);
-
         const response = await axios.post(
           `${apiURL}/merchant/products/${productId}/image`,
           formData,
@@ -288,10 +286,8 @@ const AddProductModal = memo(
               Authorization: `Bearer ${token}`,
               "Content-Type": "multipart/form-data",
             },
-          }
+          },
         );
-
-        console.log("image upload response", response.data);
 
         // Cache-i təmizlə ki, yeni şəkil göstərilsin
         productDetailsCache.delete(productId);
@@ -310,14 +306,9 @@ const AddProductModal = memo(
       e.preventDefault();
 
       try {
-        console.log("Starting product creation with image...");
-
         const productResponse = await handleAddSubmit(e, true);
 
-        console.log("Product creation response:", productResponse);
-
         if (productResponse?.productId && imageFile) {
-          console.log("Product created successfully, now uploading image...");
           await uploadProductImage(productResponse.productId, imageFile);
         }
 
@@ -536,7 +527,7 @@ const AddProductModal = memo(
         </div>
       </div>
     );
-  }
+  },
 );
 AddProductModal.displayName = "AddProductModal";
 
@@ -704,7 +695,7 @@ const EditProductModal = memo(
         </div>
       </div>
     );
-  }
+  },
 );
 EditProductModal.displayName = "EditProductModal";
 
@@ -756,7 +747,7 @@ const DeleteConfirmModal = memo(
         </div>
       </div>
     );
-  }
+  },
 );
 DeleteConfirmModal.displayName = "DeleteConfirmModal";
 
@@ -813,7 +804,7 @@ const ProductsSection = memo(
         </div>
       </div>
     );
-  }
+  },
 );
 ProductsSection.displayName = "ProductsSection";
 
@@ -896,10 +887,9 @@ const ShopDashboard = memo(() => {
           navigate("/merchant/analytics");
           break;
         default:
-          console.log("Unknown action:", action);
       }
     },
-    [navigate]
+    [navigate],
   );
 
   // Updated fetchProducts function - just for the list, details will be loaded separately
@@ -919,11 +909,8 @@ const ShopDashboard = memo(() => {
         },
       });
 
-      console.log("Merchant products response:", response.data);
-
       if (response.data.status === "OK" && response.data.data) {
         const productsData = response.data.data.content || [];
-        console.log("Products from merchant endpoint:", productsData);
 
         // Clear cache when fetching new products
         productDetailsCache.clear();
@@ -954,7 +941,6 @@ const ShopDashboard = memo(() => {
 
       try {
         setIsDeleting(true);
-        console.log("deleting product with id: ", productId);
 
         const response = await axios.delete(
           `${apiURL}/merchant/products/${productId}`,
@@ -963,10 +949,8 @@ const ShopDashboard = memo(() => {
               Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
-          }
+          },
         );
-
-        console.log("delete response", response.data);
 
         if (response.data.status === "OK") {
           setShowSuccess(true);
@@ -995,7 +979,7 @@ const ShopDashboard = memo(() => {
         setIsDeleting(false);
       }
     },
-    [navigate, fetchProducts]
+    [navigate, fetchProducts],
   );
 
   const handleConfirmDelete = useCallback(async () => {
@@ -1038,7 +1022,7 @@ const ShopDashboard = memo(() => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (shopResponse.data.status === "OK" && shopResponse.data.data) {
@@ -1053,7 +1037,7 @@ const ShopDashboard = memo(() => {
         navigate("/signin");
       } else if (error.response?.status === 403) {
         setError(
-          "Access denied. You don't have permission to access this shop."
+          "Access denied. You don't have permission to access this shop.",
         );
       } else {
         setError("Failed to load dashboard data. Please try again.");
@@ -1140,15 +1124,13 @@ const ShopDashboard = memo(() => {
       setError("");
 
       try {
-        console.log("🔍 Finding shop ID by name:", shopData.shopName);
-
         const shopResponse = await axios.get(
           `${apiURL}/shops/name/${encodeURIComponent(shopData.shopName)}`,
           {
             headers: {
               "Content-Type": "application/json",
             },
-          }
+          },
         );
 
         if (
@@ -1159,7 +1141,6 @@ const ShopDashboard = memo(() => {
         }
 
         const realShopId = shopResponse.data.data.id;
-        console.log("Found shop id: ", realShopId);
 
         const productData = {
           productName: formState.productName.trim(),
@@ -1171,8 +1152,6 @@ const ShopDashboard = memo(() => {
           shopId: realShopId,
         };
 
-        console.log("🚀 Sending product data with shopId:", productData);
-
         const response = await axios.post(
           `${apiURL}/merchant/products`,
           productData,
@@ -1181,24 +1160,17 @@ const ShopDashboard = memo(() => {
               Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
-          }
+          },
         );
-
-        console.log("product creation response", response.data);
 
         if (response.data.status === "OK" && response.data.data) {
           const createdProduct = response.data.data;
-          console.log("✅ Created product:", createdProduct);
-          console.log("✅ Product shopId:", createdProduct.shopId);
-          console.log("✅ Expected shopId:", realShopId);
-          console.log("✅ IDs match:", createdProduct.shopId === realShopId);
-
           if (returnProductId) {
             return { productId: response.data.data.id };
           } else {
             setShowSuccess(true);
             setSuccessMessage(
-              `Product "${createdProduct.productName}" added successfully!`
+              `Product "${createdProduct.productName}" added successfully!`,
             );
             await fetchProducts();
             setShowAddProduct(false);
@@ -1211,8 +1183,6 @@ const ShopDashboard = memo(() => {
           }
         }
       } catch (err) {
-        console.error("❌ Error adding product:", err);
-        console.log("❌ Error response:", err.response?.data);
         if (err.response?.status === 401) {
           localStorage.removeItem("merchantAccessToken");
           navigate("/signin");
@@ -1226,7 +1196,7 @@ const ShopDashboard = memo(() => {
         setIsAddingProduct(false);
       }
     },
-    [formState, navigate, fetchProducts, shopData, dispatch]
+    [formState, navigate, fetchProducts, shopData, dispatch],
   );
 
   const updateProduct = useCallback(
@@ -1259,23 +1229,17 @@ const ShopDashboard = memo(() => {
 
         if (shopData?.shopName) {
           try {
-            console.log(
-              "Finding shop id for update by name: ",
-              shopData.shopName
-            );
-
             const shopResponse = await axios.get(
               `${apiURL}/shops/name/${encodeURIComponent(shopData.shopName)}`,
               {
                 headers: { "Content-Type": "application/json" },
-              }
+              },
             );
             if (
               shopResponse.data.status === "OK" &&
               shopResponse.data.data?.id
             ) {
               realShopId = shopResponse.data.data.id;
-              console.log("found shop id for update: ", realShopId);
             }
           } catch (err) {
             console.warn("could not find shop id", err);
@@ -1295,8 +1259,6 @@ const ShopDashboard = memo(() => {
           cleanProductData.shopId = realShopId;
         }
 
-        console.log("updating product with data: ", cleanProductData);
-
         const response = await axios.put(
           `${apiURL}/merchant/products/${productId}`,
           cleanProductData,
@@ -1305,12 +1267,10 @@ const ShopDashboard = memo(() => {
               Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
-          }
+          },
         );
 
         if (response.data.status === "OK" && response.data.data) {
-          console.log("✅ Product updated successfully:", response.data.data);
-
           setShowSuccess(true);
           setSuccessMessage("Product updated successfully!");
 
@@ -1336,7 +1296,7 @@ const ShopDashboard = memo(() => {
         }
       }
     },
-    [navigate, fetchProducts, shopData]
+    [navigate, fetchProducts, shopData],
   );
 
   const handleAddSubmit = useCallback(
@@ -1345,7 +1305,7 @@ const ShopDashboard = memo(() => {
       setError("");
       return await addProduct(returnProductId);
     },
-    [addProduct]
+    [addProduct],
   );
 
   const handleEditSubmit = useCallback(
@@ -1364,7 +1324,7 @@ const ShopDashboard = memo(() => {
 
       await updateProduct(editProduct.id, productData);
     },
-    [formState, editProduct, updateProduct]
+    [formState, editProduct, updateProduct],
   );
 
   useEffect(() => {

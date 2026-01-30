@@ -36,29 +36,35 @@ export const useProducts = () => {
   const featuredLoadedRef = useRef(false);
 
   const loadProducts = useCallback(
-    ({ page = 0, size = pageSize || 20, sort = "createdAt,desc" } = {}) => {
+    ({ page = 0, size = 20, sort = "createdAt,desc" } = {}) => {
       dispatch(fetchProducts({ page, size, sort }));
     },
-    [dispatch, pageSize]
+    [dispatch],
   );
 
   const loadMoreProducts = useCallback(() => {
-    if (!loading && currentPage + 1 < totalPages) {
+    const state = { currentPage, totalPages, pageSize, loading };
+    if (!state.loading && state.currentPage + 1 < state.totalPages) {
       dispatch(
         fetchProducts({
-          page: currentPage + 1,
-          size: pageSize || 20,
+          page: state.currentPage + 1,
+          size: state.pageSize || 20,
           sort: "createdAt,desc",
-        })
+        }),
       );
     }
   }, [dispatch, loading, currentPage, totalPages, pageSize]);
 
   const refreshProducts = useCallback(() => {
     dispatch(
-      fetchProducts({ page: 0, size: pageSize || 20, sort: "createdAt,desc" })
+      fetchProducts({
+        page: 0,
+        size: 20,
+        sort: "createdAt,desc",
+        force: true,
+      }),
     );
-  }, [dispatch, pageSize]);
+  }, [dispatch]);
 
   const loadFeaturedProducts = useCallback(async () => {
     if (featuredLoadedRef.current) return;
@@ -66,9 +72,7 @@ export const useProducts = () => {
     setFeaturedAttempted(true);
 
     try {
-      console.log("🔄 Loading featured products...");
       await dispatch(fetchFeaturedProducts()).unwrap();
-      console.log("✅ Featured products loaded successfully");
     } catch (err) {
       console.error("❌ Failed to load featured products:", err);
       setFeaturedAttempted(true);
@@ -77,15 +81,15 @@ export const useProducts = () => {
 
   const loadProductDetails = useCallback(
     (productId) => dispatch(fetchProductDetails(productId)),
-    [dispatch]
+    [dispatch],
   );
 
   const filterProducts = useCallback(
     (newFilters) => {
-      console.log("🎯 Filtering products:", newFilters);
+      ("🎯 Filtering products:", newFilters);
       dispatch(setFilters(newFilters));
     },
-    [dispatch]
+    [dispatch],
   );
 
   const resetFilters = useCallback(() => {
@@ -98,34 +102,27 @@ export const useProducts = () => {
 
   // Load products and featured products once
   useEffect(() => {
-    let shouldLoadProducts = false;
-    let shouldLoadFeatured = false;
-
+    // Only load products if we don't have any and not currently loading
     if (products.length === 0 && !loading) {
-      shouldLoadProducts = true;
+      dispatch(
+        fetchProducts({
+          page: 0,
+          size: pageSize || 20,
+          sort: "createdAt,desc",
+        }),
+      );
     }
 
+    // Only load featured products once
     if (!featuredLoadedRef.current && !featuredLoading && !featuredAttempted) {
-      shouldLoadFeatured = true;
+      featuredLoadedRef.current = true;
+      setFeaturedAttempted(true);
+      dispatch(fetchFeaturedProducts()).catch((err) => {
+        console.error("❌ Failed to load featured products:", err);
+      });
     }
-
-    if (shouldLoadProducts) {
-      console.log("📦 Loading initial products...");
-      loadProducts({ page: 0 });
-    }
-
-    if (shouldLoadFeatured) {
-      console.log("⭐ Loading featured products...");
-      loadFeaturedProducts();
-    }
-  }, [
-    products.length,
-    loading,
-    featuredLoading,
-    featuredAttempted,
-    loadProducts,
-    loadFeaturedProducts,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Handle product details fetching (remove duplicate effect)
   useEffect(() => {
@@ -137,7 +134,6 @@ export const useProducts = () => {
       .map((p) => p.id);
 
     if (idsMissing.length > 0) {
-      console.log("📥 Fetching details for filters:", idsMissing.length);
       dispatch(ensureDetailsForProducts(idsMissing));
     }
   }, [dispatch, products, productDetails, filters.category, filters.condition]);
@@ -147,16 +143,7 @@ export const useProducts = () => {
   const shouldShowNotFound =
     featuredAttempted && !featuredLoading && featuredProducts.length === 0;
 
-  useEffect(() => {
-    console.log("🔍 Featured Debug:", {
-      featuredProducts: featuredProducts.length,
-      featuredLoading,
-      featuredAttempted,
-      shouldShowNotFound,
-      isReallyLoading,
-      storeProducts: featuredProducts,
-    });
-  }, [
+  useEffect(() => {}, [
     featuredProducts,
     featuredLoading,
     featuredAttempted,
