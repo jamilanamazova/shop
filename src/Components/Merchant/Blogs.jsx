@@ -294,7 +294,7 @@ const PaginationControls = memo(
 
         <div className="text-center mt-4 lg:mt-6 text-gray-600 text-xs lg:text-sm">
           Page {currentPage + 1} of {totalPages} • Showing {shops.length} of{" "}
-          {totalElements} shops
+          {totalElements} blogs
         </div>
       </div>
     );
