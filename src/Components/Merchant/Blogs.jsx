@@ -39,7 +39,7 @@ const ShopCard = memo(
         {currentUserShop && (
           <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white px-4 py-2 text-sm font-semibold flex items-center justify-center">
             <i className="fa-solid fa-crown mr-2"></i>
-            Your Shop
+            Your Blog
           </div>
         )}
 
@@ -71,7 +71,7 @@ const ShopCard = memo(
                 {products.length || "0"}
                 {currentUserShop && (
                   <span className="text-xs text-emerald-600 block">
-                    (Your Shop)
+                    (Your Blog)
                   </span>
                 )}
               </div>
@@ -83,7 +83,7 @@ const ShopCard = memo(
             className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 text-white py-3 px-4 rounded-xl font-semibold hover:from-emerald-700 hover:to-emerald-800 transition-all duration-300 flex items-center justify-center gap-2"
           >
             <i className="fa-solid fa-store"></i>
-            Visit Shop
+            Visit Blog
           </button>
         </div>
         {currentUserShop && (
@@ -92,7 +92,7 @@ const ShopCard = memo(
             className="w-full mt-2 bg-blue-600 text-white py-3 px-4 rounded-xl font-semibold hover:bg-blue-700 transition-all duration-300 flex items-center justify-center gap-2"
           >
             <i className="fa-solid fa-tachometer-alt"></i>
-            Manage Shop
+            Manage Blog
           </button>
         )}
       </div>
@@ -166,7 +166,7 @@ const FilterSidebar = memo(
                 <div className="flex items-center mb-3">
                   <i className="fa-solid fa-store text-emerald-600 mr-2"></i>
                   <span className="font-semibold text-emerald-800">
-                    Your Shop
+                    Your Blog
                   </span>
                 </div>
                 <p className="text-sm text-emerald-700 mb-4">
@@ -204,7 +204,7 @@ const FilterSidebar = memo(
                 <div className="text-gray-600 text-sm font-medium">
                   <i className="fa-solid fa-store mr-2 text-emerald-600"></i>
                   <span className="hidden sm:inline">Showing </span>
-                  {shops.length} of {totalElements} shops
+                  {shops.length} of {totalElements} blogs
                   {lastSearchTerm && (
                     <div className="mt-2 text-emerald-600 truncate">
                       for &quot;{lastSearchTerm}&quot;
@@ -220,7 +220,7 @@ const FilterSidebar = memo(
                     className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 text-white px-6 py-3 rounded-lg font-semibold text-sm hover:from-emerald-700 hover:to-emerald-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center gap-2"
                   >
                     <i className="fa-solid fa-plus"></i>
-                    <span className="hidden sm:inline">Create Shop</span>
+                    <span className="hidden sm:inline">Create Blog</span>
                     <span className="sm:hidden">Create</span>
                   </button>
                 </div>
@@ -319,7 +319,7 @@ const CreateShopModal = memo(
         <div className="bg-white rounded-2xl max-w-md w-full p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-800">
-              Create New Shop
+              Create New Blog
             </h2>
             <button
               onClick={onClose}
@@ -332,7 +332,7 @@ const CreateShopModal = memo(
           <form onSubmit={onSubmit}>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Shop Name
+                Blog Name
               </label>
               <input
                 type="text"
@@ -665,8 +665,8 @@ const Shops = memo(() => {
           }
         }
       } catch (error) {
-        console.error("Error fetching shops:", error);
-        setError("Failed to load shops. Please try again.");
+        console.error("Error fetching blogs:", error);
+        setError("Failed to load blogs. Please try again.");
         setShopsData((prev) => ({ ...prev, shops: [] }));
       } finally {
         setLoadingStates((prev) => ({
@@ -768,7 +768,7 @@ const Shops = memo(() => {
 
       const errors = {};
       if (!formData.shopName.trim()) {
-        errors.shopName = "Shop name is required";
+        errors.shopName = "Blog name is required";
       }
       if (!formData.description.trim()) {
         errors.description = "Description is required";
@@ -788,7 +788,7 @@ const Shops = memo(() => {
 
         if (response.data.status === "OK") {
           setNotification({
-            message: "Shop created successfully!",
+            message: "Blog created successfully!",
             type: "success",
           });
           handleCloseModal();
@@ -796,9 +796,9 @@ const Shops = memo(() => {
           fetchUserShop();
         }
       } catch (error) {
-        console.error("Error creating shop:", error);
+        console.error("Error creating blog:", error);
         setNotification({
-          message: "Failed to create shop. Please try again.",
+          message: "Failed to create blog. Please try again.",
           type: "error",
         });
       } finally {
@@ -866,8 +866,8 @@ const Shops = memo(() => {
             <LoadingSpinner />
             <p className="mt-6 text-gray-600 font-medium">
               {loadingUserShop
-                ? "Loading your shop data..."
-                : "Discovering amazing shops..."}
+                ? "Loading your blog data..."
+                : "Discovering amazing blogs..."}
             </p>
           </div>
         </div>
@@ -910,7 +910,7 @@ const Shops = memo(() => {
                   className="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:from-emerald-700 hover:to-emerald-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
                   <i className="fa-solid fa-tachometer-alt mr-3"></i>
-                  Go to Your Shop Dashboard
+                  Go to Your Blog Dashboard
                 </button>
               </div>
             )}
@@ -928,7 +928,7 @@ const Shops = memo(() => {
                   <div className="relative group">
                     <input
                       type="text"
-                      placeholder="Search for shops by name..."
+                      placeholder="Search for blogs by name..."
                       value={searchTerm}
                       onChange={handleSearchChange}
                       className="w-full px-6 py-4 pl-14 text-lg border-2 border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all duration-300 bg-gray-50 focus:bg-white"
@@ -1014,8 +1014,7 @@ const Shops = memo(() => {
                       Searching for blogs...
                     </h3>
                     <p className="text-gray-600 text-base lg:text-lg">
-                      Please wait while we find shops matching;
-                      {searchTerm}&quot;
+                      Please wait while we find blogs matching {searchTerm}
                     </p>
                   </div>
                 ) : shops.length === 0 ? (
@@ -1024,12 +1023,12 @@ const Shops = memo(() => {
                       <i className="fa-solid fa-store text-6xl lg:text-8xl"></i>
                     </div>
                     <h3 className="text-2xl lg:text-3xl font-bold text-gray-800 mb-6">
-                      {lastSearchTerm ? "No shops found" : "No shops available"}
+                      {lastSearchTerm ? "No blogs found" : "No blogs available"}
                     </h3>
                     <p className="text-gray-600 mb-10 max-w-lg mx-auto text-base lg:text-lg leading-relaxed">
                       {lastSearchTerm
-                        ? `We couldn't find any shops matching "${lastSearchTerm}". Please try a different search term or browse all shops.`
-                        : "Be the pioneer! Create the first shop and start your entrepreneurial journey with us."}
+                        ? `We couldn't find any blogs matching "${lastSearchTerm}". Please try a different search term or browse all blogs.`
+                        : "Be the pioneer! Create the first blog and start your entrepreneurial journey with us."}
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                       {lastSearchTerm && (

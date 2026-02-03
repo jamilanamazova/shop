@@ -56,7 +56,7 @@ const Routing = () => {
       <Route path="/shop/:shopId" element={<PublicShopDetail />} />
 
       <Route path="/blogs" element={<Blogs />} />
-      <Route path="/blogs/:id" element={<BlogDetail />} />
+      <Route path="/blog/:blogId" element={<BlogDetail />} />
 
       <Route
         path="/merchant/shops/:shopId/dashboard"

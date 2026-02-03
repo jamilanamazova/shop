@@ -1015,8 +1015,7 @@ const Shops = memo(() => {
                       Searching for shops...
                     </h3>
                     <p className="text-gray-600 text-base lg:text-lg">
-                      Please wait while we find shops matching &quot;
-                      {searchTerm}&quot;
+                      Please wait while we find blogs matching {searchTerm}
                     </p>
                   </div>
                 ) : shops.length === 0 ? (
