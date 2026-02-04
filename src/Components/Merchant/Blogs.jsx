@@ -26,17 +26,17 @@ const SearchLoadingSpinner = memo(() => (
 ));
 SearchLoadingSpinner.displayName = "SearchLoadingSpinner";
 
-const ShopCard = memo(
-  ({ shop, index, onVisit, currentUserShop = false, products }) => {
+const BlogCard = memo(
+  ({ blog, index, onVisit, currentUserBlog = false }) => {
     return (
       <div
         className={`bg-white rounded-xl lg:rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden group border transform hover:-translate-y-2 cursor-pointer ${
-          currentUserShop
+          currentUserBlog
             ? "border-emerald-500 ring-2 ring-emerald-200"
             : "border-gray-100"
         }`}
       >
-        {currentUserShop && (
+        {currentUserBlog && (
           <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white px-4 py-2 text-sm font-semibold flex items-center justify-center">
             <i className="fa-solid fa-crown mr-2"></i>
             Your Blog
@@ -45,12 +45,12 @@ const ShopCard = memo(
 
         <div className="p-4 lg:p-6">
           <h3 className="font-bold text-lg lg:text-xl text-gray-800 mb-2 lg:mb-3 truncate group-hover:text-emerald-600 transition-colors">
-            {shop.shopName || `Shop ${index + 1}`}
+            {blog.blogTitle || `Blog ${index + 1}`}
           </h3>
           <div className="text-gray-600 text-sm mb-4 h-12 lg:h-16 overflow-hidden">
             <p className="leading-relaxed line-clamp-2 lg:line-clamp-3">
-              {shop.description ||
-                "Discover amazing products and exceptional service at this wonderful shop"}
+              {blog.description ||
+                "Discover amazing stories and interesting articles at this wonderful blog"}
             </p>
           </div>
 
@@ -62,33 +62,22 @@ const ShopCard = memo(
                 ))}
               </div>
               <span className="text-gray-700 text-sm ml-2 font-semibold">
-                {shop.rating || "4.8"}
+                {blog.rating || "4.8"}
               </span>
-            </div>
-            <div className="text-right">
-              <div className="text-gray-500 text-xs">Products</div>
-              <div className="text-gray-800 font-bold">
-                {products.length || "0"}
-                {currentUserShop && (
-                  <span className="text-xs text-emerald-600 block">
-                    (Your Blog)
-                  </span>
-                )}
-              </div>
             </div>
           </div>
 
           <button
-            onClick={() => onVisit(shop.id, false)}
+            onClick={() => onVisit(blog.id, false)}
             className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 text-white py-3 px-4 rounded-xl font-semibold hover:from-emerald-700 hover:to-emerald-800 transition-all duration-300 flex items-center justify-center gap-2"
           >
-            <i className="fa-solid fa-store"></i>
+            <i className="fa-solid fa-newspaper"></i>
             Visit Blog
           </button>
         </div>
-        {currentUserShop && (
+        {currentUserBlog && (
           <button
-            onClick={() => onVisit(shop.id, true)}
+            onClick={() => onVisit(blog.id, true)}
             className="w-full mt-2 bg-blue-600 text-white py-3 px-4 rounded-xl font-semibold hover:bg-blue-700 transition-all duration-300 flex items-center justify-center gap-2"
           >
             <i className="fa-solid fa-tachometer-alt"></i>
@@ -99,7 +88,7 @@ const ShopCard = memo(
     );
   },
 );
-ShopCard.displayName = "ShopCard";
+BlogCard.displayName = "BlogCard";
 
 const Notification = memo(({ notification, onClose }) => {
   if (!notification) return null;
@@ -136,12 +125,12 @@ const FilterSidebar = memo(
     sortBy,
     sortDirection,
     onSortChange,
-    shops,
+    blogs,
     totalElements,
     lastSearchTerm,
     hasMerchantAccess,
-    onCreateShop,
-    userOwnedShop,
+    onCreateBlog,
+    userOwnedBlog,
     onGoToDashboard,
   }) => {
     const handleSortChange = useCallback(
@@ -161,16 +150,16 @@ const FilterSidebar = memo(
           </h3>
 
           <div className="space-y-6 lg:space-y-6">
-            {hasMerchantAccess && userOwnedShop && (
+            {hasMerchantAccess && userOwnedBlog && (
               <div className="bg-gradient-to-r from-emerald-50 to-emerald-100 rounded-lg p-4 border border-emerald-200">
                 <div className="flex items-center mb-3">
-                  <i className="fa-solid fa-store text-emerald-600 mr-2"></i>
+                  <i className="fa-solid fa-blog text-emerald-600 mr-2"></i>
                   <span className="font-semibold text-emerald-800">
                     Your Blog
                   </span>
                 </div>
                 <p className="text-sm text-emerald-700 mb-4">
-                  {userOwnedShop.shopName}
+                  {userOwnedBlog.blogTitle}
                 </p>
                 <button
                   onClick={onGoToDashboard}
@@ -194,17 +183,17 @@ const FilterSidebar = memo(
               >
                 <option value="createdAt,desc">🆕 Newest First</option>
                 <option value="createdAt,asc">⏰ Oldest First</option>
-                <option value="shopName,asc">🔤 Name A-Z</option>
-                <option value="shopName,desc">🔤 Name Z-A</option>
+                <option value="blogTitle,asc">🔤 Title A-Z</option>
+                <option value="blogTitle,desc">🔤 Title Z-A</option>
               </select>
             </div>
 
             <div className="flex flex-col sm:flex-row lg:flex-col gap-4 lg:gap-6">
               <div className="flex-1 lg:flex-none bg-gray-50 rounded-lg p-4 border border-gray-200">
                 <div className="text-gray-600 text-sm font-medium">
-                  <i className="fa-solid fa-store mr-2 text-emerald-600"></i>
+                  <i className="fa-solid fa-newspaper mr-2 text-emerald-600"></i>
                   <span className="hidden sm:inline">Showing </span>
-                  {shops.length} of {totalElements} blogs
+                  {blogs.length} of {totalElements} blogs
                   {lastSearchTerm && (
                     <div className="mt-2 text-emerald-600 truncate">
                       for &quot;{lastSearchTerm}&quot;
@@ -213,10 +202,10 @@ const FilterSidebar = memo(
                 </div>
               </div>
 
-              {hasMerchantAccess && !userOwnedShop && (
+              {hasMerchantAccess && !userOwnedBlog && (
                 <div className="flex-1 lg:flex-none">
                   <button
-                    onClick={onCreateShop}
+                    onClick={onCreateBlog}
                     className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 text-white px-6 py-3 rounded-lg font-semibold text-sm hover:from-emerald-700 hover:to-emerald-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center gap-2"
                   >
                     <i className="fa-solid fa-plus"></i>
@@ -235,7 +224,7 @@ const FilterSidebar = memo(
 FilterSidebar.displayName = "FilterSidebar";
 
 const PaginationControls = memo(
-  ({ currentPage, totalPages, totalElements, shops, onPageChange }) => {
+  ({ currentPage, totalPages, totalElements, blogs, onPageChange }) => {
     const getPageNumbers = useMemo(() => {
       const pageNumbers = [];
       const maxPagesToShow = 5;
@@ -293,7 +282,7 @@ const PaginationControls = memo(
         </div>
 
         <div className="text-center mt-4 lg:mt-6 text-gray-600 text-xs lg:text-sm">
-          Page {currentPage + 1} of {totalPages} • Showing {shops.length} of{" "}
+          Page {currentPage + 1} of {totalPages} • Showing {blogs.length} of{" "}
           {totalElements} blogs
         </div>
       </div>
@@ -302,7 +291,7 @@ const PaginationControls = memo(
 );
 PaginationControls.displayName = "PaginationControls";
 
-const CreateShopModal = memo(
+const CreateBlogModal = memo(
   ({
     isOpen,
     onClose,
@@ -332,21 +321,21 @@ const CreateShopModal = memo(
           <form onSubmit={onSubmit}>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Blog Name
+                Blog Title
               </label>
               <input
                 type="text"
-                name="shopName"
-                value={formData.shopName}
+                name="blogTitle"
+                value={formData.blogTitle}
                 onChange={onInputChange}
                 className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
-                  formErrors.shopName ? "border-red-500" : "border-gray-300"
+                  formErrors.blogTitle ? "border-red-500" : "border-gray-300"
                 }`}
-                placeholder="Enter shop name"
+                placeholder="Enter blog title"
               />
-              {formErrors.shopName && (
+              {formErrors.blogTitle && (
                 <p className="text-red-500 text-sm mt-1">
-                  {formErrors.shopName}
+                  {formErrors.blogTitle}
                 </p>
               )}
             </div>
@@ -363,7 +352,7 @@ const CreateShopModal = memo(
                 className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
                   formErrors.description ? "border-red-500" : "border-gray-300"
                 }`}
-                placeholder="Describe your shop"
+                placeholder="Describe your blog"
               />
               {formErrors.description && (
                 <p className="text-red-500 text-sm mt-1">
@@ -385,7 +374,7 @@ const CreateShopModal = memo(
                 disabled={isLoading}
                 className="flex-1 px-4 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50"
               >
-                {isLoading ? "Creating..." : "Create Shop"}
+                {isLoading ? "Creating..." : "Create Blog"}
               </button>
             </div>
           </form>
@@ -394,11 +383,11 @@ const CreateShopModal = memo(
     );
   },
 );
-CreateShopModal.displayName = "CreateShopModal";
+CreateBlogModal.displayName = "CreateBlogModal";
 
-const Shops = memo(() => {
-  const [shopsData, setShopsData] = useState({
-    shops: [],
+const Blogs = memo(() => {
+  const [blogsData, setBlogsData] = useState({
+    blogs: [],
     totalElements: 0,
     totalPages: 1,
     currentPage: 0,
@@ -419,180 +408,41 @@ const Shops = memo(() => {
 
   const [modalState, setModalState] = useState({
     showCreateModal: false,
-    formData: { shopName: "", description: "" },
+    formData: { blogTitle: "", description: "" },
     formErrors: {},
   });
 
-  const [userShopData, setUserShopData] = useState({
-    userOwnedShop: null,
-    loadingUserShop: false,
+  const [userBlogData, setUserBlogData] = useState({
+    userOwnedBlog: null,
+    loadingUserBlog: false,
   });
 
   const [notification, setNotification] = useState(null);
   const [error, setError] = useState("");
-
-  const [shopProducts, setShopProducts] = useState({});
-  const [userProducts, setUserProducts] = useState([]);
 
   const pageSize = 12;
   const navigate = useNavigate();
   const searchTimeoutRef = useRef(null);
   const apiCache = useRef(new Map());
 
-  const { shops, totalElements, totalPages, currentPage } = shopsData;
+  const { blogs, totalElements, totalPages, currentPage } = blogsData;
   const { loading, searchLoading, createLoading } = loadingStates;
   const { searchTerm, lastSearchTerm, sortBy, sortDirection } = searchState;
   const { showCreateModal, formData, formErrors } = modalState;
-  const { userOwnedShop, loadingUserShop } = userShopData;
+  const { userOwnedBlog, loadingUserBlog } = userBlogData;
 
   const hasMerchantAccess = useMemo(() => hasMerchantAccount(), []);
 
-  const processedShops = useMemo(() => {
-    if (!userOwnedShop) return shops;
+  const processedBlogs = useMemo(() => {
+    if (!userOwnedBlog) return blogs;
 
-    return shops.map((shop) => ({
-      ...shop,
-      isUserShop: shop.id === userOwnedShop.id,
+    return blogs.map((blog) => ({
+      ...blog,
+      isUserBlog: blog.id === userOwnedBlog.id,
     }));
-  }, [shops, userOwnedShop]);
+  }, [blogs, userOwnedBlog]);
 
-  const fetchUserShop = useCallback(async () => {
-    if (!hasMerchantAccess) {
-      return;
-    }
-
-    try {
-      setUserShopData((prev) => ({ ...prev, loadingUserShop: true }));
-
-      const token = localStorage.getItem("merchantAccessToken");
-
-      if (!token) {
-        console.error("❌ No merchant token found");
-        setUserShopData((prev) => ({ ...prev, userOwnedShop: null }));
-        return;
-      }
-
-      const dashboardResponse = await axios.get(
-        `${apiURL}/merchant/shops/dashboard`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        },
-      );
-
-      if (
-        dashboardResponse.data.status === "OK" &&
-        dashboardResponse.data.data?.shopName
-      ) {
-        const shopName = dashboardResponse.data.data.shopName;
-
-        const shopResponse = await axios.get(
-          `${apiURL}/shops/name/${encodeURIComponent(shopName)}`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          },
-        );
-
-        if (shopResponse.data.status === "OK" && shopResponse.data.data) {
-          const mergedShopData = {
-            ...shopResponse.data.data,
-            ...dashboardResponse.data.data,
-            id: shopResponse.data.data.id,
-          };
-
-          setUserShopData((prev) => ({
-            ...prev,
-            userOwnedShop: mergedShopData,
-          }));
-        } else {
-          setUserShopData((prev) => ({ ...prev, userOwnedShop: null }));
-        }
-      } else {
-        setUserShopData((prev) => ({ ...prev, userOwnedShop: null }));
-      }
-    } catch (error) {
-      if (error.response?.status === 403) {
-        console.error("🔒 Access denied - check authentication/authorization");
-      } else if (error.response?.status === 401) {
-        console.error("🔑 Unauthorized - token may be invalid");
-      }
-
-      setUserShopData((prev) => ({ ...prev, userOwnedShop: null }));
-    } finally {
-      setUserShopData((prev) => ({ ...prev, loadingUserShop: false }));
-    }
-  }, [hasMerchantAccess]);
-
-  const fetchUserProducts = useCallback(async () => {
-    if (!hasMerchantAccess || !userOwnedShop?.id) {
-      return;
-    }
-
-    const token = localStorage.getItem("merchantAccessToken");
-
-    try {
-      const response = await axios.get(`${apiURL}/merchant/products`, {
-        params: {
-          pageable: JSON.stringify({
-            page: 0,
-            size: 100,
-            sort: "createdAt,desc",
-          }),
-        },
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.data.status === "OK" && response.data.data) {
-        const products = response.data.data.content || [];
-
-        setUserProducts(products);
-
-        setShopProducts((prev) => {
-          const newShopProducts = {
-            ...prev,
-            [userOwnedShop.id]: products,
-          };
-          return newShopProducts;
-        });
-      } else {
-        setUserProducts([]);
-        setShopProducts((prev) => ({
-          ...prev,
-          [userOwnedShop.id]: [],
-        }));
-      }
-    } catch (err) {
-      console.error("Error fetching user products:", err);
-      setUserProducts([]);
-      if (userOwnedShop?.id) {
-        setShopProducts((prev) => ({
-          ...prev,
-          [userOwnedShop.id]: [],
-        }));
-      }
-    }
-  }, [hasMerchantAccess, userOwnedShop]);
-
-  const getShopProducts = useCallback(
-    (shopId) => {
-      if (shopId === userOwnedShop?.id) {
-        const result = shopProducts[shopId] || userProducts;
-        return result;
-      }
-
-      return [];
-    },
-    [shopProducts, userProducts, userOwnedShop?.id],
-  );
-
-  const fetchShops = useCallback(
+  const fetchBlogs = useCallback(
     async (searchQuery = "", showLoader = true) => {
       const cacheKey = JSON.stringify({
         searchQuery,
@@ -602,8 +452,7 @@ const Shops = memo(() => {
       });
 
       if (apiCache.current.has(cacheKey)) {
-        const cachedData = apiCache.current.get(cacheKey);
-        setShopsData(cachedData);
+        setBlogsData(apiCache.current.get(cacheKey));
         return;
       }
 
@@ -613,8 +462,7 @@ const Shops = memo(() => {
           loading: showLoader,
           searchLoading: !showLoader,
         }));
-        setError("");
-
+        
         const params = {
           page: currentPage,
           size: pageSize,
@@ -622,298 +470,70 @@ const Shops = memo(() => {
         };
 
         if (searchQuery.trim()) {
-          params.shopName = searchQuery.trim();
+          params.blogTitle = searchQuery.trim();
         }
 
-        const response = await axios.get(`${apiURL}/shops`, {
-          params,
-          headers: { "Content-Type": "application/json" },
-        });
+        const response = await axios.get(`${apiURL}/blogs`, { params });
 
         if (response.data.status === "OK" && response.data.data) {
           const pageData = response.data.data;
-          let allShops = pageData.content || [];
-
-          if (searchQuery.trim()) {
-            const searchLower = searchQuery.toLowerCase().trim();
-            allShops = allShops.filter(
-              (shop) =>
-                shop.shopName &&
-                shop.shopName.toLowerCase().includes(searchLower),
-            );
-          }
-
           const newData = {
-            shops: allShops,
-            totalPages: searchQuery.trim() ? 1 : pageData.totalPages || 1,
-            totalElements: searchQuery.trim()
-              ? allShops.length
-              : pageData.totalElements || 0,
-            currentPage: searchQuery.trim()
-              ? 0
-              : pageData.pageable?.pageNumber || 0,
+            blogs: pageData.content || [],
+            totalPages: pageData.totalPages || 1,
+            totalElements: pageData.totalElements || 0,
+            currentPage: pageData.pageable?.pageNumber || 0,
           };
-
-          setShopsData(newData);
+          setBlogsData(newData);
           setSearchState((prev) => ({ ...prev, lastSearchTerm: searchQuery }));
-
           apiCache.current.set(cacheKey, newData);
-
-          if (apiCache.current.size > 50) {
-            const firstKey = apiCache.current.keys().next().value;
-            apiCache.current.delete(firstKey);
-          }
         }
       } catch (error) {
         console.error("Error fetching blogs:", error);
-        setError("Failed to load blogs. Please try again.");
-        setShopsData((prev) => ({ ...prev, shops: [] }));
+        setError("Failed to load blogs.");
       } finally {
-        setLoadingStates((prev) => ({
-          ...prev,
-          loading: false,
-          searchLoading: false,
-        }));
+        setLoadingStates((prev) => ({ ...prev, loading: false, searchLoading: false }));
       }
     },
-    [currentPage, sortBy, sortDirection],
+    [currentPage, sortBy, sortDirection]
   );
-
-  const handleSortChange = useCallback((field, direction) => {
-    setSearchState((prev) => ({
-      ...prev,
-      sortBy: field,
-      sortDirection: direction,
-    }));
-    setShopsData((prev) => ({ ...prev, currentPage: 0 }));
-    apiCache.current.clear();
-  }, []);
-
-  const handlePageChange = useCallback(
-    (newPage) => {
-      if (newPage >= 0 && newPage < totalPages) {
-        setShopsData((prev) => ({ ...prev, currentPage: newPage }));
-      }
-    },
-    [totalPages],
-  );
-
-  const handleSearchChange = useCallback((e) => {
-    const value = e.target.value;
-    setSearchState((prev) => ({ ...prev, searchTerm: value }));
-  }, []);
-
-  const handleManualSearch = useCallback(
-    (e) => {
-      e.preventDefault();
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
-      setShopsData((prev) => ({ ...prev, currentPage: 0 }));
-      fetchShops(searchTerm, false);
-    },
-    [searchTerm, fetchShops],
-  );
-
-  const handleClearSearch = useCallback(() => {
-    setSearchState((prev) => ({ ...prev, searchTerm: "", lastSearchTerm: "" }));
-    setShopsData((prev) => ({ ...prev, currentPage: 0 }));
-    fetchShops("", false);
-  }, [fetchShops]);
-
-  const handleShopVisit = useCallback(
-    (shopId, isUserShop = false) => {
-      if (isUserShop) {
-        navigate(`/merchant/shops/${shopId}/dashboard`);
-      } else {
-        navigate(`/shop/${shopId}`);
-      }
-    },
-    [navigate],
-  );
-
-  const handleGoToDashboard = useCallback(() => {
-    if (userOwnedShop?.id) {
-      navigate(`/merchant/shops/${userOwnedShop.id}/dashboard`);
-    } else {
-      navigate("/merchant/dashboard");
-    }
-  }, [navigate, userOwnedShop]);
-
-  const handleCreateShop = useCallback(() => {
-    setModalState((prev) => ({ ...prev, showCreateModal: true }));
-  }, []);
-
-  const handleCloseModal = useCallback(() => {
-    setModalState((prev) => ({
-      ...prev,
-      showCreateModal: false,
-      formData: { shopName: "", description: "" },
-      formErrors: {},
-    }));
-  }, []);
-
-  const handleInputChange = useCallback((e) => {
-    const { name, value } = e.target;
-    setModalState((prev) => ({
-      ...prev,
-      formData: { ...prev.formData, [name]: value },
-      formErrors: { ...prev.formErrors, [name]: "" },
-    }));
-  }, []);
-
-  const handleSubmitShop = useCallback(
-    async (e) => {
-      e.preventDefault();
-
-      const errors = {};
-      if (!formData.shopName.trim()) {
-        errors.shopName = "Blog name is required";
-      }
-      if (!formData.description.trim()) {
-        errors.description = "Description is required";
-      }
-
-      if (Object.keys(errors).length > 0) {
-        setModalState((prev) => ({ ...prev, formErrors: errors }));
-        return;
-      }
-
-      try {
-        setLoadingStates((prev) => ({ ...prev, createLoading: true }));
-
-        const response = await axios.post(`${apiURL}/users/me/shop`, formData, {
-          headers: { "Content-Type": "application/json" },
-        });
-
-        if (response.data.status === "OK") {
-          setNotification({
-            message: "Blog created successfully!",
-            type: "success",
-          });
-          handleCloseModal();
-          fetchShops("", false);
-          fetchUserShop();
-        }
-      } catch (error) {
-        console.error("Error creating blog:", error);
-        setNotification({
-          message: "Failed to create blog. Please try again.",
-          type: "error",
-        });
-      } finally {
-        setLoadingStates((prev) => ({ ...prev, createLoading: false }));
-      }
-    },
-    [formData, handleCloseModal, fetchShops, fetchUserShop],
-  );
-
-  const hideNotification = useCallback(() => {
-    setNotification(null);
-  }, []);
 
   useEffect(() => {
-    if (hasMerchantAccess) {
-      fetchUserShop();
-    }
-    fetchShops(lastSearchTerm, true);
-  }, [fetchShops, fetchUserShop, lastSearchTerm, hasMerchantAccess]);
+    fetchBlogs(searchTerm, true);
+  }, [fetchBlogs]);
 
-  useEffect(() => {
-    if (hasMerchantAccess && userOwnedShop?.id) {
-      fetchUserProducts();
-    }
-  }, [hasMerchantAccess, userOwnedShop?.id, fetchUserProducts]);
+  const handleBlogVisit = useCallback((blogId, manage = false) => {
+    navigate(manage ? `/merchant/blogs/dashboard/${blogId}` : `/blogs/${blogId}`);
+  }, [navigate]);
 
-  useEffect(() => {
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
+  const handleSearchChange = (e) => {
+    setSearchState(prev => ({ ...prev, searchTerm: e.target.value }));
+  };
 
-    if (searchTerm === "") {
-      setShopsData((prev) => ({ ...prev, currentPage: 0 }));
-      fetchShops("", false);
-      return;
-    }
+  const handleManualSearch = (e) => {
+    e.preventDefault();
+    fetchBlogs(searchTerm, false);
+  };
 
-    searchTimeoutRef.current = setTimeout(() => {
-      setShopsData((prev) => ({ ...prev, currentPage: 0 }));
-      fetchShops(searchTerm, false);
-    }, 800);
-
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
-    };
-  }, [searchTerm, fetchShops]);
-
-  useEffect(() => {
-    if (notification) {
-      const timer = setTimeout(() => {
-        setNotification(null);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [notification]);
-
-  if (loading) {
-    return (
-      <Suspense fallback={<LoadingSpinner />}>
-        <Header />
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
-          <div className="text-center">
-            <LoadingSpinner />
-            <p className="mt-6 text-gray-600 font-medium">
-              {loadingUserShop
-                ? "Loading your blog data..."
-                : "Discovering amazing blogs..."}
-            </p>
-          </div>
-        </div>
-        <Footer />
-      </Suspense>
-    );
-  }
+  const handleClearSearch = () => {
+    setSearchState(prev => ({ ...prev, searchTerm: "", lastSearchTerm: "" }));
+    fetchBlogs("", false);
+  };
 
   return (
     <Suspense fallback={<LoadingSpinner />}>
       <Header />
-
-      <Notification notification={notification} onClose={hideNotification} />
-
-      <CreateShopModal
-        isOpen={showCreateModal}
-        onClose={handleCloseModal}
-        formData={formData}
-        formErrors={formErrors}
-        isLoading={createLoading}
-        onSubmit={handleSubmitShop}
-        onInputChange={handleInputChange}
-      />
-
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+      
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 pb-12">
+        
         <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white py-20 relative overflow-hidden">
           <div className="absolute inset-0 bg-black opacity-20"></div>
           <div className="relative z-10 max-w-4xl mx-auto text-center px-4">
             <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
               Discover Our Blogs
             </h1>
-            <p className="text-xl md:text-2xl text-gray-300 leading-relaxed">
-              Insights, tips and articles for modern creators
+            <p className="text-xl md:text-2xl text-gray-300 leading-relaxed max-w-2xl mx-auto">
+              Explore stories, news, and insights from our community of writers.
             </p>
-
-            {hasMerchantAccess && userOwnedShop && (
-              <div className="mt-8">
-                <button
-                  onClick={handleGoToDashboard}
-                  className="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:from-emerald-700 hover:to-emerald-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
-                >
-                  <i className="fa-solid fa-tachometer-alt mr-3"></i>
-                  Go to Your Blog Dashboard
-                </button>
-              </div>
-            )}
           </div>
         </div>
 
@@ -971,108 +591,49 @@ const Shops = memo(() => {
               </form>
             </div>
 
+            <Notification 
+              notification={notification} 
+              onClose={() => setNotification(null)} 
+            />
+            
             <div className="flex flex-col lg:flex-row gap-8">
-              <FilterSidebar
+              <FilterSidebar 
+                blogs={blogs}
+                totalElements={totalElements}
                 sortBy={sortBy}
                 sortDirection={sortDirection}
-                onSortChange={handleSortChange}
-                shops={shops}
-                totalElements={totalElements}
                 lastSearchTerm={lastSearchTerm}
                 hasMerchantAccess={hasMerchantAccess}
-                onCreateShop={handleCreateShop}
-                userOwnedShop={userOwnedShop}
-                onGoToDashboard={handleGoToDashboard}
+                userOwnedBlog={userOwnedBlog}
+                onSortChange={(field, dir) => setSearchState(prev => ({ ...prev, sortBy: field, sortDirection: dir }))}
+                onCreateBlog={() => setModalState(prev => ({ ...prev, showCreateModal: true }))}
               />
 
-              <div className="flex-1 min-w-0">
-                {error ? (
-                  <div className="bg-white rounded-2xl shadow-lg p-8 lg:p-12 text-center border border-red-100 transform transition-all duration-300">
-                    <div className="text-red-500 mb-6">
-                      <i className="fa-solid fa-exclamation-triangle text-4xl lg:text-6xl"></i>
-                    </div>
-                    <h3 className="text-xl lg:text-2xl font-bold text-gray-800 mb-4">
-                      Oops! Something went wrong
-                    </h3>
-                    <p className="text-gray-600 mb-8 text-base lg:text-lg">
-                      {error}
-                    </p>
-                    <button
-                      onClick={() => fetchShops(lastSearchTerm, false)}
-                      className="bg-gradient-to-r from-red-500 to-red-600 text-white px-6 lg:px-8 py-3 rounded-xl font-semibold hover:from-red-600 hover:to-red-700 transition-all duration-300 transform hover:scale-105"
-                    >
-                      <i className="fa-solid fa-refresh mr-2"></i>
-                      Try Again
-                    </button>
-                  </div>
-                ) : searchLoading && shops.length === 0 ? (
-                  <div className="bg-white rounded-2xl shadow-lg p-12 lg:p-16 text-center transform transition-all duration-300">
-                    <div className="text-emerald-500 mb-8">
-                      <i className="fa-solid fa-search text-6xl lg:text-8xl animate-pulse"></i>
-                    </div>
-                    <h3 className="text-2xl lg:text-3xl font-bold text-gray-800 mb-6">
-                      Searching for blogs...
-                    </h3>
-                    <p className="text-gray-600 text-base lg:text-lg">
-                      Please wait while we find blogs matching {searchTerm}
-                    </p>
-                  </div>
-                ) : shops.length === 0 ? (
-                  <div className="bg-white rounded-2xl shadow-lg p-12 lg:p-16 text-center transform transition-all duration-300">
-                    <div className="text-gray-300 mb-8">
-                      <i className="fa-solid fa-store text-6xl lg:text-8xl"></i>
-                    </div>
-                    <h3 className="text-2xl lg:text-3xl font-bold text-gray-800 mb-6">
-                      {lastSearchTerm ? "No blogs found" : "No blogs available"}
-                    </h3>
-                    <p className="text-gray-600 mb-10 max-w-lg mx-auto text-base lg:text-lg leading-relaxed">
-                      {lastSearchTerm
-                        ? `We couldn't find any blogs matching "${lastSearchTerm}". Please try a different search term or browse all blogs.`
-                        : "Be the pioneer! Create the first blog and start your entrepreneurial journey with us."}
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                      {lastSearchTerm && (
-                        <button
-                          onClick={handleClearSearch}
-                          className="inline-flex items-center bg-gray-600 text-white px-6 lg:px-8 py-3 rounded-xl font-semibold hover:bg-gray-700 transition-all duration-300"
-                        >
-                          <i className="fa-solid fa-times mr-2"></i>
-                          Clear Search
-                        </button>
-                      )}
-                      {hasMerchantAccess && !userOwnedShop && (
-                        <button
-                          onClick={handleCreateShop}
-                          className="inline-flex items-center bg-gradient-to-r from-emerald-600 to-emerald-700 text-white px-8 lg:px-10 py-3 lg:py-4 rounded-xl font-semibold text-base lg:text-lg hover:from-emerald-700 hover:to-emerald-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
-                        >
-                          <i className="fa-solid fa-plus mr-2 lg:mr-3"></i>
-                          Create Your Blog
-                        </button>
-                      )}
-                    </div>
-                  </div>
+              <div className="flex-1">
+                {loading ? (
+                  <div className="flex justify-center items-center h-64"><LoadingSpinner /></div>
                 ) : (
                   <>
-                    <div className="grid gap-4 sm:gap-6 lg:gap-8 mb-8 lg:mb-12 transition-all duration-300 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3">
-                      {processedShops.map((shop, index) => (
-                        <ShopCard
-                          key={shop.id || index}
-                          shop={shop}
-                          index={index}
-                          onVisit={handleShopVisit}
-                          currentUserShop={shop.isUserShop}
-                          products={getShopProducts(shop.id)}
+                    <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
+                      {processedBlogs.map((blog, index) => (
+                        <BlogCard 
+                          key={blog.id} 
+                          blog={blog} 
+                          index={index} 
+                          onVisit={handleBlogVisit}
+                          currentUserBlog={blog.isUserBlog}
                         />
                       ))}
                     </div>
-
-                    <PaginationControls
-                      currentPage={currentPage}
-                      totalPages={totalPages}
-                      totalElements={totalElements}
-                      shops={shops}
-                      onPageChange={handlePageChange}
-                    />
+                    <div className="mt-10">
+                      <PaginationControls 
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        totalElements={totalElements}
+                        blogs={blogs}
+                        onPageChange={(page) => setBlogsData(prev => ({ ...prev, currentPage: page }))}
+                      />
+                    </div>
                   </>
                 )}
               </div>
@@ -1081,10 +642,25 @@ const Shops = memo(() => {
         </div>
       </div>
 
+      <CreateBlogModal 
+        isOpen={showCreateModal}
+        onClose={() => setModalState(prev => ({ ...prev, showCreateModal: false }))}
+        formData={formData}
+        formErrors={formErrors}
+        isLoading={createLoading}
+        onInputChange={(e) => {
+          const { name, value } = e.target;
+          setModalState(prev => ({ ...prev, formData: { ...prev.formData, [name]: value } }));
+        }}
+        onSubmit={(e) => {
+          e.preventDefault();
+        }}
+      />
+      
       <Footer />
     </Suspense>
   );
 });
 
-Shops.displayName = "Shops";
-export default Shops;
+Blogs.displayName = "Blogs";
+export default Blogs;
